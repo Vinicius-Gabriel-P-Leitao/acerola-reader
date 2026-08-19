@@ -43,6 +43,22 @@ impl SecureP2pStorage {
         Self { store, peers_cache: RwLock::new(peers_cache) }
     }
 
+    /// Remove um peer do cache de endereços conhecidos — usado quando o usuário desempareia
+    /// um dispositivo pela UI. `get_paired_peers` (ver `api.rs`) lê exatamente desse cache,
+    /// não do `trust_store`, então sem isso o peer sumiria da confiança mas continuaria
+    /// aparecendo na lista de pareados.
+    pub(crate) async fn remove_peer(&self, id: &str) -> Result<(), P2pError> {
+        let mut peers = self.peers_cache.write().await;
+        peers.retain(|cached| cached.id.id != id);
+
+        let bytes = serde_json::to_vec(&*peers)
+            .map_err(|err| P2pError::StartupFailed(format!("failed to encode peer cache: {err}")))?;
+
+        self.store
+            .save_blob(PEERS_KEY.to_string(), bytes)
+            .map_err(|err| P2pError::StartupFailed(format!("failed to save peer cache: {err}")))
+    }
+
     fn migrate_legacy_files(store: &Arc<dyn SecureBlobStore>, legacy_dir: &Path) {
         Self::migrate_legacy_file(store, &legacy_dir.join("identity.seed"), IDENTITY_KEY);
         Self::migrate_legacy_file(store, &legacy_dir.join("peers.json"), PEERS_KEY);
@@ -132,5 +148,90 @@ impl P2PStorage for SharedSecureP2pStorage {
 
     async fn load_peers(&self) -> Result<Vec<PeerAddr>, P2pError> {
         self.0.load_peers().await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{collections::HashMap, sync::Mutex as StdMutex};
+
+    use acerola_p2p::api::peer::PeerIdentity;
+
+    use super::*;
+    use crate::callbacks::{SecureBlobStore, SecureBlobStoreError};
+
+    struct FakeBlobStore {
+        data: StdMutex<HashMap<String, Vec<u8>>>,
+    }
+
+    impl FakeBlobStore {
+        fn new() -> Self {
+            Self { data: StdMutex::new(HashMap::new()) }
+        }
+    }
+
+    impl SecureBlobStore for FakeBlobStore {
+        fn save_blob(&self, key: String, value: Vec<u8>) -> Result<(), SecureBlobStoreError> {
+            self.data.lock().unwrap().insert(key, value);
+            Ok(())
+        }
+
+        fn load_blob(&self, key: String) -> Result<Option<Vec<u8>>, SecureBlobStoreError> {
+            Ok(self.data.lock().unwrap().get(&key).cloned())
+        }
+    }
+
+    fn make_peer(id: &str) -> PeerAddr {
+        PeerAddr { id: PeerIdentity { id: id.to_string(), device_id: None }, addrs: Vec::new() }
+    }
+
+    #[tokio::test]
+    async fn remove_peer_forgets_a_cached_address() {
+        let storage = SecureP2pStorage::open(Arc::new(FakeBlobStore::new()), None);
+        storage.save_peer(&make_peer("peer-a")).await.unwrap();
+
+        storage.remove_peer("peer-a").await.unwrap();
+
+        let remaining = storage.load_peers().await.unwrap();
+        assert!(remaining.is_empty());
+    }
+
+    #[tokio::test]
+    async fn remove_peer_only_affects_the_given_peer() {
+        let storage = SecureP2pStorage::open(Arc::new(FakeBlobStore::new()), None);
+        storage.save_peer(&make_peer("peer-a")).await.unwrap();
+        storage.save_peer(&make_peer("peer-b")).await.unwrap();
+
+        storage.remove_peer("peer-a").await.unwrap();
+
+        let remaining = storage.load_peers().await.unwrap();
+        assert_eq!(remaining.len(), 1);
+        assert_eq!(remaining[0].id.id, "peer-b");
+    }
+
+    #[tokio::test]
+    async fn remove_peer_persists_across_reopen() {
+        let blob_store: Arc<dyn SecureBlobStore> = Arc::new(FakeBlobStore::new());
+
+        let storage = SecureP2pStorage::open(Arc::clone(&blob_store), None);
+        storage.save_peer(&make_peer("peer-a")).await.unwrap();
+        storage.save_peer(&make_peer("peer-b")).await.unwrap();
+        storage.remove_peer("peer-a").await.unwrap();
+
+        let reopened = SecureP2pStorage::open(blob_store, None);
+        let remaining = reopened.load_peers().await.unwrap();
+        assert_eq!(remaining.len(), 1);
+        assert_eq!(remaining[0].id.id, "peer-b");
+    }
+
+    #[tokio::test]
+    async fn removing_an_unknown_peer_is_a_no_op() {
+        let storage = SecureP2pStorage::open(Arc::new(FakeBlobStore::new()), None);
+        storage.save_peer(&make_peer("peer-a")).await.unwrap();
+
+        storage.remove_peer("never-existed").await.unwrap();
+
+        let remaining = storage.load_peers().await.unwrap();
+        assert_eq!(remaining.len(), 1);
     }
 }

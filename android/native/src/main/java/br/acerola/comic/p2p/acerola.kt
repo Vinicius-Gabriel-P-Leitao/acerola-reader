@@ -922,6 +922,8 @@ internal open class UniffiVTableCallbackInterfaceSecureBlobStore(
 
 
 
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -1009,6 +1011,8 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_acerola_fn_method_p2pnode_get_paired_peers(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_acerola_fn_method_p2pnode_remove_paired_peer(`ptr`: Pointer,`id`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_acerola_fn_method_p2pnode_shutdown(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_acerola_fn_method_p2pnode_switch_to_local(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
@@ -1177,6 +1181,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_acerola_checksum_method_p2pnode_get_paired_peers(
     ): Short
+    fun uniffi_acerola_checksum_method_p2pnode_remove_paired_peer(
+    ): Short
     fun uniffi_acerola_checksum_method_p2pnode_shutdown(
     ): Short
     fun uniffi_acerola_checksum_method_p2pnode_switch_to_local(
@@ -1264,6 +1270,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_acerola_checksum_method_p2pnode_get_paired_peers() != 47316.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_acerola_checksum_method_p2pnode_remove_paired_peer() != 11699.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_acerola_checksum_method_p2pnode_shutdown() != 3258.toShort()) {
@@ -2920,6 +2929,14 @@ public interface P2pNodeInterface {
      */
     fun `getPairedPeers`(): List<FfiPeerAddr>
     
+    /**
+     * Desempareia um peer: some da confiança (`trust_store`) e do cache de endereços
+     * conhecidos (`storage`, a mesma fonte de `get_paired_peers`). Não derruba uma conexão
+     * ativa nem bloqueia o peer — se ele tentar se conectar de novo depois, passa pelo mesmo
+     * fluxo TOFU de um dispositivo nunca visto (ver `trust_store::SecureTrustedStore::remove`).
+     */
+    fun `removePairedPeer`(`id`: kotlin.String)
+    
     fun `shutdown`()
     
     fun `switchToLocal`()
@@ -3105,6 +3122,23 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
     }
     )
     }
+    
+
+    
+    /**
+     * Desempareia um peer: some da confiança (`trust_store`) e do cache de endereços
+     * conhecidos (`storage`, a mesma fonte de `get_paired_peers`). Não derruba uma conexão
+     * ativa nem bloqueia o peer — se ele tentar se conectar de novo depois, passa pelo mesmo
+     * fluxo TOFU de um dispositivo nunca visto (ver `trust_store::SecureTrustedStore::remove`).
+     */override fun `removePairedPeer`(`id`: kotlin.String)
+        = 
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_remove_paired_peer(
+        it, FfiConverterString.lower(`id`),_status)
+}
+    }
+    
     
 
     override fun `shutdown`()

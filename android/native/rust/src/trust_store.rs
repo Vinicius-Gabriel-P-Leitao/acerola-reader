@@ -98,6 +98,17 @@ impl SecureTrustedStore {
         }
     }
 
+    /// Remove um peer da lista de confiáveis — usado quando o usuário desempareia um
+    /// dispositivo pela UI. Não mexe em `blocked`, só desfaz a confiança concedida: se esse
+    /// peer tentar se conectar de novo depois, passa pelo mesmo fluxo TOFU de um peer novo
+    /// (ver `TofuGuard::into_validator` na acerola-p2p — reconhece e reconfia
+    /// automaticamente, exatamente como faria com um dispositivo nunca visto).
+    pub(crate) async fn remove(&self, id: &str) {
+        let mut trusted = self.trusted.write().await;
+        trusted.remove(id);
+        self.write_set(TRUSTED_KEY, &trusted);
+    }
+
     fn write_set(&self, key: &str, set: &HashSet<String>) {
         match serde_json::to_vec(set) {
             Ok(bytes) => {
@@ -133,5 +144,84 @@ impl TrustedPeerStore for SecureTrustedStore {
 
     async fn is_blocked(&self, id: &str) -> bool {
         self.blocked.contains(id)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{collections::HashMap, sync::Mutex as StdMutex};
+
+    use super::*;
+    use crate::callbacks::{SecureBlobStore, SecureBlobStoreError};
+
+    struct FakeBlobStore {
+        data: StdMutex<HashMap<String, Vec<u8>>>,
+    }
+
+    impl FakeBlobStore {
+        fn new() -> Self {
+            Self { data: StdMutex::new(HashMap::new()) }
+        }
+    }
+
+    impl SecureBlobStore for FakeBlobStore {
+        fn save_blob(&self, key: String, value: Vec<u8>) -> Result<(), SecureBlobStoreError> {
+            self.data.lock().unwrap().insert(key, value);
+            Ok(())
+        }
+
+        fn load_blob(&self, key: String) -> Result<Option<Vec<u8>>, SecureBlobStoreError> {
+            Ok(self.data.lock().unwrap().get(&key).cloned())
+        }
+    }
+
+    fn noop_emitter() -> EventEmitter {
+        Arc::new(|_event, _data| {})
+    }
+
+    #[tokio::test]
+    async fn remove_forgets_a_trusted_peer() {
+        let store = SecureTrustedStore::open(Arc::new(FakeBlobStore::new()), noop_emitter(), None);
+        store.insert("peer-a").await;
+        assert!(store.contains("peer-a").await);
+
+        store.remove("peer-a").await;
+
+        assert!(!store.contains("peer-a").await);
+    }
+
+    #[tokio::test]
+    async fn remove_only_affects_the_given_peer() {
+        let store = SecureTrustedStore::open(Arc::new(FakeBlobStore::new()), noop_emitter(), None);
+        store.insert("peer-a").await;
+        store.insert("peer-b").await;
+
+        store.remove("peer-a").await;
+
+        assert!(!store.contains("peer-a").await);
+        assert!(store.contains("peer-b").await);
+    }
+
+    #[tokio::test]
+    async fn remove_persists_across_reopen() {
+        let blob_store: Arc<dyn SecureBlobStore> = Arc::new(FakeBlobStore::new());
+
+        let store = SecureTrustedStore::open(Arc::clone(&blob_store), noop_emitter(), None);
+        store.insert("peer-a").await;
+        store.insert("peer-b").await;
+        store.remove("peer-a").await;
+
+        let reopened = SecureTrustedStore::open(blob_store, noop_emitter(), None);
+        assert!(!reopened.contains("peer-a").await);
+        assert!(reopened.contains("peer-b").await);
+    }
+
+    #[tokio::test]
+    async fn removing_an_unknown_peer_is_a_no_op() {
+        let store = SecureTrustedStore::open(Arc::new(FakeBlobStore::new()), noop_emitter(), None);
+
+        store.remove("never-existed").await;
+
+        assert!(!store.contains("never-existed").await);
     }
 }

@@ -239,6 +239,19 @@ impl P2PNode {
         })
     }
 
+    /// Desempareia um peer: some da confiança (`trust_store`) e do cache de endereços
+    /// conhecidos (`storage`, a mesma fonte de `get_paired_peers`). Não derruba uma conexão
+    /// ativa nem bloqueia o peer — se ele tentar se conectar de novo depois, passa pelo mesmo
+    /// fluxo TOFU de um dispositivo nunca visto (ver `trust_store::SecureTrustedStore::remove`).
+    pub fn remove_paired_peer(&self, id: String) {
+        let trust_store = Arc::clone(&self.trust_store);
+        let storage = Arc::clone(&self.storage);
+        self.runtime.block_on(async move {
+            trust_store.remove(&id).await;
+            let _ = storage.remove_peer(&id).await;
+        });
+    }
+
     pub fn get_connected_peers_with_info(&self) -> Vec<FfiConnectedPeer> {
         self.runtime.block_on(async {
             self.node

@@ -52,6 +52,11 @@ class P2pUseCase
 
         fun getPairedPeers(): List<PeerAddress> = p2pService.getPairedPeers()
 
+        fun removePairedPeer(id: String) {
+            AcerolaLogger.i("P2pUseCase", "Removing paired peer: $id", LogSource.NETWORK)
+            p2pService.removePairedPeer(id)
+        }
+
         fun shutdown() {
             p2pService.shutdown()
         }

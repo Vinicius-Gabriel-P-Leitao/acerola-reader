@@ -128,6 +128,13 @@ class P2pService(
             PeerAddress(id = it.id, deviceId = it.deviceId, addrs = it.addrs)
         }
 
+    /** Desempareia um peer — some da confiança e do cache de endereços conhecidos. Uma
+     *  reconexão futura desse peer passa pelo mesmo fluxo TOFU de um dispositivo novo. */
+    fun removePairedPeer(id: String) {
+        Log.d("P2pService", "Removing paired peer: $id")
+        p2pNode.removePairedPeer(id)
+    }
+
     fun shutdown() {
         p2pNode.destroy()
     }
