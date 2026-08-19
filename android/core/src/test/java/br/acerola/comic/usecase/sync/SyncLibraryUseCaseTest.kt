@@ -36,7 +36,7 @@ class SyncLibraryUseCaseTest {
     }
 
     @Test
-    fun `execute INCREMENTAL deve chamar scanGateway incrementalScan`() =
+    fun `execute INCREMENTAL should call scanGateway incrementalScan`() =
         runTest {
             val uri = mockk<Uri>()
             coEvery { scanGateway.incrementalScan(uri) } returns Either.Right(Unit)
@@ -48,7 +48,7 @@ class SyncLibraryUseCaseTest {
         }
 
     @Test
-    fun `execute REFRESH deve chamar scanGateway refreshLibrary`() =
+    fun `execute REFRESH should call scanGateway refreshLibrary`() =
         runTest {
             val uri = mockk<Uri>()
             coEvery { scanGateway.refreshLibrary(uri) } returns Either.Right(Unit)
@@ -60,7 +60,7 @@ class SyncLibraryUseCaseTest {
         }
 
     @Test
-    fun `execute REBUILD deve chamar rebuildGateway rebuildLibrary`() =
+    fun `execute REBUILD should call rebuildGateway rebuildLibrary`() =
         runTest {
             val uri = mockk<Uri>()
             coEvery { rebuildGateway.rebuildLibrary(uri) } returns Either.Right(Unit)
@@ -72,7 +72,7 @@ class SyncLibraryUseCaseTest {
         }
 
     @Test
-    fun `execute SPECIFIC com id valido deve chamar singleSync refreshManga`() =
+    fun `execute SPECIFIC with valid id should call singleSync refreshManga`() =
         runTest {
             val uri = mockk<Uri>()
             coEvery { singleSync.refreshManga(42L, uri) } returns Either.Right(Unit)
@@ -84,7 +84,7 @@ class SyncLibraryUseCaseTest {
         }
 
     @Test
-    fun `execute SPECIFIC com id invalido deve retornar erro`() =
+    fun `execute SPECIFIC with invalid id should return error`() =
         runTest {
             val result = useCase.execute(SyncType.SPECIFIC, -1L, null)
 

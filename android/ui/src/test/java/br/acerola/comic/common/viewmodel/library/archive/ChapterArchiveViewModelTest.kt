@@ -48,7 +48,7 @@ class ChapterArchiveViewModelTest {
     }
 
     @Test
-    fun `deve enfileirar trabalho de sincronizacao ao solicitar`() =
+    fun `should enqueue synchronization work when requested`() =
         runTest {
             viewModel.syncChaptersByMangaDirectory(1L)
 
@@ -56,7 +56,7 @@ class ChapterArchiveViewModelTest {
         }
 
     @Test
-    fun `deve refletir progresso do repositório`() =
+    fun `should reflect repository progress`() =
         runTest {
             val progressFlow = MutableStateFlow(50)
             val isIndexingFlow = MutableStateFlow(true)

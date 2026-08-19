@@ -67,6 +67,9 @@ dependencies {
     implementation(libs.arrow.core)
     implementation(libs.arrow.fx.coroutines)
 
+    implementation(libs.zxing.core)
+    implementation(libs.play.services.code.scanner)
+
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)

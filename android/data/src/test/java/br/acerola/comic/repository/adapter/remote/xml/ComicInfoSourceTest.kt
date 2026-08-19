@@ -51,9 +51,9 @@ class ComicInfoSourceTest {
     }
 
     @Test
-    fun searchInfo_deve_ler_da_raiz_se_ComicInfo_existir() =
+    fun searchInfo_should_read_from_root_if_ComicInfo_exists() =
         runTest {
-            // Arrange
+            // Preparação
             val folderUri = mockk<Uri>()
             val folderDoc = mockk<DocumentFile>()
             val xmlFile = mockk<DocumentFile>()
@@ -74,18 +74,18 @@ class ComicInfoSourceTest {
 
             coEvery { parser.parseMangaInfo(inputStream) } returns Either.Right(expectedInfo)
 
-            // Act
+            // Ação
             val result = repository.searchInfo("title", onProgress = null, extra = arrayOf("content://folder"))
 
-            // Assert
-            assertTrue("Deveria ser Right mas foi $result", result.isRight())
+            // Verificação
+            assertTrue("Should be Right but was $result", result.isRight())
             result.onRight { assertEquals(expectedInfo, it.first()) }
         }
 
     @Test
-    fun searchInfo_deve_procurar_dentro_do_cbz_se_nao_houver_xml_na_raiz() =
+    fun searchInfo_should_search_inside_cbz_if_no_xml_in_root() =
         runTest {
-            // Arrange
+            // Preparação
             val folderUri = mockk<Uri>()
             val folderDoc = mockk<DocumentFile>()
             val cbzFile = mockk<DocumentFile>()
@@ -112,16 +112,16 @@ class ComicInfoSourceTest {
             every { sourceService.close() } returns Unit
             every { inputStream.close() } returns Unit
 
-            // Act
+            // Ação
             val result = repository.searchInfo("title", onProgress = null, extra = arrayOf("content://folder"))
 
-            // Assert
-            assertTrue("Deveria ser Right mas foi $result", result.isRight())
+            // Verificação
+            assertTrue("Should be Right but was $result", result.isRight())
             result.onRight { assertEquals(expectedInfo, it.first()) }
         }
 
     @Test
-    fun searchInfo_deve_retornar_NotFound_se_diretorio_nao_existir() =
+    fun searchInfo_should_return_NotFound_if_directory_does_not_exist() =
         runTest {
             every { Uri.parse(any()) } returns mockk()
             every { DocumentFile.fromTreeUri(any(), any()) } returns null

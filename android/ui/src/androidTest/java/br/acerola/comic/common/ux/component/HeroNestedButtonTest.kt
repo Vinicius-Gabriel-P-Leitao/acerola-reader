@@ -17,36 +17,36 @@ class HeroNestedButtonTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_titulo_e_descricao_do_item_aninhado() {
+    fun should_display_title_and_description_of_nested_item() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Acerola.Component.HeroNestedButton(
-                    title = "Sincronizar Capítulos",
-                    description = "Busca capítulos remotos",
+                    title = "Sync Chapters",
+                    description = "Fetch remote chapters",
                     icon = Icons.Default.Sync,
                     onClick = {},
                 )
             }
         }
 
-        composeTestRule.onNodeWithText("Sincronizar Capítulos").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Busca capítulos remotos").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Sync Chapters").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Fetch remote chapters").assertIsDisplayed()
     }
 
     @Test
-    fun deve_executar_callback_de_clique_no_item_aninhado() {
+    fun should_execute_click_callback_on_nested_item() {
         var clicked = false
         composeTestRule.setContent {
             AcerolaTheme {
                 Acerola.Component.HeroNestedButton(
-                    title = "Item Clicável",
+                    title = "Clickable Item",
                     icon = Icons.Default.Sync,
                     onClick = { clicked = true },
                 )
             }
         }
 
-        composeTestRule.onNodeWithText("Item Clicável").performClick()
+        composeTestRule.onNodeWithText("Clickable Item").performClick()
         assertTrue(clicked)
     }
 }

@@ -202,18 +202,18 @@ class ComicViewModelTest {
         )
 
     @Test
-    fun `deve ordenar capítulos por numero ascendente`() =
+    fun `should sort chapters by number ascending`() =
         runTest {
             val cap1 = ChapterFileDto(id = 1L, name = "Cap 1", path = "", chapterSort = "1", lastModified = 1000L)
             val cap2 = ChapterFileDto(id = 2L, name = "Cap 2", path = "", chapterSort = "2", lastModified = 500L)
 
             viewModel.init(1L, null)
-            // Providing sorted data as the DB would do
+            // Fornecendo dados ordenados como o banco faria
             localChaptersFlow.value = ChapterPageDto(listOf(cap1, cap2), emptyList(), 20, 0, 2)
             viewModel.updateChapterSort(ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING))
 
             viewModel.chapters.test {
-                // Initial state might be null
+                // O estado inicial pode ser nulo
                 var item = awaitItem()
                 while (item == null || item.archive.items.isEmpty()) {
                     item = awaitItem()
@@ -225,7 +225,7 @@ class ComicViewModelTest {
         }
 
     @Test
-    fun `deve ordenar capitulos decimais corretamente — 0_01 antes de 0_02, 0_10 apos 0_09`() =
+    fun `should sort decimal chapters correctly - 0_01 before 0_02, 0_10 after 0_09`() =
         runTest {
             // Bug: "0.1".toDouble() == "0.10".toDouble() == 0.1
             // causava Ch.0.10 aparecer logo após Ch.0.01, antes de Ch.0.02
@@ -235,7 +235,7 @@ class ComicViewModelTest {
             val ch010 = ChapterFileDto(id = 10L, name = "Ch. 0.10", path = "", chapterSort = "0.10")
             val ch011 = ChapterFileDto(id = 11L, name = "Ch. 0.11", path = "", chapterSort = "0.11")
 
-            // Providing sorted data
+            // Fornecendo dados ordenados
             localChaptersFlow.value =
                 ChapterPageDto(
                     listOf(ch001, ch002, ch009, ch010, ch011),
@@ -256,7 +256,7 @@ class ComicViewModelTest {
         }
 
     @Test
-    fun `deve ordenar capitulos inteiros corretamente — 1 2 9 10 11 100`() =
+    fun `should sort integer chapters correctly - 1 2 9 10 11 100`() =
         runTest {
             // Bug: "10".toDouble()=10.0 e "100".toDouble()=100.0 parecem ok,
             // mas "10" < "11" < "100" ficaria errado com sort textual.
@@ -268,7 +268,7 @@ class ComicViewModelTest {
             val ch11 = ChapterFileDto(id = 11L, name = "Ch. 11", path = "", chapterSort = "11")
             val ch100 = ChapterFileDto(id = 100L, name = "Ch. 100", path = "", chapterSort = "100")
 
-            // Providing sorted data
+            // Fornecendo dados ordenados
             localChaptersFlow.value =
                 ChapterPageDto(
                     listOf(ch1, ch2, ch9, ch10, ch11, ch100),
@@ -289,7 +289,7 @@ class ComicViewModelTest {
         }
 
     @Test
-    fun `deve ordenar capitulos mistos inteiros e decimais corretamente`() =
+    fun `should sort mixed integer and decimal chapters correctly`() =
         runTest {
             val ch001 = ChapterFileDto(id = 1L, name = "Ch. 0.01", path = "", chapterSort = "0.1")
             val ch010 = ChapterFileDto(id = 2L, name = "Ch. 0.10", path = "", chapterSort = "0.10")
@@ -298,7 +298,7 @@ class ComicViewModelTest {
             val ch2 = ChapterFileDto(id = 5L, name = "Ch. 2", path = "", chapterSort = "2")
             val ch10 = ChapterFileDto(id = 6L, name = "Ch. 10", path = "", chapterSort = "10")
 
-            // Providing sorted data
+            // Fornecendo dados ordenados
             localChaptersFlow.value =
                 ChapterPageDto(
                     listOf(ch001, ch010, ch1, ch1dot5, ch2, ch10),
@@ -319,13 +319,13 @@ class ComicViewModelTest {
         }
 
     @Test
-    fun `deve ordenar capitulos decimais descendente`() =
+    fun `should sort decimal chapters descending`() =
         runTest {
             val ch001 = ChapterFileDto(id = 1L, name = "Ch. 0.01", path = "", chapterSort = "0.1")
             val ch002 = ChapterFileDto(id = 2L, name = "Ch. 0.02", path = "", chapterSort = "0.2")
             val ch010 = ChapterFileDto(id = 3L, name = "Ch. 0.10", path = "", chapterSort = "0.10")
 
-            // Providing ASCENDING data from DB. ViewModel will reverse it.
+            // Fornecendo dados em ordem ASCENDENTE do banco. O ViewModel irá invertê-los.
             localChaptersFlow.value =
                 ChapterPageDto(
                     listOf(ch001, ch002, ch010),
@@ -346,7 +346,7 @@ class ComicViewModelTest {
         }
 
     @Test
-    fun `deve ordenar capítulos por ultima atualizacao descendente`() =
+    fun `should sort chapters by last update descending`() =
         runTest {
             val cap1 = ChapterFileDto(id = 1L, name = "Cap 1", path = "", chapterSort = "1", lastModified = 1000L)
             val cap2 = ChapterFileDto(id = 2L, name = "Cap 2", path = "", chapterSort = "2", lastModified = 2000L)
@@ -366,7 +366,7 @@ class ComicViewModelTest {
         }
 
     @Test
-    fun `deve exibir headers apenas quando houver multiplos volumes reais`() =
+    fun `should display headers only when there are multiple real volumes`() =
         runTest {
             val volume1 = VolumeArchiveDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
             val volume2 = VolumeArchiveDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = false)
@@ -425,7 +425,7 @@ class ComicViewModelTest {
         }
 
     @Test
-    fun `deve ocultar headers quando houver capitulos root misturados`() =
+    fun `should hide headers when there are mixed root chapters`() =
         runTest {
             val volume1 = VolumeArchiveDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
             val volume2 = VolumeArchiveDto(id = 20L, name = "Vol. 2", volumeSort = "2", isSpecial = false)
@@ -454,7 +454,7 @@ class ComicViewModelTest {
         }
 
     @Test
-    fun `marcar todos como lido deve usar a lista completa do quadrinho, nao apenas a pagina carregada`() =
+    fun `mark all as read should use full comic list, not only loaded page`() =
         runTest {
             val fullChapters =
                 (1..5).map { n ->

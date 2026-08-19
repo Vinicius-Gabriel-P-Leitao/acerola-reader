@@ -13,12 +13,12 @@ class TopBarTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `ReaderTopBar_deve_exibir_titulo_e_subtitulo_corretamente`() {
+    fun `ReaderTopBar_should_display_title_and_subtitle_correctly`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Reader.Template.TopBar(
                     title = "Solo Leveling",
-                    subtitle = "Capítulo 150",
+                    subtitle = "Chapter 150",
                     isVisible = true,
                     onBackClick = {},
                     onSettingsClick = {},
@@ -27,16 +27,16 @@ class TopBarTest {
         }
 
         composeTestRule.onNodeWithText("Solo Leveling").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Capítulo 150").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Chapter 150").assertIsDisplayed()
     }
 
     @Test
-    fun `ReaderTopBar_deve_ficar_oculta_quando_isVisible_for_falso`() {
+    fun `ReaderTopBar_should_be_hidden_when_isVisible_is_false`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Reader.Template.TopBar(
-                    title = "Qualquer",
-                    subtitle = "Coisa",
+                    title = "Anything",
+                    subtitle = "Something",
                     isVisible = false,
                     onBackClick = {},
                     onSettingsClick = {},
@@ -44,6 +44,6 @@ class TopBarTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Qualquer").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Anything").assertDoesNotExist()
     }
 }

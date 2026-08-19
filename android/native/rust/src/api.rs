@@ -4,18 +4,35 @@ use tokio::runtime::Runtime;
 
 #[cfg(target_os = "android")]
 use acerola_p2p::api::{
-    guard::{InMemoryTrustedStore, TofuGuard, TrustedPeerStore},
+    guard::TofuGuard,
     identity::{DefaultDeviceInfoProvider, DeviceInfoProvider},
     network::NetworkMode,
     peer::{PeerAddr, PeerIdentity},
+    storage::P2PStorage,
     transport::IrohTransportBuilder,
 };
 
 #[cfg(target_os = "android")]
-use crate::{mode::FfiNetworkMode, singleton::TOKIO_RUNTIME};
+use crate::{
+    callbacks::{FileSyncProvider, HistorySyncProvider, SecureBlobStore},
+    mode::FfiNetworkMode,
+    protocol::{
+        files::{FileSyncInbound, FileSyncOutbound, FileSyncSessionGuard, FILE_SYNC_ALPN},
+        history::{HistorySyncInbound, HistorySyncOutbound, HISTORY_SYNC_ALPN},
+    },
+    singleton::TOKIO_RUNTIME,
+    storage::{SecureP2pStorage, SharedSecureP2pStorage},
+    trust_store::SecureTrustedStore,
+};
 
 #[cfg(target_os = "android")]
 use std::collections::HashMap;
+
+/// URL do relay oficial do projeto, usado quando nenhum override é fornecido pelo app.
+///
+/// TODO: Fazer isso mudar junto com a versão do app android, colocar na action de release.
+#[cfg(target_os = "android")]
+const DEFAULT_RELAY_URL: &str = "https://relay.acerola-comic.com/";
 
 #[uniffi::export(with_foreign)]
 pub trait P2PCallback: Send + Sync {
@@ -29,49 +46,105 @@ pub struct FfiPeerAddr {
     pub addrs: Vec<u8>,
 }
 
+#[derive(uniffi::Record)]
+pub struct FfiConnectedPeer {
+    pub peer_id: String,
+    pub alpns: Vec<Vec<u8>>,
+    pub device_name: Option<String>,
+}
+
 #[derive(uniffi::Object)]
 pub struct P2PNode {
     node: Arc<AcerolaP2p>,
     runtime: Arc<Runtime>,
+    #[cfg(target_os = "android")]
+    trust_store: Arc<SecureTrustedStore>,
+    #[cfg(target_os = "android")]
+    storage: Arc<SecureP2pStorage>,
 }
 
 #[uniffi::export]
 #[cfg(target_os = "android")]
 impl P2PNode {
     #[uniffi::constructor]
-    pub fn new(callback: Arc<dyn P2PCallback>) -> Self {
+    pub fn new(
+        callback: Arc<dyn P2PCallback>, legacy_data_dir: Option<String>, relay_url: Option<String>,
+        device_name: String, device_version: String, secure_store: Arc<dyn SecureBlobStore>,
+        history_provider: Arc<dyn HistorySyncProvider>, file_provider: Arc<dyn FileSyncProvider>,
+    ) -> Self {
         let runtime = TOKIO_RUNTIME.clone();
 
-        let node = runtime.block_on(async {
-            let cb_clone = Arc::clone(&callback);
-
-            let emit: acerola_p2p::api::protocol::EventEmitter = Arc::new(move |event, data| {
-                cb_clone.on_event(event.to_string(), data);
-            });
-
-            let store = Arc::new(InMemoryTrustedStore::new());
-
-            let transport = IrohTransportBuilder::default()
-                .seed(*b"acerola-android-seed-v1-00000000")
-                .relay("https://relay.acerola-comic.com/");
-
-            // TODO: Fazer isso mudar junto com a versão do app android, colocar na action de release.
-            let device = DefaultDeviceInfoProvider::new("Android", "0.2.2-beta")
-                .provide()
-                .expect("Failed to read device info");
- 
-            Arc::new(
-                AcerolaP2p::builder(emit, transport, device)
-                    .guard(
-                        TofuGuard::new(Arc::clone(&store) as Arc<dyn TrustedPeerStore>).into_validator(),
-                    )
-                    .build()
-                    .await
-                    .expect("Failed to start P2P node"),
-            )
+        let cb_clone = Arc::clone(&callback);
+        let emit: acerola_p2p::api::protocol::EventEmitter = Arc::new(move |event, data| {
+            cb_clone.on_event(event.to_string(), data);
         });
 
-        Self { node, runtime }
+        // Só usado pra migrar `identity.seed`/`peers.json`/`trusted.txt`/`blocked.txt` (formato
+        // antigo, texto puro, de antes do `SecureBlobStore`) — ver `storage.rs`/`trust_store.rs`.
+        let legacy_dir = legacy_data_dir.as_deref().map(std::path::Path::new);
+
+        let trust_store = Arc::new(SecureTrustedStore::open(
+            Arc::clone(&secure_store),
+            Arc::clone(&emit),
+            legacy_dir,
+        ));
+
+        let storage = Arc::new(SecureP2pStorage::open(Arc::clone(&secure_store), legacy_dir));
+
+        let node = {
+            let trust_store = Arc::clone(&trust_store);
+            let storage_for_builder = Arc::clone(&storage);
+            let emit_for_handlers = Arc::clone(&emit);
+            let file_sync_guard = Arc::new(FileSyncSessionGuard::default());
+            runtime.block_on(async move {
+                let transport = IrohTransportBuilder::default()
+                    .relay(relay_url.as_deref().unwrap_or(DEFAULT_RELAY_URL));
+
+                let device = DefaultDeviceInfoProvider::new(device_name, device_version)
+                    .provide()
+                    .expect("Failed to read device info");
+
+                Arc::new(
+                    AcerolaP2p::builder(emit, transport, device)
+                        .guard(
+                            TofuGuard::new(trust_store as Arc<dyn acerola_p2p::api::guard::TrustedPeerStore>)
+                                .into_validator(),
+                        )
+                        .storage(SharedSecureP2pStorage(storage_for_builder))
+                        .inbound(
+                            HISTORY_SYNC_ALPN,
+                            Arc::new(HistorySyncInbound::new(
+                                Arc::clone(&emit_for_handlers),
+                                Arc::clone(&history_provider),
+                            )),
+                        )
+                        .outbound(
+                            HISTORY_SYNC_ALPN,
+                            Arc::new(HistorySyncOutbound::new(
+                                Arc::clone(&emit_for_handlers),
+                                history_provider,
+                            )),
+                        )
+                        .inbound(
+                            FILE_SYNC_ALPN,
+                            Arc::new(FileSyncInbound::new(
+                                Arc::clone(&emit_for_handlers),
+                                Arc::clone(&file_provider),
+                                Arc::clone(&file_sync_guard),
+                            )),
+                        )
+                        .outbound(
+                            FILE_SYNC_ALPN,
+                            Arc::new(FileSyncOutbound::new(emit_for_handlers, file_provider, file_sync_guard)),
+                        )
+                        .build()
+                        .await
+                        .expect("Failed to start P2P node"),
+                )
+            })
+        };
+
+        Self { node, runtime, trust_store, storage }
     }
 
     pub fn get_local_id(&self) -> String {
@@ -110,18 +183,20 @@ impl P2PNode {
 
     pub fn switch_to_local(&self) {
         let node = Arc::clone(&self.node);
+        let trust_store = Arc::clone(&self.trust_store);
         self.runtime.spawn(async move {
-            let store = Arc::new(InMemoryTrustedStore::new());
-            let guard = TofuGuard::new(store as Arc<dyn TrustedPeerStore>).into_validator();
+            let guard = TofuGuard::new(trust_store as Arc<dyn acerola_p2p::api::guard::TrustedPeerStore>)
+                .into_validator();
             let _ = node.switch_guard(guard, NetworkMode::Local).await;
         });
     }
 
     pub fn switch_to_relay(&self) {
         let node = Arc::clone(&self.node);
+        let trust_store = Arc::clone(&self.trust_store);
         self.runtime.spawn(async move {
-            let store = Arc::new(InMemoryTrustedStore::new());
-            let guard = TofuGuard::new(store as Arc<dyn TrustedPeerStore>).into_validator();
+            let guard = TofuGuard::new(trust_store as Arc<dyn acerola_p2p::api::guard::TrustedPeerStore>)
+                .into_validator();
             let _ = node.switch_guard(guard, NetworkMode::Relay).await;
         });
     }
@@ -138,6 +213,56 @@ impl P2PNode {
                 .await
                 .into_iter()
                 .map(|(peer, alpns)| (peer.id.clone(), alpns.into_iter().collect()))
+                .collect()
+        })
+    }
+
+    /// Devolve todos os peers já pareados (TOFU) em algum momento, com o último endereço
+    /// conhecido — persistem entre reinícios do app e independem de conexão ativa no momento,
+    /// já que a conexão de handshake em si dura só alguns segundos (troca PING/PONG/DeviceInfo
+    /// e fecha). É essa lista, não `get_connected_peers*`, que deve alimentar "dispositivos
+    /// pareados" na UI.
+    pub fn get_paired_peers(&self) -> Vec<FfiPeerAddr> {
+        let storage = Arc::clone(&self.storage);
+        self.runtime.block_on(async move {
+            storage
+                .load_peers()
+                .await
+                .unwrap_or_default()
+                .into_iter()
+                .map(|addr| FfiPeerAddr {
+                    id: addr.id.id,
+                    device_id: addr.id.device_id,
+                    addrs: addr.addrs,
+                })
+                .collect()
+        })
+    }
+
+    /// Desempareia um peer: some da confiança (`trust_store`) e do cache de endereços
+    /// conhecidos (`storage`, a mesma fonte de `get_paired_peers`). Não derruba uma conexão
+    /// ativa nem bloqueia o peer — se ele tentar se conectar de novo depois, passa pelo mesmo
+    /// fluxo TOFU de um dispositivo nunca visto (ver `trust_store::SecureTrustedStore::remove`).
+    pub fn remove_paired_peer(&self, id: String) {
+        let trust_store = Arc::clone(&self.trust_store);
+        let storage = Arc::clone(&self.storage);
+        self.runtime.block_on(async move {
+            trust_store.remove(&id).await;
+            let _ = storage.remove_peer(&id).await;
+        });
+    }
+
+    pub fn get_connected_peers_with_info(&self) -> Vec<FfiConnectedPeer> {
+        self.runtime.block_on(async {
+            self.node
+                .connected_peers_with_info()
+                .await
+                .into_iter()
+                .map(|(peer, alpns, device)| FfiConnectedPeer {
+                    peer_id: peer.id.clone(),
+                    alpns: alpns.into_iter().collect(),
+                    device_name: device.map(|info| info.name),
+                })
                 .collect()
         })
     }

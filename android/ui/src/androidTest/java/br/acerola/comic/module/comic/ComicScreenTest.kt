@@ -68,13 +68,13 @@ class ComicScreenTest {
     }
 
     @Test
-    fun `MangaScreen_deve_exibir_o_titulo_do_comic`() {
+    fun `ComicScreen_should_display_comic_title`() {
         val comic =
             ComicDto(
                 directory = ComicDirectoryDto(1L, "Test", "path", null, null, 0L, null, false),
                 remoteInfo =
                     ComicMetadataDto(
-                        title = "Comic de Teste",
+                        title = "Test Comic",
                         description = "Desc",
                         status = "Ongoing",
                     ),
@@ -95,6 +95,6 @@ class ComicScreenTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Comic de Teste").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Test Comic").assertIsDisplayed()
     }
 }

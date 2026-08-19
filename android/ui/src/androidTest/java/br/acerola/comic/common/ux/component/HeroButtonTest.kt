@@ -19,65 +19,65 @@ class HeroButtonTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_titulo_e_descricao_corretamente() {
+    fun should_display_title_and_description_correctly() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Acerola.Component.HeroButton(
-                    title = "Configurações",
-                    description = "Descrição do item",
+                    title = "Settings",
+                    description = "Item description",
                     icon = Icons.Default.Settings,
                 )
             }
         }
 
-        composeTestRule.onNodeWithText("Configurações").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Descrição do item").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Settings").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Item description").assertIsDisplayed()
     }
 
     @Test
-    fun deve_executar_callback_de_clique() {
+    fun should_execute_click_callback() {
         var clicked = false
         composeTestRule.setContent {
             AcerolaTheme {
                 Acerola.Component.HeroButton(
-                    title = "Item Clicável",
+                    title = "Clickable Item",
                     icon = Icons.Default.Settings,
                     onClick = { clicked = true },
                 )
             }
         }
 
-        composeTestRule.onNodeWithText("Item Clicável").performClick()
+        composeTestRule.onNodeWithText("Clickable Item").performClick()
         assertTrue(clicked)
     }
 
     @Test
-    fun deve_renderizar_slot_de_acao_lateral() {
+    fun should_render_side_action_slot() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Acerola.Component.HeroButton(
-                    title = "Item com Switch",
+                    title = "Item with Switch",
                     icon = Icons.Default.Settings,
                     action = { Switch(checked = false, onCheckedChange = null) },
                 )
             }
         }
 
-        composeTestRule.onNodeWithText("Item com Switch").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Item with Switch").assertIsDisplayed()
     }
 
     @Test
-    fun deve_exibir_conteudo_inferior_quando_configurado() {
+    fun should_display_bottom_content_when_configured() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Acerola.Component.HeroButton(
-                    title = "Item com Extra",
+                    title = "Item with Extra",
                     icon = Icons.Default.Settings,
-                    bottomContent = { Text("Conteúdo Inferior") },
+                    bottomContent = { Text("Bottom Content") },
                 )
             }
         }
 
-        composeTestRule.onNodeWithText("Conteúdo Inferior").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Bottom Content").assertIsDisplayed()
     }
 }

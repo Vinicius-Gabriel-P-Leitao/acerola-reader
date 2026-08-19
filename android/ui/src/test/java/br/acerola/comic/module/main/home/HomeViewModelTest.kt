@@ -119,7 +119,7 @@ class HomeViewModelTest {
         )
 
     @Test
-    fun `deve filtrar comics ocultos por padrao`() =
+    fun `should filter hidden comics by default`() =
         runTest {
             val comic1 =
                 mockk<ComicDirectoryDto>(relaxed = true) {
@@ -145,7 +145,7 @@ class HomeViewModelTest {
         }
 
     @Test
-    fun `deve mostrar comics ocultos quando o filtro esta ativo`() =
+    fun `should show hidden comics when filter is active`() =
         runTest {
             val comic1 =
                 mockk<ComicDirectoryDto>(relaxed = true) {
@@ -169,7 +169,7 @@ class HomeViewModelTest {
         }
 
     @Test
-    fun `deve ordenar comics por titulo`() =
+    fun `should sort comics by title`() =
         runTest {
             val comicA =
                 mockk<ComicDirectoryDto>(relaxed = true) {
@@ -196,7 +196,7 @@ class HomeViewModelTest {
         }
 
     @Test
-    fun `deve ordenar comics por titulo descendente`() =
+    fun `should sort comics by title descending`() =
         runTest {
             val comicA =
                 mockk<ComicDirectoryDto>(relaxed = true) {
@@ -223,7 +223,7 @@ class HomeViewModelTest {
         }
 
     @Test
-    fun `deve filtrar por categoria`() =
+    fun `should filter by category`() =
         runTest {
             val cat1 =
                 CategoryDto(id = 10L, name = "Cat 1", color = 0)
@@ -253,7 +253,7 @@ class HomeViewModelTest {
         }
 
     @Test
-    fun `deve alternar selecao de comics`() =
+    fun `should toggle comics selection`() =
         runTest {
             assertThat(viewModel.selectedComicIds.value).isEmpty()
 
@@ -271,7 +271,7 @@ class HomeViewModelTest {
         }
 
     @Test
-    fun `deve selecionar todos e limpar selecao`() =
+    fun `should select all and clear selection`() =
         runTest {
             viewModel.selectAllComics(listOf(1L, 2L, 3L))
             assertThat(viewModel.selectedComicIds.value).containsExactly(1L, 2L, 3L)
@@ -281,7 +281,7 @@ class HomeViewModelTest {
         }
 
     @Test
-    fun `deve ocultar quadrinhos selecionados em lote`() =
+    fun `should hide selected comics in batch`() =
         runTest {
             coEvery { hideComicUseCase(any(), any()) } returns arrow.core.Either.Right(Unit)
 
@@ -294,7 +294,7 @@ class HomeViewModelTest {
         }
 
     @Test
-    fun `deve reexibir quadrinhos selecionados em lote`() =
+    fun `should unhide selected comics in batch`() =
         runTest {
             coEvery { hideComicUseCase(any(), any()) } returns arrow.core.Either.Right(Unit)
 
@@ -307,7 +307,7 @@ class HomeViewModelTest {
         }
 
     @Test
-    fun `deve deletar quadrinhos selecionados em lote`() =
+    fun `should delete selected comics in batch`() =
         runTest {
             coEvery { deleteComicUseCase(any()) } returns arrow.core.Either.Right(Unit)
 

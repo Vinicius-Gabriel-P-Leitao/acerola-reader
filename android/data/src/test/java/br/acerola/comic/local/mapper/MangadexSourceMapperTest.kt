@@ -16,7 +16,7 @@ import org.junit.Test
 
 class MangadexSourceMapperTest {
     @Test
-    fun `MangaMangadexDto toViewDto deve extrair autor e capa das relacoes`() {
+    fun `MangaMangadexDto toViewDto should extract author and cover from relationships`() {
         val context = mockk<Context>()
         every { context.getString(R.string.description_comic_untitled) } returns "Untitled"
 

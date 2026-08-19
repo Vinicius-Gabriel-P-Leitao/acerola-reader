@@ -54,6 +54,7 @@ dependencies {
     // --- Utilities ---
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.documentfile)
+    implementation(libs.zxing.core)
 
     // --- Networking (Retrofit) ---
     implementation(libs.retrofit)

@@ -59,7 +59,7 @@ class SyncLibraryUseCaseTest {
     }
 
     @Test
-    fun `isIndexing deve ser true se qualquer gateway estiver indexando`() =
+    fun `isIndexing should be true if any gateway is indexing`() =
         runTest {
             assertFalse(useCase.isIndexing.first())
 
@@ -76,7 +76,7 @@ class SyncLibraryUseCaseTest {
         }
 
     @Test
-    fun `progress deve refletir o gateway ativo no fluxo de sincronizacao de metadados`() =
+    fun `progress should reflect active gateway in metadata synchronization flow`() =
         runTest {
             // Inicial: nada acontecendo
             assertEquals(-1, useCase.progress.first())
@@ -104,7 +104,7 @@ class SyncLibraryUseCaseTest {
         }
 
     @Test
-    fun `sync deve chamar incrementalScan`() =
+    fun `sync should call incrementalScan`() =
         runTest {
             val uri = mockk<Uri>()
             coEvery { scanGateway.incrementalScan(baseUri = uri) } returns Either.Right(value = Unit)
@@ -116,7 +116,7 @@ class SyncLibraryUseCaseTest {
         }
 
     @Test
-    fun `rescan deve chamar refreshLibrary`() =
+    fun `rescan should call refreshLibrary`() =
         runTest {
             val uri = mockk<Uri>()
             coEvery { scanGateway.refreshLibrary(baseUri = uri) } returns Either.Right(value = Unit)
@@ -128,7 +128,7 @@ class SyncLibraryUseCaseTest {
         }
 
     @Test
-    fun `deepRescan deve chamar rebuildLibrary`() =
+    fun `deepRescan should call rebuildLibrary`() =
         runTest {
             val uri = mockk<Uri>()
             coEvery { rebuildGateway.rebuildLibrary(baseUri = uri) } returns Either.Right(value = Unit)

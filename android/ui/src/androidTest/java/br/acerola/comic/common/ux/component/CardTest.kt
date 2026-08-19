@@ -13,13 +13,13 @@ class CardTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_titulo_e_conteudo() {
+    fun should_display_title_and_content() {
         composeTestRule.setContent {
-            Acerola.Component.Card(title = "Teste") {
-                Text("Corpo")
+            Acerola.Component.Card(title = "Test") {
+                Text("Body")
             }
         }
-        composeTestRule.onNodeWithText("Teste").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Corpo").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Test").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Body").assertIsDisplayed()
     }
 }

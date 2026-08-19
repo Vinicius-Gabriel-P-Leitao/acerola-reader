@@ -43,10 +43,10 @@ class GlobalProgressViewModelTest {
         return GlobalProgressViewModel(workManager)
     }
 
-    // isIndexing tests
+    // Testes de isIndexing
 
     @Test
-    fun `isIndexing deve ser true quando library sync está RUNNING`() =
+    fun `isIndexing should be true when library sync is RUNNING`() =
         runTest {
             val vm = viewModel(library = listOf(workInfo(WorkInfo.State.RUNNING)))
 
@@ -54,7 +54,7 @@ class GlobalProgressViewModelTest {
         }
 
     @Test
-    fun `isIndexing deve ser true quando metadata sync está RUNNING`() =
+    fun `isIndexing should be true when metadata sync is RUNNING`() =
         runTest {
             val vm = viewModel(metadata = listOf(workInfo(WorkInfo.State.RUNNING)))
 
@@ -62,7 +62,7 @@ class GlobalProgressViewModelTest {
         }
 
     @Test
-    fun `isIndexing deve ser true quando trabalho está ENQUEUED`() =
+    fun `isIndexing should be true when work is ENQUEUED`() =
         runTest {
             val vm = viewModel(library = listOf(workInfo(WorkInfo.State.ENQUEUED)))
 
@@ -70,7 +70,7 @@ class GlobalProgressViewModelTest {
         }
 
     @Test
-    fun `isIndexing deve ser true quando trabalho está BLOCKED`() =
+    fun `isIndexing should be true when work is BLOCKED`() =
         runTest {
             val vm = viewModel(library = listOf(workInfo(WorkInfo.State.BLOCKED)))
 
@@ -78,7 +78,7 @@ class GlobalProgressViewModelTest {
         }
 
     @Test
-    fun `isIndexing deve ser false quando ambas as listas estão vazias`() =
+    fun `isIndexing should be false when both lists are empty`() =
         runTest {
             val vm = viewModel()
 
@@ -86,7 +86,7 @@ class GlobalProgressViewModelTest {
         }
 
     @Test
-    fun `isIndexing deve ser false quando todos os trabalhos foram concluídos com SUCCEEDED`() =
+    fun `isIndexing should be false when all jobs are completed with SUCCEEDED`() =
         runTest {
             val vm =
                 viewModel(
@@ -98,7 +98,7 @@ class GlobalProgressViewModelTest {
         }
 
     @Test
-    fun `isIndexing deve ser false quando trabalhos foram FAILED ou CANCELLED`() =
+    fun `isIndexing should be false when jobs are FAILED or CANCELLED`() =
         runTest {
             val vm =
                 viewModel(
@@ -110,7 +110,7 @@ class GlobalProgressViewModelTest {
         }
 
     @Test
-    fun `isIndexing deve ser true quando ao menos um trabalho não está finalizado entre vários`() =
+    fun `isIndexing should be true when at least one job is not finished among multiple`() =
         runTest {
             val vm =
                 viewModel(
@@ -120,10 +120,10 @@ class GlobalProgressViewModelTest {
             assertTrue(vm.isIndexing.first())
         }
 
-    // progress tests
+    // Testes de progress
 
     @Test
-    fun `progress deve retornar null quando não há trabalho RUNNING`() =
+    fun `progress should return null when there is no RUNNING work`() =
         runTest {
             val vm = viewModel()
 
@@ -131,7 +131,7 @@ class GlobalProgressViewModelTest {
         }
 
     @Test
-    fun `progress deve retornar null quando trabalho está ENQUEUED sem progresso`() =
+    fun `progress should return null when work is ENQUEUED without progress`() =
         runTest {
             val vm = viewModel(library = listOf(workInfo(WorkInfo.State.ENQUEUED)))
 
@@ -139,7 +139,7 @@ class GlobalProgressViewModelTest {
         }
 
     @Test
-    fun `progress deve retornar null quando trabalho está RUNNING mas progresso é -1`() =
+    fun `progress should return null when work is RUNNING but progress is -1`() =
         runTest {
             val progressData = workDataOf(WorkerContract.KEY_PROGRESS to -1)
             val vm = viewModel(library = listOf(workInfo(WorkInfo.State.RUNNING, progressData)))
@@ -148,7 +148,7 @@ class GlobalProgressViewModelTest {
         }
 
     @Test
-    fun `progress deve retornar null quando trabalho está RUNNING sem chave de progresso`() =
+    fun `progress should return null when work is RUNNING without progress key`() =
         runTest {
             val vm = viewModel(library = listOf(workInfo(WorkInfo.State.RUNNING, Data.EMPTY)))
 
@@ -156,7 +156,7 @@ class GlobalProgressViewModelTest {
         }
 
     @Test
-    fun `progress deve retornar 0_5f quando progresso é 50`() =
+    fun `progress should return 0_5f when progress is 50`() =
         runTest {
             val progressData = workDataOf(WorkerContract.KEY_PROGRESS to 50)
             val vm = viewModel(library = listOf(workInfo(WorkInfo.State.RUNNING, progressData)))
@@ -165,7 +165,7 @@ class GlobalProgressViewModelTest {
         }
 
     @Test
-    fun `progress deve retornar 1_0f quando progresso é 100`() =
+    fun `progress should return 1_0f when progress is 100`() =
         runTest {
             val progressData = workDataOf(WorkerContract.KEY_PROGRESS to 100)
             val vm = viewModel(library = listOf(workInfo(WorkInfo.State.RUNNING, progressData)))
@@ -174,7 +174,7 @@ class GlobalProgressViewModelTest {
         }
 
     @Test
-    fun `progress deve retornar 0_0f quando progresso é 0`() =
+    fun `progress should return 0_0f when progress is 0`() =
         runTest {
             val progressData = workDataOf(WorkerContract.KEY_PROGRESS to 0)
             val vm = viewModel(library = listOf(workInfo(WorkInfo.State.RUNNING, progressData)))
@@ -183,7 +183,7 @@ class GlobalProgressViewModelTest {
         }
 
     @Test
-    fun `progress deve usar metadata sync quando library sync não está RUNNING`() =
+    fun `progress should use metadata sync when library sync is not RUNNING`() =
         runTest {
             val progressData = workDataOf(WorkerContract.KEY_PROGRESS to 75)
             val vm =
@@ -196,7 +196,7 @@ class GlobalProgressViewModelTest {
         }
 
     @Test
-    fun `progress deve priorizar o primeiro trabalho RUNNING encontrado`() =
+    fun `progress should prioritize the first RUNNING work found`() =
         runTest {
             val libraryProgress = workDataOf(WorkerContract.KEY_PROGRESS to 30)
             val metadataProgress = workDataOf(WorkerContract.KEY_PROGRESS to 80)

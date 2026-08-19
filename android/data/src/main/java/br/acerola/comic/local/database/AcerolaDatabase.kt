@@ -15,6 +15,7 @@ import br.acerola.comic.local.dao.metadata.relationship.AuthorDao
 import br.acerola.comic.local.dao.metadata.relationship.GenreDao
 import br.acerola.comic.local.dao.metadata.source.AnilistSourceDao
 import br.acerola.comic.local.dao.metadata.source.MangadexSourceDao
+import br.acerola.comic.local.dao.sync.SyncHistoryLogDao
 import br.acerola.comic.local.dao.view.ComicSummaryDao
 import br.acerola.comic.local.entity.archive.ArchiveTemplate
 import br.acerola.comic.local.entity.archive.ChapterArchive
@@ -29,6 +30,7 @@ import br.acerola.comic.local.entity.metadata.relationship.Author
 import br.acerola.comic.local.entity.metadata.relationship.Genre
 import br.acerola.comic.local.entity.metadata.source.AnilistSource
 import br.acerola.comic.local.entity.metadata.source.MangadexSource
+import br.acerola.comic.local.entity.sync.SyncHistoryLog
 import br.acerola.comic.local.entity.view.ComicSummaryView
 
 @Database(
@@ -46,12 +48,13 @@ import br.acerola.comic.local.entity.view.ComicSummaryView
         AnilistSource::class,
         Category::class,
         ComicCategory::class,
+        SyncHistoryLog::class,
     ],
     views = [
         ComicSummaryView::class,
     ],
     exportSchema = true,
-    version = 4,
+    version = 5,
 )
 @TypeConverters(AcerolaTypeConverters::class)
 abstract class AcerolaDatabase : RoomDatabase() {
@@ -78,4 +81,6 @@ abstract class AcerolaDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
 
     abstract fun comicSummaryDao(): ComicSummaryDao
+
+    abstract fun syncHistoryLogDao(): SyncHistoryLogDao
 }

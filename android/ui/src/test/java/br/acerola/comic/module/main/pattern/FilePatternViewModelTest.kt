@@ -46,7 +46,7 @@ class FilePatternViewModelTest {
     }
 
     @Test
-    fun `estado inicial tem lista de templates vazia`() =
+    fun `initial state has empty templates list`() =
         runTest {
             viewModel.uiState.test {
                 assertThat(awaitItem().templates).isEmpty()
@@ -55,7 +55,7 @@ class FilePatternViewModelTest {
         }
 
     @Test
-    fun `estado e atualizado quando use case emite novos templates`() =
+    fun `state is updated when use case emits new templates`() =
         runTest {
             val template = ArchiveTemplateDto(id = 1L, label = "Vol. Cap.", pattern = "{chapter}", type = SortType.CHAPTER)
 
@@ -68,7 +68,7 @@ class FilePatternViewModelTest {
         }
 
     @Test
-    fun `AddTemplate delega para use case com label e pattern corretos`() =
+    fun `AddTemplate delegates to use case with correct label and pattern`() =
         runTest {
             viewModel.onAction(FilePatternAction.AddTemplate("Vol.", "{chapter}", SortType.CHAPTER))
 
@@ -76,7 +76,7 @@ class FilePatternViewModelTest {
         }
 
     @Test
-    fun `DeleteTemplate delega para use case com id correto`() =
+    fun `DeleteTemplate delegates to use case with correct id`() =
         runTest {
             viewModel.onAction(FilePatternAction.DeleteTemplate(42L))
 
@@ -84,7 +84,7 @@ class FilePatternViewModelTest {
         }
 
     @Test
-    fun `EditTemplate delega para use case com id, label e pattern corretos`() =
+    fun `EditTemplate delegates to use case with correct id, label and pattern`() =
         runTest {
             coEvery { updateTemplate(1L, "Novo Label", "{chapter}", SortType.CHAPTER) } returns Either.Right(Unit)
 
@@ -94,7 +94,7 @@ class FilePatternViewModelTest {
         }
 
     @Test
-    fun `EditTemplate emite evento de erro quando use case retorna Left`() =
+    fun `EditTemplate emits error event when use case returns Left`() =
         runTest {
             val error = TemplateError.Duplicate
             coEvery { updateTemplate(any(), any(), any(), any()) } returns Either.Left(error)
@@ -108,7 +108,7 @@ class FilePatternViewModelTest {
         }
 
     @Test
-    fun `AddTemplate emite evento de erro quando use case retorna Left`() =
+    fun `AddTemplate emits error event when use case returns Left`() =
         runTest {
             coEvery { addTemplate(any(), any(), any()) } returns Either.Left(TemplateError.Duplicate)
 

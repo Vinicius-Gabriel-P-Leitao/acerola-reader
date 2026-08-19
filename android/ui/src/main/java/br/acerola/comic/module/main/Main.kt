@@ -38,6 +38,12 @@ object Main {
         object Template
     }
 
+    object Sync {
+        object Component
+
+        object Template
+    }
+
     object Tutorial {
         object Component
 

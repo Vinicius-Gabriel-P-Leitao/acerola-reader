@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- O P2PNode (iroh/QUIC) precisa disso pra abrir sockets. O app principal já herda
+         essas permissões via merge de outras dependências de rede, mas a APK de
+         `androidTest` deste módulo é separada e só herda o manifest do próprio :native —
+         sem isso aqui, criar um P2PNode num teste instrumentado falha com
+         StartupFailed("port unavailable") (bind de socket negado, não porta ocupada). -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
 </manifest>

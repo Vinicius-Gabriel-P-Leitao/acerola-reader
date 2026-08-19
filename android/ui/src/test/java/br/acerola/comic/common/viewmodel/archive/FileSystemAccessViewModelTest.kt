@@ -50,7 +50,7 @@ class FileSystemAccessViewModelTest {
         coEvery { manager.loadFolderUri() } returns Unit
         every { manager.folderUri } returns null
 
-        // Mock DocumentFile to avoid issues with fromTreeUri
+        // Mocka DocumentFile para evitar problemas com fromTreeUri
         every { DocumentFile.fromTreeUri(any(), any()) } returns null
 
         viewModel = FileSystemAccessViewModel(manager, context)
@@ -62,7 +62,7 @@ class FileSystemAccessViewModelTest {
     }
 
     @Test
-    fun `deve salvar uri da pasta e marcar tutorial como visto`() =
+    fun `should save folder uri and mark tutorial as seen`() =
         runTest {
             val uri = mockk<Uri>()
             coEvery { manager.saveFolderUri(uri) } returns Either.Right(Unit)
@@ -77,7 +77,7 @@ class FileSystemAccessViewModelTest {
         }
 
     @Test
-    fun `deve carregar pasta salva ao inicializar`() =
+    fun `should load saved folder on initialize`() =
         runTest {
             val uri = mockk<Uri>()
             every { manager.folderUri } returns uri

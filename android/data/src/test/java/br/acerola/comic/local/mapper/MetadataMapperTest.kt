@@ -9,7 +9,7 @@ import org.junit.Test
 
 class MetadataMapperTest {
     @Test
-    fun `MetadataRelations toViewDto deve mapear hierarquia completa`() {
+    fun `MetadataRelations toViewDto should map full hierarchy`() {
         val comic = MetadataFixtures.createMangaRemoteInfo(title = "Berserk")
         val author = MetadataFixtures.createAuthor(name = "Kentaro Miura")
         val genre = MetadataFixtures.createGenre(genre = "Seinen")
@@ -30,7 +30,7 @@ class MetadataMapperTest {
     }
 
     @Test
-    fun `Author toViewDto e AuthorDto toEntity devem ser simétricos`() {
+    fun `Author toViewDto and AuthorDto toEntity should be symmetric`() {
         val entity = MetadataFixtures.createAuthor(name = "Oda", type = TypeAuthor.AUTHOR)
 
         val dto = entity.toViewDto()
@@ -44,7 +44,7 @@ class MetadataMapperTest {
     }
 
     @Test
-    fun `MangaMetadataDto toEntity deve mapear campos base`() {
+    fun `MangaMetadataDto toEntity should map base fields`() {
         val dto = MetadataFixtures.createMangaRemoteInfoDto(title = "Test", year = 2024)
 
         val entity = dto.toEntity()

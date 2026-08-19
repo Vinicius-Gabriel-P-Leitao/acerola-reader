@@ -13,7 +13,7 @@ class BottomControlsTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `ReaderBottomControls_deve_exibir_o_número_da_página_atual_corretamente`() {
+    fun `ReaderBottomControls_should_display_current_page_number_correctly`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Reader.Template.BottomControls(
@@ -27,12 +27,12 @@ class BottomControlsTest {
             }
         }
 
-        // Verifica se a string \"10 / 50\" está presente
+        // Verifica se a string "10 / 50" está presente
         composeTestRule.onNodeWithText("10 / 50").assertIsDisplayed()
     }
 
     @Test
-    fun `botão_de_próximo_capítulo_deve_aparecer_apenas_quando_capítulo_estiver_lido_e_houver_próximo`() {
+    fun `next_chapter_button_should_appear_only_when_chapter_is_read_and_has_next`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Reader.Template.BottomControls(
@@ -52,7 +52,7 @@ class BottomControlsTest {
     }
 
     @Test
-    fun `botão_de_capítulo_anterior_deve_aparecer_quando_houver_anterior`() {
+    fun `previous_chapter_button_should_appear_when_has_previous`() {
         composeTestRule.setContent {
             AcerolaTheme {
                 Reader.Template.BottomControls(

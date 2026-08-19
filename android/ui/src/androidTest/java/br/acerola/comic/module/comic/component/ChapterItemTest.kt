@@ -14,7 +14,7 @@ class ChapterItemTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `ChapterItem_deve_exibir_o_numero_do_capitulo_e_nome_do_arquivo`() {
+    fun `ChapterItem_should_display_chapter_number_and_file_name`() {
         val archive = ChapterFileDto(1L, "capitulo_01.cbz", "/path", "1")
 
         composeTestRule.setContent {
@@ -31,7 +31,7 @@ class ChapterItemTest {
     }
 
     @Test
-    fun `ChapterItem_deve_exibir_indicador_de_lido_quando_status_for_verdadeiro`() {
+    fun `ChapterItem_should_display_read_indicator_when_status_is_true`() {
         val archive = ChapterFileDto(1L, "capitulo_01.cbz", "/path", "1")
 
         composeTestRule.setContent {

@@ -13,7 +13,7 @@ class ZoomablePageImageTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_renderizar_com_bitmap_fake() {
+    fun should_render_with_fake_bitmap() {
         composeTestRule.setContent {
             Reader.Gesture.ZoomablePageImage(
                 comicId = 1L,
@@ -27,7 +27,7 @@ class ZoomablePageImageTest {
     }
 
     @Test
-    fun deve_identificar_clique_no_centro_da_imagem() {
+    fun should_identify_click_at_image_center() {
         var tappedArea: br.acerola.comic.module.reader.state.TapArea? = null
         composeTestRule.setContent {
             Reader.Gesture.ZoomablePageImage(

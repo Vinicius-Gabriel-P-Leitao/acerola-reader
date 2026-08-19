@@ -21,7 +21,7 @@ class ChapterSectionPaginationTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_carregar_paginas_do_volume_uma_por_vez_ao_expandir() {
+    fun should_load_volume_pages_one_by_one_when_expanding() {
         val calls = mutableListOf<Int>()
         val volume1 = VolumeArchiveDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
 
@@ -69,11 +69,11 @@ class ChapterSectionPaginationTest {
 
         composeTestRule.waitForIdle()
 
-        assertTrue("Não deveria carregar a próxima página se o rodapé do volume não estiver visível. Chamadas: ${calls.size}", calls.isEmpty())
+        assertTrue("Should not load next page if volume footer is not visible. Calls: ${calls.size}", calls.isEmpty())
     }
 
     @Test
-    fun deve_detectar_busca_em_cascata_no_modo_volume() {
+    fun should_detect_cascading_search_in_volume_mode() {
         val calls = mutableListOf<Int>()
         val volume1 = VolumeArchiveDto(id = 10L, name = "Vol. 1", volumeSort = "1", isSpecial = false)
 

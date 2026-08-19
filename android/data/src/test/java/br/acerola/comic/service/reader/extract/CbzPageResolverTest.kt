@@ -21,7 +21,7 @@ class CbzPageResolverTest {
     }
 
     @Test
-    fun open_deve_falhar_se_arquivo_nao_existir() {
+    fun open_should_fail_if_file_does_not_exist() {
         val chapter = ChapterFileDto(1, "ch", "/non/existent/file.cbz", "1")
 
         val result = service.open(chapter)
@@ -36,7 +36,7 @@ class CbzPageResolverTest {
     // ou mantê-los com testes básicos de erro no Unit Test.
 
     @Test
-    fun close_deve_limpar_referencias_e_arquivos_temporarios() {
+    fun close_should_clean_references_and_temporary_files() {
         service.close()
         runTest {
             assertEquals(0, service.pageCount())

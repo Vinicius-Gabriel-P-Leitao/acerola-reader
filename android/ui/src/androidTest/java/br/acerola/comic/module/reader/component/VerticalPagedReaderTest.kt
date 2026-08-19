@@ -11,7 +11,7 @@ class VerticalPagedReaderTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `deve_renderizar_vertical_reader_sem_erros`() {
+    fun `should_render_vertical_reader_without_errors`() {
         composeTestRule.setContent {
             val pagerState = rememberPagerState(pageCount = { 10 })
             Reader.Component.VerticalPagedReader(

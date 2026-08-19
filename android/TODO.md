@@ -110,7 +110,7 @@
 
 ## 🚧 Pendente
 
-- [ ] **Marcar quadrinho / capítulo como concluído manualmente** - Não existe ação, use case ou campo `completed` no banco. Atualmente o estado "concluído" só é inferido quando `lastPage >= pageCount` na leitura.
+- [x] **Marcar quadrinho / capítulo como concluído manualmente** - Não existe ação, use case ou campo `completed` no banco. Atualmente o estado "concluído" só é inferido quando `lastPage >= pageCount` na leitura.
 - [x] **Seleção múltipla de quadrinhos e capítulos (multi-select)** - Nenhuma tela tem `selectedItems: Set<Long>` no UiState. Long press abre o 
   `ComicActionsSheet` para um único item.
 - [x] **Ações em lote sobre seleção múltipla** - Depende do multi-select acima. Sem estado de seleção, não há como aplicar delete/hide/bookmark em 

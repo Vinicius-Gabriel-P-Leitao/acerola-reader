@@ -18,7 +18,7 @@ class NavigationBarsTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `BottomBar_deve_exibir_destinos_principais`() {
+    fun `BottomBar_should_display_main_destinations`() {
         composeTestRule.setContent {
             val navController = rememberNavController()
             val hazeState = remember { HazeState() }
@@ -39,18 +39,18 @@ class NavigationBarsTest {
     }
 
     @Test
-    fun `TopBar_deve_exibir_o_titulo_informado`() {
+    fun `TopBar_should_display_given_title`() {
         composeTestRule.setContent {
             AcerolaTheme {
-                Acerola.Component.TopBar(title = "Teste Titulo")
+                Acerola.Component.TopBar(title = "Test Title")
             }
         }
 
-        composeTestRule.onNodeWithText("Teste Titulo").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Test Title").assertIsDisplayed()
     }
 
     @Test
-    fun `SideBar_deve_renderizar_em_modo_paisagem`() {
+    fun `SideBar_should_render_in_landscape_mode`() {
         composeTestRule.setContent {
             val navController = rememberNavController()
 

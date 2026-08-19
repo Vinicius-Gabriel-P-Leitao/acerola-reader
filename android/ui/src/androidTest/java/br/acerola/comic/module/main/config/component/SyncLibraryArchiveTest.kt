@@ -11,7 +11,7 @@ class SyncLibraryArchiveTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_sincronizacao_e_botoes() {
+    fun should_display_sync_and_buttons() {
         composeTestRule.setContent {
             Main.Config.Component.SyncLibraryArchive(
                 onDeepScan = {},

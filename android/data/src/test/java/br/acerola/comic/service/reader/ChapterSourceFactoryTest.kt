@@ -28,7 +28,7 @@ class ChapterSourceFactoryTest {
     }
 
     @Test
-    fun create_deve_retornar_CBZ_quando_extensao_for_cbz() {
+    fun create_should_return_CBZ_when_extension_is_cbz() {
         val chapter = ChapterFileDto(1, "ch", "file.cbz", "1")
         every { cbzService.open(chapter) } returns Either.Right(cbzService)
 
@@ -39,7 +39,7 @@ class ChapterSourceFactoryTest {
     }
 
     @Test
-    fun create_deve_retornar_CBR_quando_extensao_for_cbr() {
+    fun create_should_return_CBR_when_extension_is_cbr() {
         val chapter = ChapterFileDto(1, "ch", "file.cbr", "1")
         every { cbrService.open(chapter) } returns Either.Right(cbrService)
 
@@ -50,7 +50,7 @@ class ChapterSourceFactoryTest {
     }
 
     @Test
-    fun create_deve_retornar_erro_para_formato_nao_suportado() {
+    fun create_should_return_error_for_unsupported_format() {
         val chapter = ChapterFileDto(1, "ch", "file.pdf", "1")
 
         val result = factory.create(chapter)

@@ -156,6 +156,12 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
         chapters: List<String>,
     ): Flow<List<ChapterArchive>>
 
+    @Query("SELECT * FROM chapter_archive WHERE comic_directory_fk = :folderId AND chapter = :chapter")
+    suspend fun getChapterByDirectoryAndChapter(
+        folderId: Long,
+        chapter: String,
+    ): ChapterArchive?
+
     @Query("SELECT comic_directory_fk, COUNT(*) as count FROM chapter_archive GROUP BY comic_directory_fk")
     fun getChapterCountsByDirectory(): Flow<List<MangaChapterCount>>
 }

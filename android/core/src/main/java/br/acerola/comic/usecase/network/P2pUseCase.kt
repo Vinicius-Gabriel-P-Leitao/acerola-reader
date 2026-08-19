@@ -2,6 +2,7 @@ package br.acerola.comic.usecase.network
 
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
+import br.acerola.comic.service.ConnectedPeerInfo
 import br.acerola.comic.service.NetworkMode
 import br.acerola.comic.service.P2pService
 import br.acerola.comic.service.PeerAddress
@@ -46,6 +47,15 @@ class P2pUseCase
         fun getMode(): NetworkMode = p2pService.getMode()
 
         fun getConnectedPeers(): Map<String, List<ByteArray>> = p2pService.getConnectedPeers()
+
+        fun getConnectedPeersWithInfo(): List<ConnectedPeerInfo> = p2pService.getConnectedPeersWithInfo()
+
+        fun getPairedPeers(): List<PeerAddress> = p2pService.getPairedPeers()
+
+        fun removePairedPeer(id: String) {
+            AcerolaLogger.i("P2pUseCase", "Removing paired peer: $id", LogSource.NETWORK)
+            p2pService.removePairedPeer(id)
+        }
 
         fun shutdown() {
             p2pService.shutdown()

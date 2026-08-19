@@ -108,7 +108,7 @@ class ChapterArchiveEngineVolumeTest {
     }
 
     @Test
-    fun `refreshComicChapters deve converter PDF para CBZ dentro de subpasta de volume e atualizar`() =
+    fun `refreshComicChapters should convert PDF to CBZ inside volume subfolder and update`() =
         runTest {
             val comicId = 1L
             val validPath = "content://com.android.externalstorage.documents/tree/primary%3Aroot"
@@ -137,7 +137,7 @@ class ChapterArchiveEngineVolumeTest {
             coEvery { directoryDao.getDirectoryById(any()) } returns comicDir
             coEvery { volumeSyncService.sync(any(), any(), any(), any(), any()) } returns mapOf("vol_uri" to 101L)
 
-            // Mocking the check for PDF conversion
+            // Mockando a verificação para conversão de PDF
             val volDoc = mockk<DocumentFile>(relaxed = true)
             every { volDoc.exists() } returns true
             every { folderDoc.findFile(any()) } returns volDoc

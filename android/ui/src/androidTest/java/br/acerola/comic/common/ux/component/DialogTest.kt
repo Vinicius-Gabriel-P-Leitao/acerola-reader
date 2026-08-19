@@ -15,36 +15,36 @@ class DialogTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_dialog_com_titulo_botoes_e_conteudo() {
+    fun should_display_dialog_with_title_buttons_and_content() {
         composeTestRule.setContent {
             Acerola.Component.Dialog(
                 show = true,
                 onDismiss = {},
-                title = "Titulo Dialog",
+                title = "Dialog Title",
                 confirmButtonContent = {
                     Acerola.Component.DialogButton(
-                        text = "Confirmar",
+                        text = "Confirm",
                         onClick = {},
                     )
                 },
                 dismissButtonContent = {
                     Acerola.Component.DialogButton(
-                        text = "Cancelar",
+                        text = "Cancel",
                         onClick = {},
                     )
                 },
             ) {
-                Text("Conteudo Dialog")
+                Text("Dialog Content")
             }
         }
-        composeTestRule.onNodeWithText("Titulo Dialog").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Confirmar").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Cancelar").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Conteudo Dialog").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Dialog Title").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Confirm").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Cancel").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Dialog Content").assertIsDisplayed()
     }
 
     @Test
-    fun deve_exibir_dialog_de_descarte_conforme_especificacao() {
+    fun should_display_discard_dialog_according_to_specification() {
         composeTestRule.setContent {
             Acerola.Component.Dialog(
                 show = true,
@@ -78,22 +78,22 @@ class DialogTest {
     }
 
     @Test
-    fun deve_exibir_dialog_de_novo_pattern_com_descricao_correta() {
+    fun should_display_new_pattern_dialog_with_correct_description() {
         composeTestRule.setContent {
             Acerola.Component.Dialog(
                 show = true,
                 onDismiss = {},
-                title = "Novo Padrão",
+                title = "New Pattern",
                 confirmButtonContent = {
                     Acerola.Component.DialogButton(
-                        text = "Adicionar",
+                        text = "Add",
                         onClick = {},
                         fontWeight = FontWeight.Bold,
                     )
                 },
                 dismissButtonContent = {
                     Acerola.Component.DialogButton(
-                        text = "Cancelar",
+                        text = "Cancel",
                         onClick = {},
                     )
                 },
@@ -104,12 +104,12 @@ class DialogTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Novo Padrão").assertIsDisplayed()
+        composeTestRule.onNodeWithText("New Pattern").assertIsDisplayed()
         composeTestRule
             .onNodeWithText(
                 "{volume} representa o número do volume (usado para organização em pastas). {chapter} é o número do capítulo (obrigatório). {decimal} indica variação decimal do capítulo (ex: .5). Utilize * como wildcard para ignorar qualquer trecho de texto.",
             ).assertIsDisplayed()
-        composeTestRule.onNodeWithText("Adicionar").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Cancelar").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Add").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Cancel").assertIsDisplayed()
     }
 }

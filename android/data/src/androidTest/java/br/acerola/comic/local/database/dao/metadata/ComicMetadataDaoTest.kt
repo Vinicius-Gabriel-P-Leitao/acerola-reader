@@ -45,9 +45,9 @@ class ComicMetadataDaoTest {
     }
 
     @Test
-    fun getAllComicsWithRelations_DeveRetornarMangaComAutoresGeneros() =
+    fun getAllComicsWithRelations_ShouldReturnComicWithAuthorsGenres() =
         runBlocking {
-            // Arrange
+            // Preparação
             val comic = MetadataFixtures.createMangaRemoteInfo(title = "Comic Test")
             val comicId = comicDao.insert(comic)
 
@@ -57,10 +57,10 @@ class ComicMetadataDaoTest {
             authorDao.insert(author)
             genreDao.insert(genre)
 
-            // Act
+            // Ação
             val result = comicDao.observeAllComicsWithRelations().first()
 
-            // Assert
+            // Verificação
             assertTrue(result.isNotEmpty())
             val relations = result[0]
 
@@ -74,9 +74,9 @@ class ComicMetadataDaoTest {
         }
 
     @Test
-    fun deleteManga_DeveRemoverRelacoesEmCascata() =
+    fun deleteManga_ShouldRemoveRelationsInCascade() =
         runBlocking {
-            // Arrange
+            // Preparação
             val comic = MetadataFixtures.createMangaRemoteInfo()
             val comicId = comicDao.insert(comic)
 
@@ -86,10 +86,10 @@ class ComicMetadataDaoTest {
             authorDao.insert(author)
             genreDao.insert(genre)
 
-            // Act
+            // Ação
             comicDao.delete(comic.copy(id = comicId))
 
-            // Assert
+            // Verificação
             val result = comicDao.observeAllComicsWithRelations().first()
             assertTrue(result.isEmpty())
         }

@@ -82,6 +82,7 @@ dependencies {
     // --- File & Utilities ---
     implementation(libs.junrar)
     implementation(libs.androidx.documentfile)
+    implementation(libs.androidx.security.crypto)
 
     // --- Quality code ---
     implementation(libs.arrow.core)

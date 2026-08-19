@@ -16,7 +16,7 @@ class ChapterSortSheetTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_folha_de_ordenacao_de_capitulos() {
+    fun should_display_chapter_sort_sheet() {
         val sortSettings = ChapterSortPreferenceData(ChapterSortType.NUMBER, SortDirection.ASCENDING)
 
         composeTestRule.setContent {

@@ -11,8 +11,8 @@ import org.junit.Test
 
 class MangadexSourceInterceptorTest {
     @Test
-    fun intercept_deve_adicionar_User_Agent_customizado() {
-        // Arrange
+    fun intercept_should_add_custom_User_Agent() {
+        // Preparação
         val interceptor = MangadexInterceptor()
         val chain = mockk<Interceptor.Chain>()
         val request =
@@ -26,14 +26,14 @@ class MangadexSourceInterceptorTest {
         every { chain.request() } returns request
         every { chain.proceed(capture(requestSlot)) } returns mockk<Response>()
 
-        // Act
+        // Execução
         interceptor.intercept(chain)
 
-        // Assert
+        // Verificação
         val capturedRequest = requestSlot.captured
         val userAgent = capturedRequest.header("User-Agent")
 
         assert(userAgent != null)
-        assertTrue("User-Agent deve conter AcerolaMangaApp", userAgent!!.contains("AcerolaMangaApp"))
+        assertTrue("User-Agent should contain AcerolaMangaApp", userAgent!!.contains("AcerolaMangaApp"))
     }
 }

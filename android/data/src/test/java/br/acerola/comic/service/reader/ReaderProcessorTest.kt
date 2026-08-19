@@ -25,14 +25,14 @@ class ReaderProcessorTest {
     }
 
     @Test
-    fun `dado um capitulo, quando abrir o capitulo, deve limpar o cache e inicializar o source`() {
-        // Arrange (Organizar)
+    fun `given a chapter, when opening the chapter, should clear cache and initialize source`() {
+        // Preparação (Organizar)
         val chapter = ComicFixtures.createChapterFileDto()
 
-        // Act (Agir)
+        // Ação (Agir)
         val result = repository.openChapter(chapter)
 
-        // Assert (Aferir)
+        // Verificação (Aferir)
         assertThat(result.isRight()).isTrue()
         verify { bitmapCache.clear() }
     }

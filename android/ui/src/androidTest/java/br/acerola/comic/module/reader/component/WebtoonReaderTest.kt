@@ -14,7 +14,7 @@ class WebtoonReaderTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_solicitar_paginas_no_modo_webtoon() {
+    fun should_request_pages_in_webtoon_mode() {
         var requestedIndices = mutableSetOf<Int>()
         composeTestRule.setContent {
             val listState = rememberLazyListState()
@@ -34,7 +34,7 @@ class WebtoonReaderTest {
     }
 
     @Test
-    fun deve_alternar_UI_ao_clicar_na_imagem() {
+    fun should_toggle_UI_when_clicking_image() {
         var uiToggled = false
         composeTestRule.setContent {
             Reader.Component.WebtoonReader(

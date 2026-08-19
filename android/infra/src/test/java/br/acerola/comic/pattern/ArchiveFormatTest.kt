@@ -7,7 +7,7 @@ import org.junit.Test
 
 class ArchiveFormatTest {
     @Test
-    fun isSupportedDeveIdentificarCbzCorretamente() {
+    fun isSupportedShouldIdentifyCbzCorrectly() {
         assertTrue(ArchiveFormat.isSupported("cbz"))
         assertTrue(ArchiveFormat.isSupported(".cbz"))
         assertTrue(ArchiveFormat.isSupported("file.cbz"))
@@ -17,11 +17,11 @@ class ArchiveFormatTest {
     }
 
     @Test
-    fun isIndexableDeveRetornarTrueParaCbz() {
+    fun isIndexableShouldReturnTrueForCbz() {
         assertTrue(ArchiveFormat.isIndexable("cbz"))
         assertTrue(ArchiveFormat.isIndexable("file.cbz"))
 
-        // PDF is indexable = false in enum
+        // PDF é indexable = false no enum
         assertFalse(ArchiveFormat.isIndexable("pdf"))
     }
 }

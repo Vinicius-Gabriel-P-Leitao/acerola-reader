@@ -7,6 +7,7 @@ import br.acerola.comic.local.entity.archive.ChapterArchive
 import br.acerola.comic.local.entity.archive.ComicDirectory
 import br.acerola.comic.local.entity.archive.VolumeArchive
 import br.acerola.comic.util.file.FastFileMetadata
+import br.acerola.comic.util.file.fileStem
 
 fun ComicDirectoryDto.toEntity(): ComicDirectory =
     ComicDirectory(
@@ -22,7 +23,7 @@ fun ComicDirectoryDto.toEntity(): ComicDirectory =
 
 fun ChapterFileDto.toEntity(folderId: Long): ChapterArchive =
     ChapterArchive(
-        chapter = name,
+        chapter = name.fileStem(),
         path = path,
         chapterSort = chapterSort,
         folderPathFk = folderId,
@@ -54,7 +55,7 @@ fun FastFileMetadata.toChapterArchiveEntity(
     isSpecial: Boolean = false,
 ): ChapterArchive =
     ChapterArchive(
-        chapter = name,
+        chapter = name.fileStem(),
         path = fileUri,
         checksum = null,
         chapterSort = chapterSort,
@@ -106,7 +107,7 @@ fun DocumentFile.toChapterArchiveEntity(
     isSpecial: Boolean = false,
 ): ChapterArchive =
     ChapterArchive(
-        chapter = name ?: "",
+        chapter = (name ?: "").fileStem(),
         path = uri.toString(),
         checksum = checksum,
         chapterSort = chapterSort,

@@ -15,7 +15,7 @@ class PaginationPreferenceTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun deve_exibir_titulo_e_opcoes_de_paginacao() {
+    fun should_display_title_and_pagination_options() {
         composeTestRule.setContent {
             Comic.Component.PaginationPreference(
                 selected = ChapterPageSizeType.SHORT,
@@ -31,7 +31,7 @@ class PaginationPreferenceTest {
     }
 
     @Test
-    fun deve_chamar_onSelect_ao_clicar_em_uma_opcao() {
+    fun should_call_onSelect_when_clicking_an_option() {
         var selectedSize: ChapterPageSizeType? = null
         composeTestRule.setContent {
             Comic.Component.PaginationPreference(

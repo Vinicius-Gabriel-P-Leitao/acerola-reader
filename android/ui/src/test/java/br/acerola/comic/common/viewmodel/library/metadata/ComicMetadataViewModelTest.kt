@@ -42,20 +42,20 @@ class ComicMetadataViewModelTest {
     }
 
     @Test
-    fun `deve chamar use case para criar categoria`() =
+    fun `should call use case to create category`() =
         runTest {
             viewModel.createCategory("Nova", 0xFF0000)
             coVerify { manageCategoriesUseCase.createCategory("Nova", 0xFF0000) }
         }
 
     @Test
-    fun `deve enfileirar sincronizacao do mangadex`() {
+    fun `should enqueue mangadex synchronization`() {
         viewModel.syncFromMangadex(1L)
         verify { workManager.enqueueUniqueWork(any(), ExistingWorkPolicy.REPLACE, any<OneTimeWorkRequest>()) }
     }
 
     @Test
-    fun `deve enfileirar sincronizacao do anilist`() {
+    fun `should enqueue anilist synchronization`() {
         viewModel.syncFromAnilist(1L)
         verify { workManager.enqueueUniqueWork(any(), ExistingWorkPolicy.REPLACE, any<OneTimeWorkRequest>()) }
     }

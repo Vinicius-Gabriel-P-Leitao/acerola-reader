@@ -25,7 +25,7 @@ class TrackReadingProgressUseCaseTest {
 
     // markChapterAsRead — caminho feliz
     @Test
-    fun `markChapterAsRead deve delegar ao repositório exatamente uma vez`() =
+    fun `markChapterAsRead should delegate to repository exactly once`() =
         runTest {
             coJustRun { historyRepository.markChapterAsRead(any(), any(), any()) }
 
@@ -36,7 +36,7 @@ class TrackReadingProgressUseCaseTest {
 
     // toggleReadStatus — isRead = true → desmarcar capítulo
     @Test
-    fun `toggleReadStatus quando isRead=true deve chamar unmarkChapterAsRead`() =
+    fun `toggleReadStatus when isRead=true should call unmarkChapterAsRead`() =
         runTest {
             coJustRun { historyRepository.unmarkChapterAsRead(any(), any()) }
 
@@ -47,7 +47,7 @@ class TrackReadingProgressUseCaseTest {
 
     // toggleReadStatus — isRead = false → marcar capítulo
     @Test
-    fun `toggleReadStatus quando isRead=false deve chamar markChapterAsRead`() =
+    fun `toggleReadStatus when isRead=false should call markChapterAsRead`() =
         runTest {
             coJustRun { historyRepository.markChapterAsRead(any(), any(), any()) }
 
@@ -58,7 +58,7 @@ class TrackReadingProgressUseCaseTest {
 
     // saveProgress — caminho feliz
     @Test
-    fun `saveProgress deve delegar upsertHistory ao repositório exatamente uma vez`() =
+    fun `saveProgress should delegate upsertHistory to repository exactly once`() =
         runTest {
             val historyDto = mockk<ReadingHistoryDto>()
             coJustRun { historyRepository.upsertHistory(any()) }

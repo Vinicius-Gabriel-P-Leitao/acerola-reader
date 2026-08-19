@@ -65,7 +65,7 @@ class VolumeSyncServiceTest {
     }
 
     @Test
-    fun `sync deve inserir novos volumes e retornar mapa de caminhos para ids`() =
+    fun `sync should insert new volumes and return map of paths to ids`() =
         runTest {
             val comicId = 1L
             val subFolder = FastFileMetadata("vol1_id", 0L, "Vol. 01", DocumentsContract.Document.MIME_TYPE_DIR, 1000L)
@@ -100,7 +100,7 @@ class VolumeSyncServiceTest {
         }
 
     @Test
-    fun `sync deve deletar volumes que nao existem mais no disco`() =
+    fun `sync should delete volumes that no longer exist on disk`() =
         runTest {
             val comicId = 1L
             val subFolders = emptyList<FastFileMetadata>()

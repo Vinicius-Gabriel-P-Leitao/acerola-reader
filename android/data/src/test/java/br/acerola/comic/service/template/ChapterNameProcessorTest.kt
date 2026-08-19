@@ -56,7 +56,7 @@ class ChapterNameProcessorTest {
     // region addTemplate
 
     @Test
-    fun `deve anexar a extensao automaticamente se o usuario nao a prover`() =
+    fun `should append extension automatically if user does not provide it`() =
         runTest {
             val result = service.addTemplate("Meu Template", "Cap. {chapter}", SortType.CHAPTER)
 
@@ -64,7 +64,7 @@ class ChapterNameProcessorTest {
         }
 
     @Test
-    fun `deve anexar a extensao automaticamente para volume se o usuario nao a prover`() =
+    fun `should append extension automatically for volume if user does not provide it`() =
         runTest {
             val result = service.addTemplate("Meu Volume", "Vol. {volume}", SortType.VOLUME)
 
@@ -72,7 +72,7 @@ class ChapterNameProcessorTest {
         }
 
     @Test
-    fun `deve remover lixo apos a extensao caso o usuario forneca`() =
+    fun `should remove trailing garbage after extension if user provides it`() =
         runTest {
             val result = service.addTemplate("Template com Lixo", "Ch. {chapter}{extension} LixoAqui", SortType.CHAPTER)
 
@@ -80,7 +80,7 @@ class ChapterNameProcessorTest {
         }
 
     @Test
-    fun `deve rejeitar padrao invalido com erros apropriados`() =
+    fun `should reject invalid pattern with appropriate errors`() =
         runTest {
             val result = service.addTemplate("Template Invalido", "Sem a macro de valor", SortType.CHAPTER)
 
@@ -92,7 +92,7 @@ class ChapterNameProcessorTest {
         }
 
     @Test
-    fun `deve rejeitar padrao de volume invalido sem macro de volume`() =
+    fun `should reject invalid volume pattern without volume macro`() =
         runTest {
             val result = service.addTemplate("Volume Invalido", "Vol. {chapter}", SortType.VOLUME)
 
@@ -104,7 +104,7 @@ class ChapterNameProcessorTest {
         }
 
     @Test
-    fun `addTemplate retorna Duplicate quando dao retorna -1`() =
+    fun `addTemplate returns Duplicate when dao returns -1`() =
         runTest {
             coEvery { dao.insert(any()) } returns -1L
 
@@ -119,7 +119,7 @@ class ChapterNameProcessorTest {
     // region updateTemplate
 
     @Test
-    fun `updateTemplate tem sucesso com template customizado valido`() =
+    fun `updateTemplate succeeds with valid custom template`() =
         runTest {
             coEvery { dao.getTemplateById(10L) } returns customTemplate
 
@@ -130,7 +130,7 @@ class ChapterNameProcessorTest {
         }
 
     @Test
-    fun `updateTemplate retorna SystemProtected quando template nao e encontrado`() =
+    fun `updateTemplate returns SystemProtected when template is not found`() =
         runTest {
             coEvery { dao.getTemplateById(99L) } returns null
 
@@ -141,7 +141,7 @@ class ChapterNameProcessorTest {
         }
 
     @Test
-    fun `updateTemplate retorna SystemProtected ao tentar editar template padrao`() =
+    fun `updateTemplate returns SystemProtected when trying to edit default template`() =
         runTest {
             coEvery { dao.getTemplateById(1L) } returns defaultTemplate
 
@@ -152,7 +152,7 @@ class ChapterNameProcessorTest {
         }
 
     @Test
-    fun `updateTemplate retorna Duplicate quando dao lanca SQLiteConstraintException`() =
+    fun `updateTemplate returns Duplicate when dao throws SQLiteConstraintException`() =
         runTest {
             coEvery { dao.getTemplateById(10L) } returns customTemplate
             coEvery { dao.update(any()) } throws SQLiteConstraintException("UNIQUE constraint failed")
@@ -164,7 +164,7 @@ class ChapterNameProcessorTest {
         }
 
     @Test
-    fun `updateTemplate rejeita padrao sem macro de capitulo`() =
+    fun `updateTemplate rejects pattern without chapter macro`() =
         runTest {
             coEvery { dao.getTemplateById(10L) } returns customTemplate
 
@@ -175,7 +175,7 @@ class ChapterNameProcessorTest {
         }
 
     @Test
-    fun `updateTemplate adiciona extensao automaticamente se nao fornecida`() =
+    fun `updateTemplate adds extension automatically if not provided`() =
         runTest {
             coEvery { dao.getTemplateById(10L) } returns customTemplate
 
@@ -185,7 +185,7 @@ class ChapterNameProcessorTest {
         }
 
     @Test
-    fun `updateTemplate remove lixo apos a extensao`() =
+    fun `updateTemplate removes trailing garbage after extension`() =
         runTest {
             coEvery { dao.getTemplateById(10L) } returns customTemplate
 

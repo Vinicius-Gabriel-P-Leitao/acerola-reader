@@ -11,7 +11,7 @@ class HorizontalPagedReaderTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `deve_renderizar_horizontal_reader_sem_erros`() {
+    fun `should_render_horizontal_reader_without_errors`() {
         composeTestRule.setContent {
             val pagerState = rememberPagerState(pageCount = { 10 })
             Reader.Component.HorizontalPagedReader(

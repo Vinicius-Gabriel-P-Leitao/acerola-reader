@@ -30,7 +30,7 @@ class ReaderScreenTest {
     }
 
     @Test
-    fun `ReaderScreen_deve_renderizar_sem_erros`() {
+    fun `ReaderScreen_should_render_without_errors`() {
         val chapter = ChapterFileDto(1L, "Cap 1", "path", "1")
 
         composeTestRule.setContent {
