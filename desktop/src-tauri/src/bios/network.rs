@@ -28,10 +28,13 @@ use crate::{
             MasterKeySource,
         },
         sync::protocol::{
+            comic_handler::{ComicSyncInbound, ComicSyncOutbound},
+            comic_sync_registry::PendingComicSyncRegistry,
             file_handler::{FileSyncInbound, FileSyncOutbound},
             file_session_guard::FileSyncSessionGuard,
             history_handler::{HistorySyncInbound, HistorySyncOutbound},
-            FILE_SYNC_ALPN, HISTORY_SYNC_ALPN,
+            library_browse_handler::{LibraryBrowseInbound, LibraryBrowseOutbound},
+            COMIC_SYNC_ALPN, FILE_SYNC_ALPN, HISTORY_SYNC_ALPN, LIBRARY_BROWSE_ALPN,
         },
     },
 };
@@ -152,8 +155,17 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
         read_library_path(&app_data_directory).unwrap_or_else(|| app_data_directory.join("library"))
     });
     // Compartilhado entre inbound e outbound: garante que só uma sessão de sync-files por
-    // peer rode por vez, nos dois sentidos (ver `file_session_guard.rs`).
+    // peer rode por vez, nos dois sentidos (ver `file_session_guard.rs`). Também compartilhado
+    // com `COMIC_SYNC_ALPN` (mesmo recurso — transferência de arquivos — então uma sessão de
+    // biblioteca inteira e uma individual pro mesmo peer não podem rodar ao mesmo tempo).
     let file_sync_session_guard = FileSyncSessionGuard::new();
+
+    // Side-channel pro comando Tauri `sync_comic` informar qual `comic_name` o
+    // `ComicSyncOutbound` deve usar na próxima sessão que ele iniciar pra um dado peer — ver
+    // `comic_sync_registry.rs` pro motivo de precisar disso (o `Handler` é um singleton, não
+    // recebe parâmetro por chamada de `connect()`).
+    let pending_comic_sync = PendingComicSyncRegistry::new();
+    app_handle.manage(Arc::clone(&pending_comic_sync));
 
     let p2p_node = match tokio::time::timeout(
         std::time::Duration::from_secs(10),
@@ -192,10 +204,34 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
                 FILE_SYNC_ALPN,
                 Arc::new(FileSyncOutbound::new(
                     Arc::clone(&event_emitter),
-                    file_sync_service,
-                    sync_log_repo,
-                    file_sync_session_guard,
+                    file_sync_service.clone(),
+                    sync_log_repo.clone(),
+                    Arc::clone(&file_sync_session_guard),
                 )),
+            )
+            .inbound(
+                COMIC_SYNC_ALPN,
+                Arc::new(ComicSyncInbound::new(
+                    Arc::clone(&event_emitter),
+                    file_sync_service.clone(),
+                    sync_log_repo.clone(),
+                    Arc::clone(&file_sync_session_guard),
+                )),
+            )
+            .outbound(
+                COMIC_SYNC_ALPN,
+                Arc::new(ComicSyncOutbound::new(
+                    Arc::clone(&event_emitter),
+                    file_sync_service.clone(),
+                    sync_log_repo.clone(),
+                    Arc::clone(&file_sync_session_guard),
+                    Arc::clone(&pending_comic_sync),
+                )),
+            )
+            .inbound(LIBRARY_BROWSE_ALPN, Arc::new(LibraryBrowseInbound::new(file_sync_service)))
+            .outbound(
+                LIBRARY_BROWSE_ALPN,
+                Arc::new(LibraryBrowseOutbound::new(Arc::clone(&event_emitter))),
             )
             .build(),
     )

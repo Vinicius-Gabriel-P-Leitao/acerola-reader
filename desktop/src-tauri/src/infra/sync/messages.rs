@@ -71,6 +71,30 @@ pub struct FileHeader {
     pub checksum: Option<String>,
 }
 
+/// Primeira mensagem do protocolo `acerola/sync-comic/1`, escrita pelo lado que inicia — diz
+/// ao peer qual quadrinho escopar antes da troca de manifestos (ver
+/// `FileSyncService::build_manifest_for_comic`). Sem isso o lado que responde não teria como
+/// saber qual quadrinho escopar quando o iniciador ainda não tem nenhum capítulo dele
+/// localmente (caso "pull": o manifesto do iniciador viria vazio, sem nome nenhum dentro).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ComicSyncRequest {
+    pub comic_name: String,
+}
+
+/// Resumo de um quadrinho da biblioteca remota, usado só pra listar/buscar (sem transferir
+/// nada ainda) — ver protocolo `acerola/browse-library/1`. Nomes espelhados no Android
+/// (`protocol/library_browse/model.rs::ComicSummaryEntry`/`LibrarySummary`).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ComicSummaryEntry {
+    pub comic_name: String,
+    pub chapter_count: u32,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct LibrarySummary {
+    pub comics: Vec<ComicSummaryEntry>,
+}
+
 /// Mensagem enviada no lugar do manifesto quando `FileSyncSessionGuard` já rejeitou a sessão
 /// localmente (peer já tem uma sessão ativa) — schema espelhado no Android
 /// (`protocol/files/model.rs::SessionBusy`), único jeito dos dois lados falarem a mesma coisa

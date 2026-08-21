@@ -98,6 +98,18 @@ impl FileSyncService {
         Ok(FileManifest { comics })
     }
 
+    /// Mesmo manifesto de `build_manifest()`, mas filtrado pra um único quadrinho — usado pelo
+    /// sync individual (`acerola/sync-comic/1`) pra não trocar a biblioteca inteira quando só
+    /// um `comic_name` foi pedido. Reaproveita a query completa em vez de uma busca dedicada
+    /// no repositório: bibliotecas pessoais são pequenas o bastante pra isso não importar, e
+    /// evita duplicar a lógica de montagem de `FileChapterInfo` (tamanho em disco, nome do
+    /// arquivo) em dois lugares.
+    pub async fn build_manifest_for_comic(&self, comic_name: &str) -> Result<FileManifest, ComicError> {
+        let mut manifest = self.build_manifest().await?;
+        manifest.comics.retain(|comic| comic.comic_name == comic_name);
+        Ok(manifest)
+    }
+
     /// Calcula o que EU quero, comparando o manifesto do peer contra a base local: capítulos
     /// ausentes ou com checksum diferente (arquivo desatualizado/corrompido localmente).
     pub async fn diff_wanted(
@@ -263,6 +275,18 @@ mod tests {
         let root = temp_dir.path().to_path_buf();
         let service = FileSyncService::new(pool.clone(), move || root.clone());
         (pool, temp_dir, service)
+    }
+
+    #[tokio::test]
+    async fn build_manifest_for_comic_scopes_to_a_single_comic() {
+        let (_, _dir, service) = setup().await;
+
+        let manifest = service.build_manifest_for_comic("Test").await.unwrap();
+        assert_eq!(manifest.comics.len(), 1);
+        assert_eq!(manifest.comics[0].comic_name, "Test");
+
+        let empty = service.build_manifest_for_comic("Nao Existe").await.unwrap();
+        assert!(empty.comics.is_empty());
     }
 
     #[tokio::test]
