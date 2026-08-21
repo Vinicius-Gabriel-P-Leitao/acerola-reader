@@ -19,6 +19,9 @@ import br.acerola.comic.error.UserMessage
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.module.main.home.state.FilterSettings
+import br.acerola.comic.module.main.sync.state.PairedPeer
+import br.acerola.comic.type.UiText
+import br.acerola.comic.ui.R
 import br.acerola.comic.usecase.DirectoryCase
 import br.acerola.comic.usecase.MangadexCase
 import br.acerola.comic.usecase.chapter.GetChapterCountUseCase
@@ -27,8 +30,11 @@ import br.acerola.comic.usecase.comic.HideComicUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.history.ObserveHistoryUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
+import br.acerola.comic.usecase.network.P2pUseCase
+import br.acerola.comic.usecase.network.SyncComicWithPeerUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,9 +68,14 @@ class HomeViewModel
         @param:ApplicationContext private val context: Context,
         @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<ComicMetadataDto>,
         @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<ComicDirectoryDto>,
+        private val p2pUseCase: P2pUseCase,
+        private val syncComicWithPeerUseCase: SyncComicWithPeerUseCase,
     ) : ViewModel() {
         private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
         val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
+
+        private val _pairedPeers = MutableStateFlow<List<PairedPeer>>(emptyList())
+        val pairedPeers: StateFlow<List<PairedPeer>> = _pairedPeers.asStateFlow()
 
         private val _selectedHomeLayout = MutableStateFlow(value = HomeLayoutType.LIST)
         val selectedHomeLayout: StateFlow<HomeLayoutType> = _selectedHomeLayout.asStateFlow()
@@ -228,6 +239,35 @@ class HomeViewModel
                     }
                 }
                 clearComicSelection()
+            }
+        }
+
+        /** Carrega os peers pareados pro `PeerPickerSheet` — sob demanda, não reativo. */
+        fun loadPairedPeers() {
+            viewModelScope.launch(Dispatchers.IO) {
+                val liveDeviceNames = p2pUseCase.getConnectedPeersWithInfo().associate { it.peerId to it.deviceName }
+                val paired =
+                    p2pUseCase.getPairedPeers().map { PairedPeer(peerId = it.id, deviceName = liveDeviceNames[it.id]) }
+                _pairedPeers.value = paired
+            }
+        }
+
+        fun syncComicWithPeer(
+            peerId: String,
+            comicName: String,
+        ) {
+            AcerolaLogger.audit(
+                TAG,
+                "Syncing comic with peer",
+                LogSource.VIEWMODEL,
+                mapOf("peerId" to peerId, "comicName" to comicName),
+            )
+
+            val fired = syncComicWithPeerUseCase(peerId, comicName)
+            if (!fired) {
+                viewModelScope.launch {
+                    _uiEvents.send(UserMessage.Raw(UiText.StringResource(R.string.error_sync_comic_peer_not_paired)))
+                }
             }
         }
 

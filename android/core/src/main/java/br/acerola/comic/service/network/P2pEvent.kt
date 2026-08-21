@@ -70,8 +70,26 @@ sealed interface P2pEvent {
         val failedCount: Int,
     ) : P2pEvent
 
+    data class LibraryBrowseResult(
+        val peerId: String,
+        val comics: List<ComicSummary>,
+    ) : P2pEvent
+
+    data class LibraryBrowseError(
+        val peerId: String,
+        val message: String,
+    ) : P2pEvent
+
     data class Unknown(
         val event: String,
         val data: String,
     ) : P2pEvent
 }
+
+/** Um quadrinho da biblioteca de um peer remoto — resumido a nome + contagem de capítulos, não
+ *  o manifesto completo (checksum/nome de arquivo por capítulo). Usado só pra escolher qual
+ *  quadrinho pedir via `SyncAction.SyncComic` depois. */
+data class ComicSummary(
+    val comicName: String,
+    val chapterCount: Int,
+)

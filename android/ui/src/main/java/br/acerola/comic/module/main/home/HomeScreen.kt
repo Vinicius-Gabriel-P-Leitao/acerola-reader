@@ -159,6 +159,7 @@ fun Main.Home.Template.Screen(
     val searchQuery by homeViewModel.searchQuery.collectAsStateWithLifecycle()
     val isSearchExpanded by homeViewModel.isSearchExpanded.collectAsStateWithLifecycle()
     val selectedComicIds by homeViewModel.selectedComicIds.collectAsStateWithLifecycle()
+    val pairedPeers by homeViewModel.pairedPeers.collectAsStateWithLifecycle()
 
     val isSelectionMode = selectedComicIds.isNotEmpty()
 
@@ -541,6 +542,9 @@ fun Main.Home.Template.Screen(
                 onDelete = { homeViewModel.deleteComic(activeManga.directory.id) },
                 onBookmark = { categoryId -> homeViewModel.setMangaCategory(activeManga.directory.id, categoryId) },
                 onDismiss = { selectedMangaForActions = null },
+                pairedPeers = pairedPeers,
+                onLoadPairedPeers = homeViewModel::loadPairedPeers,
+                onSyncWithPeer = { peerId -> homeViewModel.syncComicWithPeer(peerId, activeManga.directory.name) },
             )
         }
 

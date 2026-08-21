@@ -116,6 +116,25 @@ class P2pEventBus
                             )
                         }
 
+                    "browse:library:result" ->
+                        JSONObject(data).let { json ->
+                            val comicsArray = json.getJSONArray("comics")
+                            val comics =
+                                (0 until comicsArray.length()).map { index ->
+                                    val entry = comicsArray.getJSONObject(index)
+                                    ComicSummary(
+                                        comicName = entry.getString("comicName"),
+                                        chapterCount = entry.getInt("chapterCount"),
+                                    )
+                                }
+                            P2pEvent.LibraryBrowseResult(peerId = json.getString("peerId"), comics = comics)
+                        }
+
+                    "browse:library:error" ->
+                        JSONObject(data).let {
+                            P2pEvent.LibraryBrowseError(peerId = it.getString("peerId"), message = it.getString("message"))
+                        }
+
                     else -> P2pEvent.Unknown(event, data)
                 }
             }.getOrElse { error ->

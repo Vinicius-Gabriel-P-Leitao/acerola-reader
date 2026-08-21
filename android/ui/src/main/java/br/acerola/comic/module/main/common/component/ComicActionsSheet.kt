@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.BookmarkBorder
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.HorizontalDivider
@@ -50,6 +51,7 @@ import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.module.main.Main
+import br.acerola.comic.module.main.sync.state.PairedPeer
 import br.acerola.comic.ui.R
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -66,10 +68,14 @@ fun Main.Common.Component.ComicActionsSheet(
     onDelete: () -> Unit,
     onBookmark: (categoryId: Long?) -> Unit,
     onDismiss: () -> Unit,
+    pairedPeers: List<PairedPeer> = emptyList(),
+    onLoadPairedPeers: () -> Unit = {},
+    onSyncWithPeer: (peerId: String) -> Unit = {},
 ) {
     var showCategorySheet by remember { mutableStateOf(false) }
     var showHideDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showPeerPicker by remember { mutableStateOf(false) }
 
     val title = comic.remoteInfo?.title ?: comic.directory.name
     val currentCategoryName = comic.category?.name
@@ -163,6 +169,19 @@ fun Main.Common.Component.ComicActionsSheet(
                 )
             },
             modifier = Modifier.clickable { showHideDialog = true },
+        )
+
+        ListItem(
+            leadingContent = {
+                Icon(imageVector = Icons.Rounded.PhoneAndroid, contentDescription = null)
+            },
+            headlineContent = { Text(text = stringResource(id = R.string.action_sync_comic_with_peer)) },
+            supportingContent = { Text(text = stringResource(id = R.string.description_sync_comic_with_peer)) },
+            modifier =
+                Modifier.clickable {
+                    onLoadPairedPeers()
+                    showPeerPicker = true
+                },
         )
 
         ListItem(
@@ -272,6 +291,18 @@ fun Main.Common.Component.ComicActionsSheet(
                 )
             },
             content = { Text(text = stringResource(id = R.string.dialog_delete_message)) },
+        )
+    }
+
+    if (showPeerPicker) {
+        Main.Common.Component.PeerPickerSheet(
+            peers = pairedPeers,
+            onSelect = { peerId ->
+                showPeerPicker = false
+                onSyncWithPeer(peerId)
+                onDismiss()
+            },
+            onDismiss = { showPeerPicker = false },
         )
     }
 }

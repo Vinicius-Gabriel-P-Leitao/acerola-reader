@@ -17,8 +17,12 @@ use crate::{
     callbacks::{FileSyncProvider, HistorySyncProvider, SecureBlobStore},
     mode::FfiNetworkMode,
     protocol::{
-        files::{FileSyncInbound, FileSyncOutbound, FileSyncSessionGuard, FILE_SYNC_ALPN},
+        files::{
+            ComicSyncInbound, ComicSyncOutbound, FileSyncInbound, FileSyncOutbound, FileSyncSessionGuard,
+            PendingComicScope, COMIC_SYNC_ALPN, FILE_SYNC_ALPN,
+        },
         history::{HistorySyncInbound, HistorySyncOutbound, HISTORY_SYNC_ALPN},
+        library_browse::{LibraryBrowseInbound, LibraryBrowseOutbound, LIBRARY_BROWSE_ALPN},
     },
     singleton::TOKIO_RUNTIME,
     storage::{SecureP2pStorage, SharedSecureP2pStorage},
@@ -26,7 +30,10 @@ use crate::{
 };
 
 #[cfg(target_os = "android")]
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    sync::Mutex,
+};
 
 /// URL do relay oficial do projeto, usado quando nenhum override é fornecido pelo app.
 ///
@@ -61,6 +68,10 @@ pub struct P2PNode {
     trust_store: Arc<SecureTrustedStore>,
     #[cfg(target_os = "android")]
     storage: Arc<SecureP2pStorage>,
+    /// Ver `protocol::files::PendingComicScope` — estado pendente entre a chamada FFI
+    /// `sync_comic` e o `Handler` outbound de `acerola/sync-comic/1` que ela dispara.
+    #[cfg(target_os = "android")]
+    pending_comic_scope: PendingComicScope,
 }
 
 #[uniffi::export]
@@ -91,11 +102,14 @@ impl P2PNode {
 
         let storage = Arc::new(SecureP2pStorage::open(Arc::clone(&secure_store), legacy_dir));
 
+        let pending_comic_scope: PendingComicScope = Arc::new(Mutex::new(HashMap::new()));
+
         let node = {
             let trust_store = Arc::clone(&trust_store);
             let storage_for_builder = Arc::clone(&storage);
             let emit_for_handlers = Arc::clone(&emit);
             let file_sync_guard = Arc::new(FileSyncSessionGuard::default());
+            let pending_comic_scope = Arc::clone(&pending_comic_scope);
             runtime.block_on(async move {
                 let transport = IrohTransportBuilder::default()
                     .relay(relay_url.as_deref().unwrap_or(DEFAULT_RELAY_URL));
@@ -135,7 +149,39 @@ impl P2PNode {
                         )
                         .outbound(
                             FILE_SYNC_ALPN,
-                            Arc::new(FileSyncOutbound::new(emit_for_handlers, file_provider, file_sync_guard)),
+                            Arc::new(FileSyncOutbound::new(
+                                Arc::clone(&emit_for_handlers),
+                                Arc::clone(&file_provider),
+                                Arc::clone(&file_sync_guard),
+                            )),
+                        )
+                        // `acerola/sync-comic/1` reaproveita o MESMO `file_sync_guard` do
+                        // `sync-files` normal (ver `protocol::files::run_and_report_scoped`) —
+                        // as duas ALPNs nunca rodam sessão simultânea pro mesmo peer.
+                        .inbound(
+                            COMIC_SYNC_ALPN,
+                            Arc::new(ComicSyncInbound::new(
+                                Arc::clone(&emit_for_handlers),
+                                Arc::clone(&file_provider),
+                                Arc::clone(&file_sync_guard),
+                            )),
+                        )
+                        .outbound(
+                            COMIC_SYNC_ALPN,
+                            Arc::new(ComicSyncOutbound::new(
+                                Arc::clone(&emit_for_handlers),
+                                Arc::clone(&file_provider),
+                                file_sync_guard,
+                                pending_comic_scope,
+                            )),
+                        )
+                        .inbound(
+                            LIBRARY_BROWSE_ALPN,
+                            Arc::new(LibraryBrowseInbound::new(file_provider)),
+                        )
+                        .outbound(
+                            LIBRARY_BROWSE_ALPN,
+                            Arc::new(LibraryBrowseOutbound::new(emit_for_handlers)),
                         )
                         .build()
                         .await
@@ -144,7 +190,7 @@ impl P2PNode {
             })
         };
 
-        Self { node, runtime, trust_store, storage }
+        Self { node, runtime, trust_store, storage, pending_comic_scope }
     }
 
     pub fn get_local_id(&self) -> String {
@@ -172,6 +218,28 @@ impl P2PNode {
         self.runtime.spawn(async move {
             let _ = node.connect(addr, &alpn).await;
         });
+    }
+
+    /// Sincroniza um único quadrinho (`comic_name`) com `peer_addr` — cobre tanto push (o
+    /// usuário já tem esse quadrinho e quer mandar) quanto pull (o usuário descobriu o
+    /// quadrinho navegando a biblioteca remota via `browse_library` e quer trazê-lo), já que a
+    /// troca do protocolo `acerola/sync-comic/1` é sempre simétrica. Grava `comic_name` no
+    /// registro pendente ANTES de conectar — é a única forma dessa escolha (que só existe aqui,
+    /// do lado que chamou) chegar até `ComicSyncOutbound::handle`, já que `connect()` não carrega
+    /// payload (ver `protocol::files::COMIC_SYNC_ALPN`).
+    pub fn sync_comic(&self, peer_addr: FfiPeerAddr, comic_name: String) {
+        self.pending_comic_scope
+            .lock()
+            .expect("pending comic scope mutex poisoned")
+            .insert(peer_addr.id.clone(), comic_name);
+        self.connect(peer_addr, COMIC_SYNC_ALPN.to_vec());
+    }
+
+    /// Pede a lista de quadrinhos (nome + contagem de capítulos) da biblioteca de `peer_addr`,
+    /// sem sincronizar nada — fire-and-forget como `connect()`; o resultado chega depois via
+    /// `browse:library:result`/`browse:library:error` (ver `protocol::library_browse`).
+    pub fn browse_library(&self, peer_addr: FfiPeerAddr) {
+        self.connect(peer_addr, LIBRARY_BROWSE_ALPN.to_vec());
     }
 
     pub fn shutdown(&self) {

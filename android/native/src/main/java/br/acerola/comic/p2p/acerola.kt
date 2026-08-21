@@ -924,6 +924,10 @@ internal open class UniffiVTableCallbackInterfaceSecureBlobStore(
 
 
 
+
+
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -997,6 +1001,8 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_acerola_fn_constructor_p2pnode_new(`callback`: Pointer,`legacyDataDir`: RustBuffer.ByValue,`relayUrl`: RustBuffer.ByValue,`deviceName`: RustBuffer.ByValue,`deviceVersion`: RustBuffer.ByValue,`secureStore`: Pointer,`historyProvider`: Pointer,`fileProvider`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
+    fun uniffi_acerola_fn_method_p2pnode_browse_library(`ptr`: Pointer,`peerAddr`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_acerola_fn_method_p2pnode_connect(`ptr`: Pointer,`peerAddr`: RustBuffer.ByValue,`alpn`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_acerola_fn_method_p2pnode_get_connected_peers(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
@@ -1018,6 +1024,8 @@ internal interface UniffiLib : Library {
     fun uniffi_acerola_fn_method_p2pnode_switch_to_local(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_acerola_fn_method_p2pnode_switch_to_relay(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_acerola_fn_method_p2pnode_sync_comic(`ptr`: Pointer,`peerAddr`: RustBuffer.ByValue,`comicName`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_acerola_fn_clone_secureblobstore(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
@@ -1167,6 +1175,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_acerola_checksum_method_p2pcallback_on_event(
     ): Short
+    fun uniffi_acerola_checksum_method_p2pnode_browse_library(
+    ): Short
     fun uniffi_acerola_checksum_method_p2pnode_connect(
     ): Short
     fun uniffi_acerola_checksum_method_p2pnode_get_connected_peers(
@@ -1188,6 +1198,8 @@ internal interface UniffiLib : Library {
     fun uniffi_acerola_checksum_method_p2pnode_switch_to_local(
     ): Short
     fun uniffi_acerola_checksum_method_p2pnode_switch_to_relay(
+    ): Short
+    fun uniffi_acerola_checksum_method_p2pnode_sync_comic(
     ): Short
     fun uniffi_acerola_checksum_method_secureblobstore_save_blob(
     ): Short
@@ -1251,6 +1263,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_acerola_checksum_method_p2pcallback_on_event() != 37231.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_acerola_checksum_method_p2pnode_browse_library() != 61984.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_acerola_checksum_method_p2pnode_connect() != 27942.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -1282,6 +1297,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_acerola_checksum_method_p2pnode_switch_to_relay() != 54345.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_acerola_checksum_method_p2pnode_sync_comic() != 49826.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_acerola_checksum_method_secureblobstore_save_blob() != 37330.toShort()) {
@@ -2908,6 +2926,13 @@ public object FfiConverterTypeP2PCallback: FfiConverter<P2pCallback, Pointer> {
 
 public interface P2pNodeInterface {
     
+    /**
+     * Pede a lista de quadrinhos (nome + contagem de capítulos) da biblioteca de `peer_addr`,
+     * sem sincronizar nada — fire-and-forget como `connect()`; o resultado chega depois via
+     * `browse:library:result`/`browse:library:error` (ver `protocol::library_browse`).
+     */
+    fun `browseLibrary`(`peerAddr`: FfiPeerAddr)
+    
     fun `connect`(`peerAddr`: FfiPeerAddr, `alpn`: kotlin.ByteArray)
     
     fun `getConnectedPeers`(): Map<kotlin.String, List<kotlin.ByteArray>>
@@ -2942,6 +2967,17 @@ public interface P2pNodeInterface {
     fun `switchToLocal`()
     
     fun `switchToRelay`()
+    
+    /**
+     * Sincroniza um único quadrinho (`comic_name`) com `peer_addr` — cobre tanto push (o
+     * usuário já tem esse quadrinho e quer mandar) quanto pull (o usuário descobriu o
+     * quadrinho navegando a biblioteca remota via `browse_library` e quer trazê-lo), já que a
+     * troca do protocolo `acerola/sync-comic/1` é sempre simétrica. Grava `comic_name` no
+     * registro pendente ANTES de conectar — é a única forma dessa escolha (que só existe aqui,
+     * do lado que chamou) chegar até `ComicSyncOutbound::handle`, já que `connect()` não carrega
+     * payload (ver `protocol::files::COMIC_SYNC_ALPN`).
+     */
+    fun `syncComic`(`peerAddr`: FfiPeerAddr, `comicName`: kotlin.String)
     
     companion object
 }
@@ -3033,6 +3069,22 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
             UniffiLib.INSTANCE.uniffi_acerola_fn_clone_p2pnode(pointer!!, status)
         }
     }
+
+    
+    /**
+     * Pede a lista de quadrinhos (nome + contagem de capítulos) da biblioteca de `peer_addr`,
+     * sem sincronizar nada — fire-and-forget como `connect()`; o resultado chega depois via
+     * `browse:library:result`/`browse:library:error` (ver `protocol::library_browse`).
+     */override fun `browseLibrary`(`peerAddr`: FfiPeerAddr)
+        = 
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_browse_library(
+        it, FfiConverterTypeFfiPeerAddr.lower(`peerAddr`),_status)
+}
+    }
+    
+    
 
     override fun `connect`(`peerAddr`: FfiPeerAddr, `alpn`: kotlin.ByteArray)
         = 
@@ -3169,6 +3221,26 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
     uniffiRustCall() { _status ->
     UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_switch_to_relay(
         it, _status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Sincroniza um único quadrinho (`comic_name`) com `peer_addr` — cobre tanto push (o
+     * usuário já tem esse quadrinho e quer mandar) quanto pull (o usuário descobriu o
+     * quadrinho navegando a biblioteca remota via `browse_library` e quer trazê-lo), já que a
+     * troca do protocolo `acerola/sync-comic/1` é sempre simétrica. Grava `comic_name` no
+     * registro pendente ANTES de conectar — é a única forma dessa escolha (que só existe aqui,
+     * do lado que chamou) chegar até `ComicSyncOutbound::handle`, já que `connect()` não carrega
+     * payload (ver `protocol::files::COMIC_SYNC_ALPN`).
+     */override fun `syncComic`(`peerAddr`: FfiPeerAddr, `comicName`: kotlin.String)
+        = 
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_sync_comic(
+        it, FfiConverterTypeFfiPeerAddr.lower(`peerAddr`),FfiConverterString.lower(`comicName`),_status)
 }
     }
     

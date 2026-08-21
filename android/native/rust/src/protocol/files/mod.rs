@@ -2,7 +2,10 @@ mod exchange;
 mod model;
 mod session_guard;
 
-use std::sync::Arc;
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 use acerola_p2p::api::{
     error::P2pError,
@@ -17,6 +20,20 @@ use model::FileSyncStats;
 pub(crate) use session_guard::FileSyncSessionGuard;
 
 pub(crate) const FILE_SYNC_ALPN: &[u8] = b"acerola/sync-files/1";
+
+/// ALPN do protocolo `acerola/sync-comic/1` — mesma máquina de estados do `sync-files`
+/// (manifesto -> want-list -> transferência), mas filtrada a um único quadrinho por uma fase 0
+/// extra (`ComicSyncScope`, ver `exchange::run_exchange_scoped`). ALPN dedicado (em vez de
+/// reaproveitar `FILE_SYNC_ALPN`) porque o outro lado precisa rotear pro handler certo antes de
+/// saber que a sessão é escopada — a única forma de expressar isso sem tocar a lib de
+/// transporte (`acerola-p2p`, que roteia por ALPN exato e não carrega payload em `connect()`).
+pub(crate) const COMIC_SYNC_ALPN: &[u8] = b"acerola/sync-comic/1";
+
+/// `peer_id -> comic_name` escolhido pelo usuário na chamada FFI `P2PNode::sync_comic`, lido e
+/// removido por `ComicSyncOutbound::handle` assim que a sessão outbound começa. Único jeito de
+/// levar essa escolha (que só existe do lado Kotlin) até o `Handler` que a lib de transporte
+/// invoca sem contexto por chamada — ver comentário em `COMIC_SYNC_ALPN`.
+pub(crate) type PendingComicScope = Arc<Mutex<HashMap<String, String>>>;
 
 /// Papel outbound do protocolo `acerola/sync-files/1` — este lado iniciou a conexão.
 pub(crate) struct FileSyncOutbound {
@@ -121,6 +138,130 @@ async fn run_and_report(
             // por falha de conexão. Se essa escrita falhar (peer já caiu, stream já fechado),
             // ignora — a sessão já foi rejeitada localmente de qualquer forma, o erro abaixo é
             // retornado igual.
+            let _ = exchange::write_session_busy(send, &reason).await;
+            Err(P2pError::StreamFailed(reason))
+        }
+    };
+
+    match result {
+        Ok(stats) => {
+            emit("sync:files:complete", complete_payload(peer, &stats));
+            Ok(())
+        }
+        Err(err) => {
+            emit(
+                "sync:files:chapter_failed",
+                serde_json::json!({ "peerId": peer.id, "comicName": "", "chapter": "", "reason": err.to_string() })
+                    .to_string(),
+            );
+            Err(err)
+        }
+    }
+}
+
+/// Papel outbound do protocolo `acerola/sync-comic/1` — este lado discou. Recupera (e remove)
+/// o `comic_name` que o usuário escolheu, gravado em `pending_scope` por `P2PNode::sync_comic`
+/// logo antes de chamar `connect()` — é a única forma de essa escolha, que só existe do lado
+/// Kotlin, chegar até aqui (ver `COMIC_SYNC_ALPN`).
+pub(crate) struct ComicSyncOutbound {
+    emit: EventEmitter,
+    provider: Arc<dyn FileSyncProvider>,
+    session_guard: Arc<FileSyncSessionGuard>,
+    pending_scope: PendingComicScope,
+}
+
+impl ComicSyncOutbound {
+    pub(crate) fn new(
+        emit: EventEmitter,
+        provider: Arc<dyn FileSyncProvider>,
+        session_guard: Arc<FileSyncSessionGuard>,
+        pending_scope: PendingComicScope,
+    ) -> Self {
+        Self { emit, provider, session_guard, pending_scope }
+    }
+}
+
+#[async_trait]
+impl Handler for ComicSyncOutbound {
+    async fn handle(
+        &self,
+        peer: &PeerIdentity,
+        send: Box<dyn AsyncWrite + Send + Unpin>,
+        recv: Box<dyn AsyncRead + Send + Unpin>,
+    ) -> Result<(), P2pError> {
+        let comic_name = self
+            .pending_scope
+            .lock()
+            .expect("pending comic scope mutex poisoned")
+            .remove(&peer.id);
+        run_and_report_scoped(
+            true,
+            peer,
+            &self.emit,
+            &self.provider,
+            &self.session_guard,
+            comic_name,
+            send,
+            recv,
+        )
+        .await
+    }
+}
+
+/// Papel inbound do protocolo `acerola/sync-comic/1` — o peer discou pedindo (ou oferecendo) um
+/// quadrinho específico. O `comic_name` chega pelo wire (fase 0, `ComicSyncScope`), não é
+/// conhecido localmente antes da sessão começar — por isso não precisa de `pending_scope`.
+pub(crate) struct ComicSyncInbound {
+    emit: EventEmitter,
+    provider: Arc<dyn FileSyncProvider>,
+    session_guard: Arc<FileSyncSessionGuard>,
+}
+
+impl ComicSyncInbound {
+    pub(crate) fn new(
+        emit: EventEmitter,
+        provider: Arc<dyn FileSyncProvider>,
+        session_guard: Arc<FileSyncSessionGuard>,
+    ) -> Self {
+        Self { emit, provider, session_guard }
+    }
+}
+
+#[async_trait]
+impl Handler for ComicSyncInbound {
+    async fn handle(
+        &self,
+        peer: &PeerIdentity,
+        send: Box<dyn AsyncWrite + Send + Unpin>,
+        recv: Box<dyn AsyncRead + Send + Unpin>,
+    ) -> Result<(), P2pError> {
+        run_and_report_scoped(false, peer, &self.emit, &self.provider, &self.session_guard, None, send, recv).await
+    }
+}
+
+/// Mesma orquestração de `run_and_report` (guard -> exchange -> emitir complete/failed), só que
+/// pro exchange escopado a um quadrinho (`exchange::run_exchange_scoped`). `session_guard` é a
+/// MESMA instância compartilhada com `acerola/sync-files/1` (ver `api.rs::P2PNode::new`) — um
+/// sync completo e um sync de um quadrinho só para o mesmo peer nunca rodam ao mesmo tempo,
+/// exatamente pelo mesmo motivo (dobrar a varredura de biblioteca/I-O) que já vale entre duas
+/// sessões `sync-files`. Por isso os eventos emitidos são os MESMOS `sync:files:*` de sempre —
+/// nunca há ambiguidade sobre qual sessão está ativa pra um peer.
+async fn run_and_report_scoped(
+    outbound_role: bool,
+    peer: &PeerIdentity,
+    emit: &EventEmitter,
+    provider: &Arc<dyn FileSyncProvider>,
+    session_guard: &Arc<FileSyncSessionGuard>,
+    comic_name_outbound: Option<String>,
+    send: Box<dyn AsyncWrite + Send + Unpin>,
+    recv: Box<dyn AsyncRead + Send + Unpin>,
+) -> Result<(), P2pError> {
+    let result = match session_guard.try_acquire(&peer.id) {
+        Some(_lease) => {
+            exchange::run_exchange_scoped(outbound_role, peer, emit, provider, comic_name_outbound, send, recv).await
+        }
+        None => {
+            let reason = format!("sync-comic session already in progress for peer {}", peer.id);
             let _ = exchange::write_session_busy(send, &reason).await;
             Err(P2pError::StreamFailed(reason))
         }
@@ -320,5 +461,73 @@ mod concurrency_tests {
 
         let rejecter_error = rejecter_result.expect_err("rejeição local também deve retornar erro");
         assert!(rejecter_error.to_string().contains("already in progress"));
+    }
+
+    /// `acerola/sync-comic/1` compartilha a MESMA instância de `FileSyncSessionGuard` com
+    /// `acerola/sync-files/1` (ver `api.rs::P2PNode::new`) — uma sessão de sync completo já em
+    /// andamento pro peer deve rejeitar uma tentativa de sync de um quadrinho só, mesmo que os
+    /// ALPNs sejam diferentes. Sem isso, os dois protocolos rodariam ao mesmo tempo pro mesmo
+    /// peer e dobrariam a varredura de biblioteca via `run_blocking`.
+    #[tokio::test]
+    async fn comic_sync_session_is_rejected_while_a_full_sync_files_session_is_active_for_the_same_peer() {
+        let session_guard = Arc::new(FileSyncSessionGuard::default());
+        let manifest_calls = Arc::new(AtomicUsize::new(0));
+        let provider: Arc<dyn FileSyncProvider> =
+            Arc::new(CountingProvider { manifest_calls: Arc::clone(&manifest_calls) });
+        let peer = PeerIdentity { id: "peer-shared-guard".into(), device_id: None };
+        let emit: EventEmitter = Arc::new(|_event, _data| {});
+
+        // Simula uma sessão `sync-files` completa já em andamento pro peer.
+        let lease = session_guard.try_acquire(&peer.id);
+        assert!(lease.is_some());
+
+        let (_client, server) = tokio::io::duplex(4096);
+        let (recv, send) = tokio::io::split(server);
+        let result = run_and_report_scoped(
+            true,
+            &peer,
+            &emit,
+            &provider,
+            &session_guard,
+            Some("Comic A".to_string()),
+            Box::new(send) as Box<dyn AsyncWrite + Send + Unpin>,
+            Box::new(recv) as Box<dyn AsyncRead + Send + Unpin>,
+        )
+        .await;
+
+        assert!(result.is_err(), "sync-comic deveria ser rejeitado com sync-files ativo pro mesmo peer");
+        assert_eq!(manifest_calls.load(Ordering::SeqCst), 0, "provider não deveria ser tocado na sessão rejeitada");
+    }
+
+    /// Simétrico ao teste acima: uma sessão `sync-comic` já em andamento também rejeita uma
+    /// tentativa de `sync-files` completo pro mesmo peer, pelo mesmo guard compartilhado.
+    #[tokio::test]
+    async fn full_sync_files_session_is_rejected_while_a_comic_sync_session_is_active_for_the_same_peer() {
+        let session_guard = Arc::new(FileSyncSessionGuard::default());
+        let manifest_calls = Arc::new(AtomicUsize::new(0));
+        let provider: Arc<dyn FileSyncProvider> =
+            Arc::new(CountingProvider { manifest_calls: Arc::clone(&manifest_calls) });
+        let peer = PeerIdentity { id: "peer-shared-guard-2".into(), device_id: None };
+        let emit: EventEmitter = Arc::new(|_event, _data| {});
+
+        // Simula uma sessão `sync-comic` já em andamento pro peer.
+        let lease = session_guard.try_acquire(&peer.id);
+        assert!(lease.is_some());
+
+        let (_client, server) = tokio::io::duplex(4096);
+        let (recv, send) = tokio::io::split(server);
+        let result = run_and_report(
+            true,
+            &peer,
+            &emit,
+            &provider,
+            &session_guard,
+            Box::new(send) as Box<dyn AsyncWrite + Send + Unpin>,
+            Box::new(recv) as Box<dyn AsyncRead + Send + Unpin>,
+        )
+        .await;
+
+        assert!(result.is_err(), "sync-files deveria ser rejeitado com sync-comic ativo pro mesmo peer");
+        assert_eq!(manifest_calls.load(Ordering::SeqCst), 0, "provider não deveria ser tocado na sessão rejeitada");
     }
 }

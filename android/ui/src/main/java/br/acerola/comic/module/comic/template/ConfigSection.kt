@@ -8,6 +8,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
@@ -21,10 +25,14 @@ import br.acerola.comic.module.comic.component.ComicExternalSyncToggle
 import br.acerola.comic.module.comic.component.PaginationPreference
 import br.acerola.comic.module.comic.component.SyncMangaArchive
 import br.acerola.comic.module.comic.component.SyncMetadata
+import br.acerola.comic.module.comic.component.SyncWithPeerAction
 import br.acerola.comic.module.comic.component.VolumeStylePreference
 import br.acerola.comic.module.comic.state.ComicAction
 import br.acerola.comic.module.comic.state.ComicSyncAction
 import br.acerola.comic.module.comic.state.ComicUiState
+import br.acerola.comic.module.main.Main
+import br.acerola.comic.module.main.common.component.PeerPickerSheet
+import br.acerola.comic.module.main.sync.state.PairedPeer
 import br.acerola.comic.ui.R
 
 private val itemModifier = Modifier.padding(horizontal = 16.dp)
@@ -44,6 +52,9 @@ fun Comic.Template.configSection(
     scope: LazyListScope,
     uiState: ComicUiState,
     getSyncActionVisualState: (ComicSyncAction) -> SyncActionVisualState = { SyncActionVisualState.IDLE },
+    pairedPeers: List<PairedPeer> = emptyList(),
+    syncWithPeerState: SyncActionVisualState = SyncActionVisualState.IDLE,
+    onLoadPairedPeers: () -> Unit = {},
     onAction: (ComicAction) -> Unit,
     onSyncAction: (ComicSyncAction) -> Unit,
 ) {
@@ -166,6 +177,44 @@ fun Comic.Template.configSection(
             comicInfoState = getSyncActionVisualState(ComicSyncAction.SyncComicInfo),
             modifier = itemModifier,
         )
+    }
+
+    scope.item {
+        HorizontalDivider(
+            modifier =
+                Modifier
+                    .padding(horizontal = 24.dp, vertical = 8.dp)
+                    .alpha(0.3f),
+        )
+    }
+
+    // NOTE: Sincronização entre Dispositivos (acerola/sync-comic/1)
+    scope.item {
+        SectionHeader(stringResource(id = R.string.title_config_sync_devices))
+    }
+
+    scope.item {
+        var showPeerPicker by remember { mutableStateOf(false) }
+
+        Comic.Component.SyncWithPeerAction(
+            state = syncWithPeerState,
+            onClick = {
+                onLoadPairedPeers()
+                showPeerPicker = true
+            },
+            modifier = itemModifier,
+        )
+
+        if (showPeerPicker) {
+            Main.Common.Component.PeerPickerSheet(
+                peers = pairedPeers,
+                onSelect = { peerId ->
+                    showPeerPicker = false
+                    onSyncAction(ComicSyncAction.SyncWithPeer(peerId))
+                },
+                onDismiss = { showPeerPicker = false },
+            )
+        }
     }
 
     scope.item { Spacer(modifier = Modifier.height(32.dp)) }

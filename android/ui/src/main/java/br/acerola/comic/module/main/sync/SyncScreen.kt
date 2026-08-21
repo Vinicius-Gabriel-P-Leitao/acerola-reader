@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -273,6 +274,19 @@ private fun SyncLayout(
                 )
             }
         }
+
+        uiState.browsingPeerId?.let { peerId ->
+            val peerDisplayName =
+                uiState.pairedPeers.find { it.peerId == peerId }?.deviceName ?: PairingCode.shortId(peerId)
+            RemoteLibrarySheet(
+                peerDisplayName = peerDisplayName,
+                comics = uiState.remoteLibrary,
+                isLoading = !uiState.remoteLibraryLoaded && uiState.browseLibraryError == null,
+                errorMessage = uiState.browseLibraryError,
+                onSelectComic = { comicName -> onAction(SyncAction.SyncComic(peerId, comicName)) },
+                onDismiss = { onAction(SyncAction.DismissLibraryBrowse) },
+            )
+        }
     }
 }
 
@@ -486,6 +500,15 @@ private fun PeerRow(
                             onClick = {
                                 menuExpanded = false
                                 onAction(SyncAction.SyncFiles(peer.peerId))
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(id = R.string.action_sync_browse_library)) },
+                            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
+                            enabled = !filesSyncing,
+                            onClick = {
+                                menuExpanded = false
+                                onAction(SyncAction.BrowseLibrary(peer.peerId))
                             },
                         )
                         HorizontalDivider()

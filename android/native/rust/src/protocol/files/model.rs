@@ -35,6 +35,17 @@ pub(crate) struct FileWantList {
     pub wanted: Vec<(String, String)>,
 }
 
+/// Fase 0 exclusiva do protocolo `acerola/sync-comic/1` (sincronização de um único
+/// quadrinho) — trocada antes de qualquer coisa do protocolo `sync-files` normal. Só o lado
+/// outbound sabe qual quadrinho o usuário escolheu (veio de uma chamada FFI Kotlin ->
+/// `P2PNode::sync_comic`, não do wire); o inbound aprende por aqui e filtra seu próprio
+/// manifesto ao mesmo `comic_name` antes de seguir para as fases 1-3 compartilhadas com
+/// `run_exchange`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct ComicSyncScope {
+    pub comic_name: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct FileHeader {
     pub comic_name: String,

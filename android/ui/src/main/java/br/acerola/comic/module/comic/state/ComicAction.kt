@@ -62,4 +62,8 @@ sealed interface ComicSyncAction {
     data object ExtractFirstPageAsCover : ComicSyncAction
 
     data object ExtractVolumeCovers : ComicSyncAction
+
+    data class SyncWithPeer(
+        val peerId: String,
+    ) : ComicSyncAction
 }

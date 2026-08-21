@@ -34,6 +34,19 @@ class P2pUseCase
             p2pService.connect(peerAddress, alpn)
         }
 
+        fun syncComic(
+            peerAddress: PeerAddress,
+            comicName: String,
+        ) {
+            AcerolaLogger.i("P2pUseCase", "Syncing comic '$comicName' with peer: ${peerAddress.id}", LogSource.NETWORK)
+            p2pService.syncComic(peerAddress, comicName)
+        }
+
+        fun browseLibrary(peerAddress: PeerAddress) {
+            AcerolaLogger.i("P2pUseCase", "Browsing library of peer: ${peerAddress.id}", LogSource.NETWORK)
+            p2pService.browseLibrary(peerAddress)
+        }
+
         fun switchToLocal() {
             AcerolaLogger.i("P2pUseCase", "Switching to LOCAL mode", LogSource.NETWORK)
             p2pService.switchToLocal()

@@ -141,6 +141,8 @@ fun ComicScreen(
     val isComicMetadataIndexing by comicMetadataViewModel.isIndexing.collectAsStateWithLifecycle(false)
 
     val isExtractingVolumeCovers by comicViewModel.isExtractingVolumeCovers.collectAsStateWithLifecycle(false)
+    val isSyncingWithPeer by comicViewModel.isSyncingWithPeer.collectAsStateWithLifecycle(false)
+    val pairedPeers by comicViewModel.pairedPeers.collectAsStateWithLifecycle()
 
     val activeLibrarySyncType by comicDirectoryViewModel.activeSyncType.collectAsStateWithLifecycle(null)
     val activeMetadataSource by comicMetadataViewModel.activeSyncSource.collectAsStateWithLifecycle(null)
@@ -182,6 +184,34 @@ fun ComicScreen(
             action == ComicSyncAction.SyncAnilistInfo && activeMetadataSource == MetadataSyncWorker.SOURCE_ANILIST -> SyncActionVisualState.LOADING
             action == ComicSyncAction.SyncComicInfo && activeMetadataSource == MetadataSyncWorker.SOURCE_COMICINFO -> SyncActionVisualState.LOADING
             successSyncAction == action -> SyncActionVisualState.SUCCESS
+            else -> SyncActionVisualState.IDLE
+        }
+
+    // `ComicSyncAction.SyncWithPeer` carries a `peerId` chosen only after the peer picker
+    // closes, so it can't reuse the generic per-instance-equality tracking above (there's a
+    // single button, not one per peer) — a small dedicated state machine mirroring the same
+    // "flash success for a bit" shape instead.
+    var syncWithPeerSuccess by remember { mutableStateOf(false) }
+    var wasSyncingWithPeer by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isSyncingWithPeer) {
+        if (isSyncingWithPeer) {
+            wasSyncingWithPeer = true
+            return@LaunchedEffect
+        }
+
+        if (wasSyncingWithPeer) {
+            wasSyncingWithPeer = false
+            syncWithPeerSuccess = true
+            delay(1800.milliseconds)
+            if (syncWithPeerSuccess) syncWithPeerSuccess = false
+        }
+    }
+
+    val syncWithPeerState =
+        when {
+            isSyncingWithPeer -> SyncActionVisualState.LOADING
+            syncWithPeerSuccess -> SyncActionVisualState.SUCCESS
             else -> SyncActionVisualState.IDLE
         }
 
@@ -288,6 +318,7 @@ fun ComicScreen(
             ComicSyncAction.SyncAnilistInfo -> comicMetadataViewModel.syncFromAnilist(uiState.comic.directory.id)
             ComicSyncAction.ExtractFirstPageAsCover -> comicDirectoryViewModel.extractCoverFromChapter(uiState.comic.directory.id)
             ComicSyncAction.ExtractVolumeCovers -> comicViewModel.extractAllVolumeCovers()
+            is ComicSyncAction.SyncWithPeer -> comicViewModel.syncWithPeer(action.peerId)
         }
     }
 
@@ -379,6 +410,9 @@ fun ComicScreen(
                             scope = this,
                             uiState = uiState,
                             getSyncActionVisualState = ::getSyncActionVisualState,
+                            pairedPeers = pairedPeers,
+                            syncWithPeerState = syncWithPeerState,
+                            onLoadPairedPeers = comicViewModel::loadPairedPeers,
                             onAction = onAction,
                             onSyncAction = onSyncAction,
                         )

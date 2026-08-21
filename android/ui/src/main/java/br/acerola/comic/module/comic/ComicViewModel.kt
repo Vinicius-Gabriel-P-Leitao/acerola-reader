@@ -22,7 +22,10 @@ import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.error.UserMessage
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
+import br.acerola.comic.module.main.sync.state.PairedPeer
 import br.acerola.comic.service.cache.ChapterCacheHandler
+import br.acerola.comic.service.network.P2pEvent
+import br.acerola.comic.service.network.P2pEventBus
 import br.acerola.comic.type.UiText
 import br.acerola.comic.ui.R
 import br.acerola.comic.usecase.DirectoryCase
@@ -36,8 +39,11 @@ import br.acerola.comic.usecase.history.TrackReadingProgressUseCase
 import br.acerola.comic.usecase.metadata.ExtractAllVolumeCoversUseCase
 import br.acerola.comic.usecase.metadata.ExtractVolumeCoverUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
+import br.acerola.comic.usecase.network.P2pUseCase
+import br.acerola.comic.usecase.network.SyncComicWithPeerUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -70,6 +76,9 @@ class ComicViewModel
         private val extractVolumeCoverUseCase: ExtractVolumeCoverUseCase,
         private val extractAllVolumeCoversUseCase: ExtractAllVolumeCoversUseCase,
         private val cacheHandler: ChapterCacheHandler,
+        private val p2pUseCase: P2pUseCase,
+        private val syncComicWithPeerUseCase: SyncComicWithPeerUseCase,
+        private val p2pEventBus: P2pEventBus,
     ) : ViewModel() {
         private val selectedDirectoryId = MutableStateFlow<Long?>(null)
         private val selectedComicId = MutableStateFlow<Long?>(null)
@@ -97,6 +106,19 @@ class ComicViewModel
 
         private val _isExtractingVolumeCovers = MutableStateFlow(false)
         val isExtractingVolumeCovers: StateFlow<Boolean> = _isExtractingVolumeCovers.asStateFlow()
+
+        private val _pairedPeers = MutableStateFlow<List<PairedPeer>>(emptyList())
+        val pairedPeers: StateFlow<List<PairedPeer>> = _pairedPeers.asStateFlow()
+
+        /** `peerId` de uma sessão `acerola/sync-comic/1` em andamento pra este quadrinho, ou
+         *  `null` se nenhuma. `null` também é o valor de repouso — nunca há mais de uma sessão
+         *  de peer sync ativa por vez nesta tela (o próprio guard do lado Rust já impede duas
+         *  sessões simultâneas pro mesmo peer). */
+        private val _syncingPeerId = MutableStateFlow<String?>(null)
+        val isSyncingWithPeer: StateFlow<Boolean> =
+            _syncingPeerId
+                .map { it != null }
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
         private val _uiEvents = Channel<UserMessage>(capacity = Channel.BUFFERED)
         val uiEvents: Flow<UserMessage> = _uiEvents.receiveAsFlow()
@@ -257,6 +279,29 @@ class ComicViewModel
                         dto
                     }
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+        init {
+            viewModelScope.launch {
+                p2pEventBus.events.collect { event ->
+                    val pendingPeerId = _syncingPeerId.value ?: return@collect
+                    when (event) {
+                        is P2pEvent.FileSyncComplete ->
+                            if (event.peerId == pendingPeerId) _syncingPeerId.value = null
+
+                        is P2pEvent.FileSyncChapterFailed -> {
+                            // Comic/chapter vazios = falha da sessão inteira, não de um capítulo
+                            // (ver protocol::files::mod.rs::run_and_report_scoped).
+                            if (event.peerId == pendingPeerId && event.comicName.isEmpty() && event.chapter.isEmpty()) {
+                                _syncingPeerId.value = null
+                                _uiEvents.send(UserMessage.Raw(UiText.StringResource(R.string.error_sync_comic_peer_failed)))
+                            }
+                        }
+
+                        else -> Unit
+                    }
+                }
+            }
+        }
 
         fun init(
             folderId: Long,
@@ -517,6 +562,38 @@ class ComicViewModel
                     _isExtractingVolumeCovers.value = false
                 }
             }
+        }
+
+        /** Carrega os peers pareados pro `PeerPickerSheet` — sob demanda (não reativo), já que
+         *  essa lista só é relevante enquanto o sheet estiver aberto. */
+        fun loadPairedPeers() {
+            viewModelScope.launch(Dispatchers.IO) {
+                val liveDeviceNames = p2pUseCase.getConnectedPeersWithInfo().associate { it.peerId to it.deviceName }
+                val paired =
+                    p2pUseCase.getPairedPeers().map { PairedPeer(peerId = it.id, deviceName = liveDeviceNames[it.id]) }
+                _pairedPeers.value = paired
+            }
+        }
+
+        fun syncWithPeer(peerId: String) {
+            val comicName = comic.value?.directory?.name ?: return
+
+            AcerolaLogger.audit(
+                TAG,
+                "Syncing comic with peer",
+                LogSource.VIEWMODEL,
+                mapOf("peerId" to peerId, "comicName" to comicName),
+            )
+
+            val fired = syncComicWithPeerUseCase(peerId, comicName)
+            if (!fired) {
+                viewModelScope.launch {
+                    _uiEvents.send(UserMessage.Raw(UiText.StringResource(R.string.error_sync_comic_peer_not_paired)))
+                }
+                return
+            }
+
+            _syncingPeerId.value = peerId
         }
 
         private fun String.normalizeKey(): String = this.filter { it.isLetterOrDigit() }.lowercase()

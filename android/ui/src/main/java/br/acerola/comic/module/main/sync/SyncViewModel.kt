@@ -161,6 +161,75 @@ class SyncViewModel
                 SyncAction.DismissTrustDialog -> _uiState.update { it.copy(trustedPeerDialogPeerId = null) }
                 SyncAction.DismissConnectError -> _uiState.update { it.copy(connectError = null) }
                 is SyncAction.RemovePeer -> removePeer(action.peerId)
+
+                is SyncAction.BrowseLibrary -> browseLibrary(action.peerId)
+                SyncAction.DismissLibraryBrowse ->
+                    _uiState.update {
+                        it.copy(
+                            browsingPeerId = null,
+                            remoteLibrary = emptyList(),
+                            remoteLibraryLoaded = false,
+                            browseLibraryError = null,
+                        )
+                    }
+                is SyncAction.SyncComic -> syncComic(action.peerId, action.comicName)
+            }
+        }
+
+        /** Só lista os quadrinhos do peer (nome + contagem) — não sincroniza nada. Resultado
+         *  chega via [P2pEvent.LibraryBrowseResult]/[P2pEvent.LibraryBrowseError]. */
+        private fun browseLibrary(peerId: String) {
+            _uiState.update {
+                it.copy(
+                    browsingPeerId = peerId,
+                    remoteLibrary = emptyList(),
+                    remoteLibraryLoaded = false,
+                    browseLibraryError = null,
+                )
+            }
+
+            viewModelScope.launch(Dispatchers.IO) {
+                val addr = p2pUseCase.getPairedPeers().find { it.id == peerId }
+                if (addr == null) {
+                    _uiState.update { it.copy(browsingPeerId = null) }
+                    return@launch
+                }
+                p2pUseCase.browseLibrary(addr)
+            }
+        }
+
+        /** Sincroniza um único quadrinho (`acerola/sync-comic/1`) — reaproveita a MESMA
+         *  bookkeeping ([SYNC_KIND_FILES]/`syncingKeys`/[TransferLogEntry]) do botão
+         *  "Sincronizar arquivos", já que ambos emitem os mesmos eventos `sync:files:*`
+         *  (ver `protocol::files::run_and_report_scoped` do lado Rust). */
+        private fun syncComic(
+            peerId: String,
+            comicName: String,
+        ) {
+            val key = syncKey(peerId, SYNC_KIND_FILES)
+            if (key in _uiState.value.syncingKeys) return
+
+            _uiState.update {
+                it.copy(
+                    syncingKeys = it.syncingKeys + key,
+                    browsingPeerId = null,
+                    remoteLibrary = emptyList(),
+                    remoteLibraryLoaded = false,
+                )
+            }
+
+            viewModelScope.launch {
+                delay(SYNC_IN_FLIGHT_TIMEOUT_MS)
+                _uiState.update { it.copy(syncingKeys = it.syncingKeys - key) }
+            }
+
+            viewModelScope.launch(Dispatchers.IO) {
+                val addr = p2pUseCase.getPairedPeers().find { it.id == peerId }
+                if (addr == null) {
+                    _uiState.update { it.copy(syncingKeys = it.syncingKeys - key) }
+                    return@launch
+                }
+                p2pUseCase.syncComic(addr, comicName)
             }
         }
 
@@ -337,6 +406,15 @@ class SyncViewModel
                     pushLog(SYNC_KIND_FILES, "complete", LogState.SUCCESS)
                     refreshLocalInfo()
                 }
+
+                is P2pEvent.LibraryBrowseResult ->
+                    if (event.peerId == _uiState.value.browsingPeerId) {
+                        _uiState.update { it.copy(remoteLibrary = event.comics, remoteLibraryLoaded = true) }
+                    }
+                is P2pEvent.LibraryBrowseError ->
+                    if (event.peerId == _uiState.value.browsingPeerId) {
+                        _uiState.update { it.copy(browseLibraryError = event.message) }
+                    }
 
                 else -> Unit
             }

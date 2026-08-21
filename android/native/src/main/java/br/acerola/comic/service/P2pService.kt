@@ -96,6 +96,36 @@ class P2pService(
         p2pNode.connect(ffiAddr, alpn)
     }
 
+    /** Sincroniza um único quadrinho com o peer — cobre tanto push (quadrinho que já tenho)
+     *  quanto pull (quadrinho descoberto navegando a biblioteca remota), já que a troca do
+     *  protocolo `acerola/sync-comic/1` é sempre simétrica. */
+    fun syncComic(
+        peerAddress: PeerAddress,
+        comicName: String,
+    ) {
+        Log.d("P2pService", "Syncing comic '$comicName' with peer: ${peerAddress.id}")
+        val ffiAddr =
+            FfiPeerAddr(
+                id = peerAddress.id,
+                deviceId = peerAddress.deviceId,
+                addrs = peerAddress.addrs,
+            )
+        p2pNode.syncComic(ffiAddr, comicName)
+    }
+
+    /** Pede a lista de quadrinhos (nome + contagem de capítulos) da biblioteca do peer, sem
+     *  sincronizar nada — resultado chega via evento `browse:library:result`/`error`. */
+    fun browseLibrary(peerAddress: PeerAddress) {
+        Log.d("P2pService", "Browsing library of peer: ${peerAddress.id}")
+        val ffiAddr =
+            FfiPeerAddr(
+                id = peerAddress.id,
+                deviceId = peerAddress.deviceId,
+                addrs = peerAddress.addrs,
+            )
+        p2pNode.browseLibrary(ffiAddr)
+    }
+
     fun switchToLocal() {
         p2pNode.switchToLocal()
     }
