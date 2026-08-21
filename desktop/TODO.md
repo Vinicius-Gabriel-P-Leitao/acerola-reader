@@ -97,6 +97,7 @@
 
 - [x] **Exibir leituras recentes** - Rota renderizada agrupando items a partir de uma call SQL (Tauri) listando as leituras e capas ativas.
 - [x] **Continuar pelo histórico** - Payload de clique empacota state via router Svelte abrindo direto a page do `reader`.
+- [ ] **[Alta] Corrigir bug no histórico** - Quando um capítulo é marcado como concluído o app não atualiza o histórico para otimizar o histórico.
 
 ---
 
@@ -114,8 +115,17 @@
 
 ---
 
+## P2P / Sincronização
+
+- [x] **[Média] Sincronização individual sem ser global** - Ter uma forma de poder sincronizar um quadrinho só com outro dispositivo: o usuário deve conseguir clicar em um quadrinho e enviar para outro dispositivo, ou pesquisar quadrinhos em outro dispositivo e pedir para sincronizar.
+- [ ] **[Alta] Botão "Escolher dispositivo" não abre a seleção de dispositivo** - Na tela de preferências do quadrinho, o botão que deveria abrir o popover com a lista de dispositivos pareados (pra sync individual) não abre nada ao clicar.
+- [ ] **[Alta] Busca de biblioteca remota falha nos dois lados** - Mesmo depois de corrigir o ALPN pra bater com o Android (`acerola/browse-library/1`), a busca por biblioteca remota ainda falha tanto no Desktop quanto no Android.
+
+---
+
 ## Arquitetura & Infraestrutura (Rust)
 
 - [x] **Gerar seed dinâmico para nó P2P** - (validar se é a melhor forma) Substituir o seed hardcoded por geração de 32 bytes aleatórios persistidos em arquivo local (.key) ou SQLite para cada instalação ter sua identidade P2P isolada.
 - [x] **Tratamento gracioso de erro na inicialização assíncrona do Rust** - Substituir o uso de `panic!` na inicialização de serviços assíncronos (banco de dados SQLite, nó de rede P2P) por retornos de `Result` e exibição de alerta gráfico ao usuário.
 - [x] **Otimizar e dinamizar o gerenciamento de escopos do File System (fs_scope)** - Substituir a leitura crua do settings.json via std::fs pelo plugin tauri-plugin-store e atualizar dinamicamente as permissões do fs_scope quando o usuário alterar a pasta da biblioteca em runtime.
+- [ ] **[Média] Fazer o app conseguir ficar em segundo plano com ícone escondido** - Fazer o app poder ficar colapsado em segundo plano e na barra de tarefas do sistema para quando o usuário executar algo demorado ele poder deixar fechado enquanto roda.
