@@ -26,3 +26,16 @@ export type RelayInfo = {
 	defaultRelay: string;
 	activeRelay: string;
 };
+
+/** Resumo de um quadrinho da biblioteca remota (ver `library_browse_handler.rs`) — só título +
+ *  contagem de capítulos, sem transferir nada ainda. */
+export type ComicSummary = {
+	comicName: string;
+	chapterCount: number;
+};
+
+/** Payload do evento `library:query:result`. */
+export type LibraryQueryResultPayload = {
+	peerId: string;
+	comics: ComicSummary[];
+};

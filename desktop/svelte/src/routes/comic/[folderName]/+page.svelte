@@ -12,6 +12,8 @@
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { useChapterSelection } from '$lib/hooks/store/use-chapter-selection.svelte';
 	import { useHistory } from '$lib/hooks/store/use-history.svelte';
+	import { usePeerConnection } from '$lib/hooks/store/use-peer-connection.svelte';
+	import { useNetworkSync } from '$lib/hooks/store/use-network-sync.svelte';
 
 	import { useComicContext } from '$lib/state/comic-context.svelte';
 	import { useMetadataSync } from '$lib/hooks/store/use-metadata-sync.svelte';
@@ -55,6 +57,8 @@
 	const metadataSync = useMetadataSync();
 	const chapterSelection = useChapterSelection();
 	const historyActions = useHistory();
+	const peers = usePeerConnection();
+	const p2pSync = useNetworkSync();
 
 	let expandedVolumeId = $state<string | null>(null);
 	let currentBookmarkId = $state<number | null>(null);
@@ -317,8 +321,44 @@
 		}
 	}
 
-	onMount(async () => {
-		await Promise.all([volumeViewPreference.loadVolumeViewMode(), bookmarkStore.loadBookmarks()]);
+	const pairedPeersForUi = $derived(
+		peers.pairedPeers.map((peer) => ({
+			peerId: peer.peerId,
+			label: peers.peerLabel(peer.peerId),
+			addrs: peer.addrs
+		}))
+	);
+	const syncingPeerIds = $derived(
+		peers.pairedPeers
+			.filter((peer) => p2pSync.isSyncing(peer.peerId, 'comic'))
+			.map((peer) => peer.peerId)
+	);
+
+	async function handleSyncToDevice(peerId: string, addrs: number[]) {
+		if (!manga?.title) return;
+		try {
+			await p2pSync.syncComic(peerId, addrs, manga.title);
+			toast.success(m['pages.comic.preferences.p2p_sync.toast.success']());
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
+			toast.error(m['pages.comic.preferences.p2p_sync.toast.error']({ msg }));
+		}
+	}
+
+	onMount(() => {
+		(async () => {
+			await Promise.all([
+				volumeViewPreference.loadVolumeViewMode(),
+				bookmarkStore.loadBookmarks(),
+				peers.startListening(),
+				p2pSync.startListening()
+			]);
+		})();
+
+		return () => {
+			peers.stopListening();
+			p2pSync.stopListening();
+		};
 	});
 
 	const comicId = $derived(
@@ -778,12 +818,14 @@
 						<ComicPreferences
 							data={{
 								hasVolumeStructure: chapterStore.chapters?.hasVolumeStructure ?? false,
-								bookmarks: bookmarkStore.bookmarks
+								bookmarks: bookmarkStore.bookmarks,
+								pairedPeers: pairedPeersForUi
 							}}
 							state={{
 								volumeViewMode: volumeViewPreference.volumeViewMode,
 								bookmarkId: currentBookmarkId,
-								externalSyncEnabled: manga.metadata.externalSync
+								externalSyncEnabled: manga.metadata.externalSync,
+								syncingPeerIds
 							}}
 							events={{
 								onVolumeViewModeChange: (value) => (volumeViewPreference.volumeViewMode = value),
@@ -807,7 +849,8 @@
 								onDeepRescanComic: handleDeepRescanComic,
 								onRegenerateCover: handleRegenerateCover,
 								onRegenerateVolumeCovers: handleRegenerateVolumeCovers,
-								onClearMetadata: handleClearMetadata
+								onClearMetadata: handleClearMetadata,
+								onSyncToDevice: handleSyncToDevice
 							}}
 						/>
 					{/if}

@@ -15,6 +15,16 @@ export const NETWORK_EVENTS = {
 	filesProgress: 'sync:files:progress',
 	filesComplete: 'sync:files:complete',
 	filesError: 'sync:files:error',
+	comicStarted: 'sync:comic:started',
+	comicProgress: 'sync:comic:progress',
+	comicComplete: 'sync:comic:complete',
+	comicError: 'sync:comic:error',
+	/** Resultado de `queryRemoteLibrary` — carrega `{ peerId, comics }` (ver
+	 *  `LibraryQueryResultPayload`), emitido pelo `LibraryBrowseOutbound` no backend
+	 *  (`infra::sync::protocol::library_browse_handler`, ALPN `acerola/browse-library/1`,
+	 *  mesmo ALPN usado pelo Android). */
+	libraryQueryResult: 'library:query:result',
+	libraryQueryError: 'library:query:error',
 	/** Emitido uma vez na inicialização se o keyring do SO não estiver disponível (ver
 	 *  `infra::security::MasterKeySource::FallbackFile` no backend) — a chave mestra caiu
 	 *  pra um arquivo local sem a proteção extra do SO. Não é um erro fatal (tudo continua

@@ -312,6 +312,19 @@
 						}
 					}
 				},
+				"p2p_sync": {
+					"title": "Sync with Device",
+					"empty": "No paired devices yet. Pair a device on the Network screen.",
+					"send": {
+						"title": "Send this comic",
+						"desc": "Syncs only this comic with the chosen device, without touching the rest of the library.",
+						"button": "Choose device"
+					},
+					"toast": {
+						"success": "Comic synced with device!",
+						"error": "Failed to sync comic: {msg}"
+					}
+				},
 				"cover": {
 					"title": "Cover",
 					"regenerate": {
@@ -648,7 +661,8 @@
 				"never_synced": "Never synced",
 				"online": "Online now",
 				"offline_hint": "This device isn't reachable right now — reconnect it to sync.",
-				"more_actions": "More sync actions for this device."
+				"more_actions": "More sync actions for this device.",
+				"browse_library": "Browse remote library"
 			},
 			"transfers": {
 				"title": "Transfers",
@@ -659,7 +673,19 @@
 				"files_started": "Syncing files with {peer}...",
 				"files_progress": "Transferring {item}...",
 				"files_complete": "Files synced with {peer}.",
-				"files_error": "File sync error: {msg}"
+				"files_error": "File sync error: {msg}",
+				"comic_started": "Syncing comic with {peer}...",
+				"comic_progress": "Transferring {item}...",
+				"comic_complete": "Comic synced with {peer}.",
+				"comic_error": "Failed to sync comic: {msg}"
+			},
+			"remote_library": {
+				"title": "Remote library",
+				"search_placeholder": "Search comic...",
+				"loading": "Querying device's library...",
+				"empty": "No comics found.",
+				"chapter_count": "{count} chapters",
+				"sync_button": "Sync"
 			}
 		}
 	},

@@ -312,6 +312,19 @@
 						}
 					}
 				},
+				"p2p_sync": {
+					"title": "Sincronizar com Dispositivo",
+					"empty": "Nenhum dispositivo pareado ainda. Pareie um dispositivo na tela de Rede.",
+					"send": {
+						"title": "Enviar este quadrinho",
+						"desc": "Sincroniza só este quadrinho com o dispositivo escolhido, sem mexer no resto da biblioteca.",
+						"button": "Escolher dispositivo"
+					},
+					"toast": {
+						"success": "Quadrinho sincronizado com o dispositivo!",
+						"error": "Erro ao sincronizar quadrinho: {msg}"
+					}
+				},
 				"cover": {
 					"title": "Capa",
 					"regenerate": {
@@ -648,7 +661,8 @@
 				"never_synced": "Nunca sincronizado",
 				"online": "Online agora",
 				"offline_hint": "Este dispositivo não está acessível agora — reconecte-o pra sincronizar.",
-				"more_actions": "Mais ações de sincronização pra esse dispositivo."
+				"more_actions": "Mais ações de sincronização pra esse dispositivo.",
+				"browse_library": "Buscar biblioteca remota"
 			},
 			"transfers": {
 				"title": "Transferências",
@@ -659,7 +673,19 @@
 				"files_started": "Sincronizando arquivos com {peer}...",
 				"files_progress": "Transferindo {item}...",
 				"files_complete": "Arquivos sincronizados com {peer}.",
-				"files_error": "Erro na sincronização de arquivos: {msg}"
+				"files_error": "Erro na sincronização de arquivos: {msg}",
+				"comic_started": "Sincronizando quadrinho com {peer}...",
+				"comic_progress": "Transferindo {item}...",
+				"comic_complete": "Quadrinho sincronizado com {peer}.",
+				"comic_error": "Erro ao sincronizar quadrinho: {msg}"
+			},
+			"remote_library": {
+				"title": "Biblioteca remota",
+				"search_placeholder": "Buscar quadrinho...",
+				"loading": "Consultando biblioteca do dispositivo...",
+				"empty": "Nenhum quadrinho encontrado.",
+				"chapter_count": "{count} capítulos",
+				"sync_button": "Sincronizar"
 			}
 		}
 	},

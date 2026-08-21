@@ -15,6 +15,8 @@
 
 	import { usePeerConnection } from '$lib/hooks/store/use-peer-connection.svelte';
 	import { useNetworkSync, type TransferLogEntry } from '$lib/hooks/store/use-network-sync.svelte';
+	import { useRemoteLibrary } from '$lib/hooks/store/use-remote-library.svelte';
+	import AcerolaDialog from '$lib/components/acerola-dialog/acerola-dialog.svelte';
 	import type { DeviceInfoPayload } from '$lib/contracts/network/network.payloads';
 	import { useRelaySettings } from '$lib/hooks/preferences/use-relay-settings.svelte';
 	import { NETWORK_COMMANDS } from '$lib/contracts/network/network.commands';
@@ -37,10 +39,17 @@
 	import XIcon from '@lucide/svelte/icons/x';
 	import MonitorIcon from '@lucide/svelte/icons/monitor';
 	import MoreVerticalIcon from '@lucide/svelte/icons/more-vertical';
+	import SearchIcon from '@lucide/svelte/icons/search';
+	import BookOpenIcon from '@lucide/svelte/icons/book-open';
+	import CloudDownloadIcon from '@lucide/svelte/icons/cloud-download';
 
 	const peers = usePeerConnection();
 	const sync = useNetworkSync();
 	const relay = useRelaySettings();
+	const remoteLibrary = useRemoteLibrary();
+
+	let browsingPeerId = $state<string | null>(null);
+	let remoteSearchQuery = $state('');
 
 	let qrDataUrl = $state<string | undefined>(undefined);
 	let qrError = $state(false);
@@ -80,6 +89,7 @@
 				peers.loadLocalInfo(),
 				peers.startListening(),
 				sync.startListening(),
+				remoteLibrary.startListening(),
 				relay.loadRelayInfo()
 			]);
 		})();
@@ -88,6 +98,7 @@
 			unlistenKeyringWarning?.();
 			peers.stopListening();
 			sync.stopListening();
+			remoteLibrary.stopListening();
 		};
 	});
 
@@ -185,6 +196,27 @@
 		}
 	}
 
+	// Filtro reativo local sobre o cache já consultado (`remoteLibrary.comicsFor`) — mesmo
+	// padrão do "Buscar quadrinhos por título" da Home: não re-dispara a consulta P2P a cada
+	// tecla, só quando o usuário abre a busca pra um peer (`openRemoteLibrary`).
+	const filteredRemoteComics = $derived.by(() => {
+		if (!browsingPeerId) return [];
+		const comics = remoteLibrary.comicsFor(browsingPeerId);
+		const query = remoteSearchQuery.trim().toLowerCase();
+		if (!query) return comics;
+		return comics.filter((comic) => comic.comicName.toLowerCase().includes(query));
+	});
+
+	async function openRemoteLibrary(peerId: string) {
+		browsingPeerId = peerId;
+		remoteSearchQuery = '';
+		await withSync((id, addrs) => remoteLibrary.queryRemoteLibrary(id, addrs), peerId);
+	}
+
+	async function handleSyncRemoteComic(peerId: string, comicName: string) {
+		await withSync((id, addrs) => sync.syncComic(id, addrs, comicName), peerId);
+	}
+
 	function describeEntry(entry: TransferLogEntry): string {
 		switch (`${entry.kind}:${entry.status}`) {
 			case 'history:started':
@@ -209,6 +241,18 @@
 				});
 			case 'files:error':
 				return m['pages.network.transfers.files_error']({ msg: entry.message });
+			case 'comic:started':
+				return m['pages.network.transfers.comic_started']({
+					peer: peers.peerLabel(entry.message)
+				});
+			case 'comic:progress':
+				return m['pages.network.transfers.comic_progress']({ item: entry.message });
+			case 'comic:complete':
+				return m['pages.network.transfers.comic_complete']({
+					peer: peers.peerLabel(entry.message)
+				});
+			case 'comic:error':
+				return m['pages.network.transfers.comic_error']({ msg: entry.message });
 			default:
 				return entry.message;
 		}
@@ -510,6 +554,24 @@
 												{/if}
 												{m['pages.network.peers.sync_files']()}
 											</AcerolaButton>
+
+											<AcerolaButton
+												events={{
+													onClick: () => {
+														openPeerMenuId = null;
+														openRemoteLibrary(peer.peerId);
+													}
+												}}
+												ui={{
+													variant: 'ghost',
+													disabled: !addrs,
+													class:
+														'h-9 w-full justify-start gap-2.5 rounded-xl px-2.5 text-sm font-medium'
+												}}
+											>
+												<BookOpenIcon size={16} class="shrink-0" />
+												{m['pages.network.peers.browse_library']()}
+											</AcerolaButton>
 										</div>
 									{/snippet}
 								</AcerolaPopover>
@@ -574,3 +636,81 @@
 		</div>
 	</section>
 </div>
+
+<!-- Buscar biblioteca remota -->
+<AcerolaDialog
+	state={{ open: browsingPeerId !== null }}
+	data={{
+		title: m['pages.network.remote_library.title'](),
+		description: browsingPeerId ? peers.peerLabel(browsingPeerId) : ''
+	}}
+	events={{
+		onOpenChange: (open) => {
+			if (!open) browsingPeerId = null;
+		}
+	}}
+	ui={{
+		contentClass:
+			'w-full max-w-[calc(100vw-2rem)] sm:max-w-md border-border/60 bg-background/95 backdrop-blur-xl shadow-2xl p-6 rounded-3xl overflow-hidden'
+	}}
+>
+	<div class="flex w-full min-w-0 flex-col gap-4 py-1">
+		<div class="relative w-full">
+			<SearchIcon
+				size={14}
+				class="absolute top-1/2 left-3 shrink-0 -translate-y-1/2 text-muted-foreground"
+			/>
+			<input
+				type="text"
+				placeholder={m['pages.network.remote_library.search_placeholder']()}
+				bind:value={remoteSearchQuery}
+				class="h-9 w-full rounded-xl border border-border/60 bg-muted/60 pr-3 pl-8 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none"
+			/>
+		</div>
+
+		{#if browsingPeerId && remoteLibrary.isLoading(browsingPeerId)}
+			<p class="p-4 text-center text-sm text-muted-foreground">
+				{m['pages.network.remote_library.loading']()}
+			</p>
+		{:else if browsingPeerId && remoteLibrary.errorFor(browsingPeerId)}
+			<p class="p-4 text-center text-sm text-destructive">
+				{remoteLibrary.errorFor(browsingPeerId)}
+			</p>
+		{:else if filteredRemoteComics.length === 0}
+			<p class="p-4 text-center text-sm text-muted-foreground">
+				{m['pages.network.remote_library.empty']()}
+			</p>
+		{:else}
+			<div class="max-h-80 w-full space-y-1 overflow-y-auto">
+				{#each filteredRemoteComics as comic (comic.comicName)}
+					{@const comicSyncing = browsingPeerId ? sync.isSyncing(browsingPeerId, 'comic') : false}
+					<div
+						class="flex items-center justify-between gap-3 rounded-xl px-3 py-2 hover:bg-muted/50"
+					>
+						<div class="min-w-0 flex-1">
+							<p class="truncate text-sm font-medium text-foreground">{comic.comicName}</p>
+							<p class="text-xs text-muted-foreground">
+								{m['pages.network.remote_library.chapter_count']({ count: comic.chapterCount })}
+							</p>
+						</div>
+						<AcerolaButton
+							events={{
+								onClick: () =>
+									browsingPeerId && handleSyncRemoteComic(browsingPeerId, comic.comicName)
+							}}
+							ui={{
+								size: 'sm',
+								variant: 'outline',
+								class: 'gap-2 shrink-0',
+								disabled: comicSyncing
+							}}
+						>
+							<CloudDownloadIcon size={14} class={comicSyncing ? 'animate-spin' : ''} />
+							{m['pages.network.remote_library.sync_button']()}
+						</AcerolaButton>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</div>
+</AcerolaDialog>
