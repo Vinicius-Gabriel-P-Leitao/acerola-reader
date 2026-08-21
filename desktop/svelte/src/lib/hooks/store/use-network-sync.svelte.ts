@@ -144,7 +144,14 @@ export function useNetworkSync() {
 		status: TransferLogEntry['status'],
 		message: string
 	) {
-		const entry: TransferLogEntry = { id: nextId++, peerId, kind, status, message, timestamp: Date.now() };
+		const entry: TransferLogEntry = {
+			id: nextId++,
+			peerId,
+			kind,
+			status,
+			message,
+			timestamp: Date.now()
+		};
 		log = [entry, ...log].slice(0, MAX_LOG_ENTRIES);
 		if (peerId && isOpenStatus(status)) inFlightEntryId.set(key, entry.id);
 	}

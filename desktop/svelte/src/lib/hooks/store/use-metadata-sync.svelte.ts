@@ -12,8 +12,8 @@ export function useMetadataSync() {
 		isSyncing = true;
 		try {
 			const store = await load(STORE_FILE);
-			const language = await store.get<string>(STORE_KEYS.metadataLanguage) || 'pt-br';
-			const generateComicInfo = await store.get<boolean>(STORE_KEYS.comicInfoPreference) ?? false;
+			const language = (await store.get<string>(STORE_KEYS.metadataLanguage)) || 'pt-br';
+			const generateComicInfo = (await store.get<boolean>(STORE_KEYS.comicInfoPreference)) ?? false;
 			const result = await invoke<ComicMetadataEvent>(METADATA_COMMANDS.syncMangadex, {
 				title,
 				comicId,
@@ -33,8 +33,8 @@ export function useMetadataSync() {
 		isSyncing = true;
 		try {
 			const store = await load(STORE_FILE);
-			const language = await store.get<string>(STORE_KEYS.metadataLanguage) || 'pt-br';
-			const generateComicInfo = await store.get<boolean>(STORE_KEYS.comicInfoPreference) ?? false;
+			const language = (await store.get<string>(STORE_KEYS.metadataLanguage)) || 'pt-br';
+			const generateComicInfo = (await store.get<boolean>(STORE_KEYS.comicInfoPreference)) ?? false;
 			const result = await invoke<ComicMetadataEvent>(METADATA_COMMANDS.syncAnilist, {
 				title,
 				comicId,

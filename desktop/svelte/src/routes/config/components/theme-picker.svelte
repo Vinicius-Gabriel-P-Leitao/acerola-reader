@@ -85,7 +85,7 @@
 			<button
 				type="button"
 				onclick={() => events.onSelect(it.id)}
-				class="group relative flex flex-col justify-between cursor-pointer overflow-hidden rounded-2xl border-2 p-4 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:scale-[0.98]
+				class="group relative flex cursor-pointer flex-col justify-between overflow-hidden rounded-2xl border-2 p-4 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none active:scale-[0.98]
           {data.theme === it.id
 					? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
 					: 'border-border/60 bg-card hover:border-muted-foreground/50 hover:bg-card/90 hover:shadow-sm'}"
@@ -105,7 +105,7 @@
 					<h3 class="text-sm font-bold text-foreground transition-colors group-hover:text-primary">
 						{it.name()}
 					</h3>
-					<p class="mt-1 text-xs leading-snug text-muted-foreground line-clamp-2">
+					<p class="mt-1 line-clamp-2 text-xs leading-snug text-muted-foreground">
 						{it.description()}
 					</p>
 				</div>

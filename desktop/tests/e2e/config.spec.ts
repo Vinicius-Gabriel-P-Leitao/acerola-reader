@@ -29,9 +29,7 @@ test.describe('library configuration', () => {
 		});
 	});
 
-	test('selects folder, executes quick sync and returns to library', async ({
-		page
-	}) => {
+	test('selects folder, executes quick sync and returns to library', async ({ page }) => {
 		test.setTimeout(10_000);
 
 		await page.goto('/config');

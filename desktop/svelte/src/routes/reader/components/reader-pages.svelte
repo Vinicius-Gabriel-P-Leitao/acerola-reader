@@ -70,7 +70,10 @@
 			</p>
 		</div>
 		{#if events?.onRetry}
-			<AcerolaButton ui={{ variant: 'secondary', class: 'rounded-xl gap-2' }} events={{ onClick: events.onRetry }}>
+			<AcerolaButton
+				ui={{ variant: 'secondary', class: 'rounded-xl gap-2' }}
+				events={{ onClick: events.onRetry }}
+			>
 				<RefreshCw size={16} />
 				{m['pages.reader.fallback.retry']()}
 			</AcerolaButton>

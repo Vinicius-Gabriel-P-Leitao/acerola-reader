@@ -6,7 +6,9 @@
 	import AcerolaCardImage from '$lib/components/acerola-card/acerola-card-image.svelte';
 	import AcerolaBookmarkRibbon from '$lib/components/acerola-bookmark-ribbon/acerola-bookmark-ribbon.svelte';
 	import AcerolaComicActionDialog from './components/acerola-comic-action-dialog.svelte';
-	import AcerolaFilterPanel, { type BookmarkFilter } from './components/acerola-filter-panel.svelte';
+	import AcerolaFilterPanel, {
+		type BookmarkFilter
+	} from './components/acerola-filter-panel.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { useComicSelection } from '$lib/hooks/store/use-comic-selection.svelte';
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
@@ -27,7 +29,12 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { m } from '$lib/paraglide/messages';
 	import { toast } from 'svelte-sonner';
-	import type { ComicSummaryItemPayload, MetadataSource, SortBy, SortOrder } from '$lib/contracts/home/home.payloads';
+	import type {
+		ComicSummaryItemPayload,
+		MetadataSource,
+		SortBy,
+		SortOrder
+	} from '$lib/contracts/home/home.payloads';
 
 	const summary = useComicSummary();
 	const activeComic = useComicContext();
@@ -257,7 +264,7 @@
 
 		{#if visibleComics.length === 0}
 			<div
-				class="flex min-h-[40vh] flex-col items-center justify-center p-12 text-center animate-in fade-in-50 duration-300"
+				class="flex min-h-[40vh] animate-in flex-col items-center justify-center p-12 text-center duration-300 fade-in-50"
 			>
 				<div
 					class="mb-4 flex size-16 items-center justify-center rounded-2xl bg-surface/60 text-primary shadow-inner"
@@ -313,7 +320,8 @@
 					{#snippet action()}
 						<AcerolaButtonIcon
 							ui={{
-								class: 'text-overlay bg-transparent transition-colors hover:text-primary translate-x-1.5 -mr-1.5'
+								class:
+									'text-overlay bg-transparent transition-colors hover:text-primary translate-x-1.5 -mr-1.5'
 							}}
 							events={{
 								onClick: (event) => handleActionClick(event, comic.relations.directoryId)
@@ -366,8 +374,12 @@
 		onClose={() => (showActionDialog = false)}
 	/>
 {:else}
-	<div class="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center animate-in fade-in-50 duration-300">
-		<div class="mb-4 flex size-16 items-center justify-center rounded-2xl bg-surface/60 text-primary shadow-inner">
+	<div
+		class="flex min-h-[60vh] animate-in flex-col items-center justify-center p-8 text-center duration-300 fade-in-50"
+	>
+		<div
+			class="mb-4 flex size-16 items-center justify-center rounded-2xl bg-surface/60 text-primary shadow-inner"
+		>
 			<FolderPlus size={32} />
 		</div>
 		<h3 class="text-xl font-bold tracking-tight text-foreground">
@@ -378,7 +390,10 @@
 		</p>
 		<div class="mt-6 flex flex-wrap items-center justify-center gap-3">
 			<AcerolaButton
-				ui={{ variant: 'default', class: 'rounded-xl font-semibold gap-2 shadow-md hover:shadow-lg transition-all' }}
+				ui={{
+					variant: 'default',
+					class: 'rounded-xl font-semibold gap-2 shadow-md hover:shadow-lg transition-all'
+				}}
 				events={{ onClick: () => refreshScanner.start() }}
 			>
 				<RefreshCw size={18} class={refreshScanner.scanning ? 'animate-spin' : ''} />

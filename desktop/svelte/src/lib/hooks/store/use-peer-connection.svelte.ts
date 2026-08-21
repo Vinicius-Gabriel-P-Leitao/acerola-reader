@@ -78,7 +78,10 @@ export function usePeerConnection() {
 		unlistenStatus = await listen<NetworkStatusPayload>(NETWORK_EVENTS.status, (event) => {
 			status = event.payload;
 		});
-		unlistenDeviceInfoReceived = await listen(NETWORK_EVENTS.deviceInfoReceived, handlePeerHandshake);
+		unlistenDeviceInfoReceived = await listen(
+			NETWORK_EVENTS.deviceInfoReceived,
+			handlePeerHandshake
+		);
 		unlistenDeviceInfoExchanged = await listen(
 			NETWORK_EVENTS.deviceInfoExchanged,
 			handlePeerHandshake

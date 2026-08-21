@@ -103,8 +103,32 @@ export async function setStoreValues(entries: Record<string, unknown>) {
 		await navigateTo('/home');
 	}
 
-	await browser.execute(
-		async (items) => {
+	await browser.execute(async (items) => {
+		const tauriWindow = window as typeof window & {
+			__TAURI_INTERNALS__?: {
+				invoke: (cmd: string, payload?: unknown) => Promise<unknown>;
+			};
+		};
+		if (tauriWindow.__TAURI_INTERNALS__) {
+			const rid = await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|load', {
+				path: 'settings.json',
+				options: {}
+			});
+			for (const [k, v] of Object.entries(items)) {
+				await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|set', { rid, key: k, value: v });
+			}
+			await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|save', { rid });
+		}
+	}, entries);
+}
+
+export async function setStoreValue(key: string, value: unknown) {
+	return setStoreValues({ [key]: value });
+}
+
+export async function getStoreValue(key: string) {
+	return browser.execute(async (k) => {
+		try {
 			const tauriWindow = window as typeof window & {
 				__TAURI_INTERNALS__?: {
 					invoke: (cmd: string, payload?: unknown) => Promise<unknown>;
@@ -115,44 +139,17 @@ export async function setStoreValues(entries: Record<string, unknown>) {
 					path: 'settings.json',
 					options: {}
 				});
-				for (const [k, v] of Object.entries(items)) {
-					await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|set', { rid, key: k, value: v });
-				}
-				await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|save', { rid });
+				const res = await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|get', {
+					rid,
+					key: k
+				});
+				return Array.isArray(res) ? res[0] : res;
 			}
-		},
-		entries
-	);
-}
-
-export async function setStoreValue(key: string, value: unknown) {
-	return setStoreValues({ [key]: value });
-}
-
-export async function getStoreValue(key: string) {
-	return browser.execute(
-		async (k) => {
-			try {
-				const tauriWindow = window as typeof window & {
-					__TAURI_INTERNALS__?: {
-						invoke: (cmd: string, payload?: unknown) => Promise<unknown>;
-					};
-				};
-				if (tauriWindow.__TAURI_INTERNALS__) {
-					const rid = await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|load', {
-						path: 'settings.json',
-						options: {}
-					});
-					const res = await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|get', { rid, key: k });
-					return Array.isArray(res) ? res[0] : res;
-				}
-				return null;
-			} catch (err: any) {
-				return null;
-			}
-		},
-		key
-	);
+			return null;
+		} catch (err: any) {
+			return null;
+		}
+	}, key);
 }
 
 export async function ensureOnboardingCompleted() {

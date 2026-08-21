@@ -40,9 +40,7 @@ test.describe('library comic reader navigation', () => {
 		});
 	});
 
-	test('opens comic card, chooses first chapter and renders first page', async ({
-		page
-	}) => {
+	test('opens comic card, chooses first chapter and renders first page', async ({ page }) => {
 		test.setTimeout(10_000);
 
 		await page.goto('/home');

@@ -460,8 +460,7 @@
 				totalChapters: volume.chapterCount,
 				coverUri: volCover || fallbackCover,
 				bannerUri: volBanner || fallbackBanner || fallbackCover,
-				hasMore:
-					expandedVolumeId === volume.id.toString() && allItems.length < volume.chapterCount,
+				hasMore: expandedVolumeId === volume.id.toString() && allItems.length < volume.chapterCount,
 				chapters: []
 			};
 		});
@@ -618,7 +617,12 @@
 							<AcerolaPopover
 								state={{ open: showSortMenu }}
 								events={{ onOpenChange: (open) => (showSortMenu = open) }}
-								ui={{ align: 'end', side: 'bottom', sideOffset: 8, contentClass: 'w-48 p-2 rounded-xl' }}
+								ui={{
+									align: 'end',
+									side: 'bottom',
+									sideOffset: 8,
+									contentClass: 'w-48 p-2 rounded-xl'
+								}}
 							>
 								{#snippet trigger()}
 									<AcerolaButton ui={{ variant: 'ghost', size: 'sm', class: 'rounded-lg' }}>

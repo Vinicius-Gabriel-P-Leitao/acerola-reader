@@ -51,7 +51,6 @@ describe('onboarding and initial tutorial', () => {
 		expect(await nextBtn.isEnabled()).toBe(false);
 	});
 
-
 	it('allows navigating back using the Back button', async () => {
 		await waitForTauriReady();
 		await navigateTo('/home');

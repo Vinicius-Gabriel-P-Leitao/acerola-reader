@@ -171,7 +171,10 @@
 		return m['pages.network.peers.last_synced']({ when: new Date(timestamp).toLocaleString() });
 	}
 
-	async function withSync(action: (peerId: string, addrs: number[]) => Promise<void>, peerId: string) {
+	async function withSync(
+		action: (peerId: string, addrs: number[]) => Promise<void>,
+		peerId: string
+	) {
 		const addrs = peerAddrFor(peerId);
 		if (!addrs) return;
 
@@ -224,14 +227,17 @@
 	</div>
 
 	{#if keyringUnavailable && !keyringWarningDismissed}
-		<div class="flex items-start gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-4">
+		<div
+			class="flex items-start gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-4"
+		>
 			<ShieldAlertIcon size={18} class="mt-0.5 shrink-0 text-destructive" />
 			<p class="flex-1 text-sm text-foreground">{m['pages.network.keyring_unavailable']()}</p>
 			<AcerolaButtonIcon
 				events={{ onClick: () => (keyringWarningDismissed = true) }}
 				ui={{
 					variant: 'ghost',
-					class: 'size-8 shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground',
+					class:
+						'size-8 shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground',
 					'aria-label': m['pages.network.dismiss']()
 				}}
 			>
@@ -308,7 +314,8 @@
 							{m['pages.network.pairing.qr_error']()}
 						</span>
 					{:else}
-						<span class="text-xs text-muted-foreground">{m['pages.network.pairing.loading']()}</span>
+						<span class="text-xs text-muted-foreground">{m['pages.network.pairing.loading']()}</span
+						>
 					{/if}
 				</div>
 
@@ -331,7 +338,9 @@
 					aria-expanded={showRawCode}
 					aria-controls="pairing-raw-code"
 				>
-					{showRawCode ? m['pages.network.pairing.hide_code']() : m['pages.network.pairing.show_code']()}
+					{showRawCode
+						? m['pages.network.pairing.hide_code']()
+						: m['pages.network.pairing.show_code']()}
 					<ChevronDownIcon
 						size={12}
 						class="transition-transform {showRawCode ? 'rotate-180' : ''}"
@@ -370,7 +379,10 @@
 				<AcerolaInput
 					state={{ value: pasteValue }}
 					events={{ onValueChange: (value) => (pasteValue = value) }}
-					ui={{ placeholder: m['pages.network.connect.placeholder'](), class: 'h-10 flex-1 bg-background font-mono text-xs' }}
+					ui={{
+						placeholder: m['pages.network.connect.placeholder'](),
+						class: 'h-10 flex-1 bg-background font-mono text-xs'
+					}}
 				/>
 				<AcerolaButton
 					events={{ onClick: handleConnect }}
@@ -465,7 +477,8 @@
 												ui={{
 													variant: 'ghost',
 													disabled: !addrs || historySyncing,
-													class: 'h-9 w-full justify-start gap-2.5 rounded-xl px-2.5 text-sm font-medium'
+													class:
+														'h-9 w-full justify-start gap-2.5 rounded-xl px-2.5 text-sm font-medium'
 												}}
 											>
 												{#if historySyncing}
@@ -486,7 +499,8 @@
 												ui={{
 													variant: 'ghost',
 													disabled: !addrs || filesSyncing,
-													class: 'h-9 w-full justify-start gap-2.5 rounded-xl px-2.5 text-sm font-medium'
+													class:
+														'h-9 w-full justify-start gap-2.5 rounded-xl px-2.5 text-sm font-medium'
 												}}
 											>
 												{#if filesSyncing}

@@ -27,12 +27,13 @@
 		data={{ hasVolumeStructure: true }}
 		state={{
 			volumeViewMode,
-			bookmarkId: null, externalSyncEnabled: true
+			bookmarkId: null,
+			externalSyncEnabled: true
 		}}
 		events={{
 			onVolumeViewModeChange: (value) => (volumeViewMode = value),
-			onBookmarkChange: () => {}, onExternalSyncChange: () => {}
+			onBookmarkChange: () => {},
+			onExternalSyncChange: () => {}
 		}}
 	/>
 </Story>
-
