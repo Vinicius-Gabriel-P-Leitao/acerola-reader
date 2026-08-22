@@ -8,6 +8,7 @@ use tokio::sync::{mpsc, RwLock};
 use super::acerola_builder::AcerolaP2pBuilder;
 use crate::{
     core::{
+        blobs::P2pBlobStore,
         guard::BoxedValidator,
         network::{
             manager::NetworkCommand,
@@ -108,6 +109,13 @@ impl AcerolaP2p {
     /// "dispositivos online agora" (ex: lista de peers conectados na UI).
     pub async fn is_peer_reachable(&self, peer: &PeerId) -> bool {
         self.transport.is_connected(peer).await
+    }
+
+    /// Retorna o store de blobs deste nó, se o adapter de transporte suportar essa capacidade
+    /// (ex: `IrohTransport` construído com `.blobs(...)`). `None` quando nenhum adapter de blob
+    /// foi configurado.
+    pub async fn blobs(&self) -> Option<Arc<dyn P2pBlobStore>> {
+        self.transport.blobs().await
     }
 
     /// Todos os peers já vistos nesta sessão (endereço + device info de um handshake anterior),
