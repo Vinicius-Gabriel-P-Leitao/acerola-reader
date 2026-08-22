@@ -68,7 +68,13 @@ pub struct FileHeader {
     pub chapter: String,
     pub file_name: String,
     pub size: u64,
+    /// SHA-256 do manifesto (`FileChapterInfo.checksum`) — repassado tal e qual pra
+    /// verificação local de escrita, sem relação com blobs.
     pub checksum: Option<String>,
+    /// Hash de blob (BLAKE3, hex) devolvido por `P2pBlobStore::put` no lado que enviou —
+    /// é o que o lado que recebe usa em `P2pBlobStore::fetch` pra puxar os bytes de verdade.
+    /// `None` só no header vazio de "não tenho mais esse capítulo" (`size: 0`).
+    pub blob_hash: Option<String>,
 }
 
 /// Primeira mensagem do protocolo `acerola/sync-comic/1`, escrita pelo lado que inicia — diz
@@ -88,11 +94,40 @@ pub struct ComicSyncRequest {
 pub struct ComicSummaryEntry {
     pub comic_name: String,
     pub chapter_count: u32,
+    /// Reaproveita `ComicDirectory.last_modified`/`comic_directory.last_modified` — sem hash
+    /// novo. O cliente compara contra a versão já cacheada localmente pra decidir se precisa
+    /// buscar uma capa nova via `acerola/browse-cover/1`.
+    pub cover_version: i64,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct LibrarySummary {
     pub comics: Vec<ComicSummaryEntry>,
+}
+
+/// Único frame escrito pelo lado outbound de `acerola/browse-cover/1` — a conexão em si não é
+/// o pedido (diferente de `browse-library`), porque aqui o outbound precisa informar QUAL
+/// quadrinho e qual versão já tem cacheada, pra o inbound decidir entre `not_modified` e
+/// publicar um blob novo.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoverRequest {
+    pub comic_name: String,
+    /// `None` = "nunca busquei essa capa antes" — qualquer versão que o inbound tiver conta
+    /// como "mudou".
+    pub known_version: Option<i64>,
+}
+
+pub const COVER_STATUS_NOT_MODIFIED: &str = "not_modified";
+pub const COVER_STATUS_CHANGED: &str = "changed";
+pub const COVER_STATUS_UNAVAILABLE: &str = "unavailable";
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoverResponse {
+    pub status: String,
+    pub cover_version: Option<i64>,
+    /// Só presente quando `status == "changed"` — hash de blob (BLAKE3, hex) que o outbound usa
+    /// em `ChapterTransfer::fetch_reader` pra puxar os bytes de verdade.
+    pub cover_hash: Option<String>,
 }
 
 /// Mensagem enviada no lugar do manifesto quando `FileSyncSessionGuard` já rejeitou a sessão

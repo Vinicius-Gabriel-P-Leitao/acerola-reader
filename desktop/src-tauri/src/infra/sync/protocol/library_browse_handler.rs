@@ -10,7 +10,7 @@ use crate::{
     core::services::sync::file_sync::FileSyncService,
     infra::sync::{
         framing::{framed_reader, framed_writer, read_json, write_json, FramedReader, FramedWriter},
-        messages::{ComicSummaryEntry, LibrarySummary},
+        messages::LibrarySummary,
     },
 };
 
@@ -62,6 +62,7 @@ impl Handler for LibraryBrowseOutbound {
                         serde_json::json!({
                             "comicName": comic.comic_name,
                             "chapterCount": comic.chapter_count,
+                            "coverVersion": comic.cover_version,
                         })
                     })
                     .collect();
@@ -98,18 +99,10 @@ impl LibraryBrowseInbound {
     }
 
     async fn run(&self, writer: &mut FramedWriter) -> Result<(), P2pError> {
-        let manifest = self.service.build_manifest().await?;
-
-        let mut comics: Vec<ComicSummaryEntry> = manifest
-            .comics
-            .into_iter()
-            .map(|comic| ComicSummaryEntry {
-                comic_name: comic.comic_name,
-                chapter_count: comic.chapters.len() as u32,
-            })
-            .collect();
-        comics.sort_by(|a, b| a.comic_name.cmp(&b.comic_name));
-
+        // SQL puro (`get_library_summary`), sem tocar disco — `build_manifest()` faz um
+        // `tokio::fs::metadata()` por capítulo só pra montar `size`, que essa resposta nem usa,
+        // e isso estourava o timeout do protocolo em bibliotecas grandes/discos lentos.
+        let comics = self.service.get_library_summary().await?;
         write_json(writer, &LibrarySummary { comics }).await?;
         Ok(())
     }

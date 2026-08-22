@@ -28,14 +28,35 @@ export type RelayInfo = {
 };
 
 /** Resumo de um quadrinho da biblioteca remota (ver `library_browse_handler.rs`) — só título +
- *  contagem de capítulos, sem transferir nada ainda. */
+ *  contagem de capítulos, sem transferir nada ainda. `coverVersion` reaproveita
+ *  `comic_directory.last_modified` do peer — usado pra decidir se `queryRemoteCover` precisa
+ *  buscar uma capa nova antes de disparar a busca. */
 export type ComicSummary = {
 	comicName: string;
 	chapterCount: number;
+	coverVersion: number;
 };
 
 /** Payload do evento `library:query:result`. */
 export type LibraryQueryResultPayload = {
 	peerId: string;
 	comics: ComicSummary[];
+};
+
+/** Payload do evento `browse:cover:result` (`cover_browse_handler.rs`, ALPN
+ *  `acerola/browse-cover/1`). `path` só vem preenchido quando `status === 'changed'` — caminho
+ *  local (`<app_data_dir>/remote_covers/...`) já resolvido via `convertFileSrc` do lado do
+ *  chamador (ver `resolveArtworkPath`, `artwork.utils.ts`). */
+export type CoverQueryResultPayload = {
+	peerId: string;
+	comicName: string;
+	status: 'not_modified' | 'changed' | 'unavailable';
+	coverVersion: number | null;
+	path: string | null;
+};
+
+export type CoverQueryErrorPayload = {
+	peerId: string;
+	comicName?: string;
+	message: string;
 };

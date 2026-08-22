@@ -23,7 +23,7 @@ test = false
 tauri-build = {version = "2", features = [] }
 
 [dependencies]
-acerola-p2p = {git = "https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p.git", version = "0.0.5", branch = "main", features = ["iroh"] }
+acerola-p2p = {git = "https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p.git", version = "0.0.6", branch = "main", features = ["iroh", "iroh-blobs-adapter"] }
 anyhow = "1.0.102"
 async-trait = "0.1.89"
 axum = "0.8.8"

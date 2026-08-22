@@ -1,5 +1,7 @@
 pub mod comic_handler;
 pub mod comic_sync_registry;
+pub mod cover_browse_handler;
+pub mod cover_request_registry;
 pub mod file_handler;
 pub mod file_session_guard;
 pub mod history_handler;
@@ -17,3 +19,8 @@ pub const COMIC_SYNC_ALPN: &[u8] = b"acerola/sync-comic/1";
 /// código, então precisa bater exatamente ou o transporte (que roteia por ALPN exato) nunca
 /// encontra handler do outro lado.
 pub const LIBRARY_BROWSE_ALPN: &[u8] = b"acerola/browse-library/1";
+/// Busca a capa (thumbnail) de UM quadrinho remoto por vez, complementar ao `browse-library` —
+/// ver `cover_browse_handler.rs`. Sem sessão/guard: round-trip curto, não corre o mesmo risco de
+/// I/O pesado duplicado que `sync-files`/`sync-comic` correm. String idêntica ao Android
+/// (`protocol/cover_browse/mod.rs::COVER_BROWSE_ALPN`).
+pub const COVER_BROWSE_ALPN: &[u8] = b"acerola/browse-cover/1";

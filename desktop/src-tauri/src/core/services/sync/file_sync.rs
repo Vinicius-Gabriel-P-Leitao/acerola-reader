@@ -20,7 +20,7 @@ use crate::{
     },
     infra::{
         error::{ComicError, DbError},
-        sync::messages::{FileChapterInfo, FileComicInfo, FileManifest},
+        sync::messages::{ComicSummaryEntry, FileChapterInfo, FileComicInfo, FileManifest},
     },
 };
 
@@ -98,6 +98,23 @@ impl FileSyncService {
         Ok(FileManifest { comics })
     }
 
+    /// Resumo da biblioteca (título + contagem de capítulos + versão de capa) via
+    /// `ChapterRepository::get_library_summary` — SQL puro, sem tocar disco. Usado só por
+    /// `acerola/browse-library/1` (`LibraryBrowseInbound`); `build_manifest()` continua sendo
+    /// o que a transferência de arquivos (`sync-files`/`sync-comic`) usa, já que essa fase
+    /// precisa mesmo dos bytes/checksum de cada capítulo.
+    pub async fn get_library_summary(&self) -> Result<Vec<ComicSummaryEntry>, ComicError> {
+        let rows = self.chapter_repo.get_library_summary().await?;
+        Ok(rows
+            .into_iter()
+            .map(|row| ComicSummaryEntry {
+                comic_name: row.comic_name,
+                chapter_count: row.chapter_count as u32,
+                cover_version: row.cover_version,
+            })
+            .collect())
+    }
+
     /// Mesmo manifesto de `build_manifest()`, mas filtrado pra um único quadrinho — usado pelo
     /// sync individual (`acerola/sync-comic/1`) pra não trocar a biblioteca inteira quando só
     /// um `comic_name` foi pedido. Reaproveita a query completa em vez de uma busca dedicada
@@ -166,6 +183,25 @@ impl FileSyncService {
             path.file_name().and_then(|name| name.to_str()).unwrap_or(chapter).to_string();
 
         Ok(Some((path, size, chapter_row.checksum, file_name)))
+    }
+
+    /// Capa local (versão + bytes) de `comic_name`, usada por `acerola/browse-cover/1`. `None`
+    /// cobre tanto "quadrinho não existe" quanto "existe mas não tem capa salva" — os dois casos
+    /// resultam na mesma resposta pro peer, não há necessidade de distinguir.
+    pub async fn get_local_cover(&self, comic_name: &str) -> Result<Option<(i64, Vec<u8>)>, ComicError> {
+        let Some(comic) = self.comic_repo.find_by_name(comic_name).await? else {
+            return Ok(None);
+        };
+        let Some(cover_path) = comic.cover else {
+            return Ok(None);
+        };
+
+        let bytes = match tokio::fs::read(&cover_path).await {
+            Ok(bytes) => bytes,
+            Err(_) => return Ok(None),
+        };
+
+        Ok(Some((comic.last_modified, bytes)))
     }
 
     /// Move o arquivo já recebido (e verificado) de `temp_path` pro destino final dentro da

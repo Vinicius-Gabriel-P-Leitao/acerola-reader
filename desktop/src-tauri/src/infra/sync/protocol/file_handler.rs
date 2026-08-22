@@ -19,7 +19,7 @@ use crate::{
         messages::FileWantList,
         protocol::{
             file_session_guard::FileSyncSessionGuard,
-            transfer::{emit_busy, read_or_busy, receive_files, send_files, write_session_busy},
+            transfer::{emit_busy, read_or_busy, receive_files, send_files, write_session_busy, ChapterTransfer},
         },
     },
 };
@@ -40,17 +40,20 @@ pub struct FileSyncOutbound {
     service: FileSyncService,
     log_repo: SyncHistoryLogRepository,
     guard: Arc<FileSyncSessionGuard>,
+    transfer: Arc<dyn ChapterTransfer>,
 }
 
 impl FileSyncOutbound {
     pub fn new(
         emit: EventEmitter, service: FileSyncService, log_repo: SyncHistoryLogRepository,
-        guard: Arc<FileSyncSessionGuard>,
+        guard: Arc<FileSyncSessionGuard>, transfer: Arc<dyn ChapterTransfer>,
     ) -> Self {
-        Self { emit, service, log_repo, guard }
+        Self { emit, service, log_repo, guard, transfer }
     }
 
-    async fn run(&self, writer: &mut FramedWriter, reader: &mut FramedReader) -> Result<(), P2pError> {
+    async fn run(
+        &self, peer: &PeerIdentity, writer: &mut FramedWriter, reader: &mut FramedReader,
+    ) -> Result<(), P2pError> {
         let local_manifest = self.service.build_manifest().await?;
         write_json(writer, &local_manifest).await?;
 
@@ -62,11 +65,15 @@ impl FileSyncOutbound {
         let their_wanted: FileWantList = read_json(reader).await?;
 
         // Fase 1: o peer envia primeiro o que eu pedi.
-        receive_files(reader, my_wanted.len(), &self.service, &self.emit, PROGRESS_EVENT, ERROR_EVENT)
-            .await?;
+        receive_files(
+            reader, my_wanted.len(), &self.service, &self.emit, PROGRESS_EVENT, ERROR_EVENT, peer,
+            &self.transfer,
+        )
+        .await?;
 
         // Fase 2: eu envio o que o peer pediu.
-        send_files(writer, &their_wanted.wanted, &self.service, &self.emit, PROGRESS_EVENT).await?;
+        send_files(writer, &their_wanted.wanted, &self.service, &self.emit, PROGRESS_EVENT, &self.transfer)
+            .await?;
 
         Ok(())
     }
@@ -89,7 +96,7 @@ impl Handler for FileSyncOutbound {
 
         (self.emit)(STARTED_EVENT, peer.id.clone());
 
-        match self.run(&mut writer, &mut reader).await {
+        match self.run(peer, &mut writer, &mut reader).await {
             Ok(()) => {
                 (self.emit)(COMPLETE_EVENT, peer.id.clone());
                 self.log_repo
@@ -123,17 +130,20 @@ pub struct FileSyncInbound {
     service: FileSyncService,
     log_repo: SyncHistoryLogRepository,
     guard: Arc<FileSyncSessionGuard>,
+    transfer: Arc<dyn ChapterTransfer>,
 }
 
 impl FileSyncInbound {
     pub fn new(
         emit: EventEmitter, service: FileSyncService, log_repo: SyncHistoryLogRepository,
-        guard: Arc<FileSyncSessionGuard>,
+        guard: Arc<FileSyncSessionGuard>, transfer: Arc<dyn ChapterTransfer>,
     ) -> Self {
-        Self { emit, service, log_repo, guard }
+        Self { emit, service, log_repo, guard, transfer }
     }
 
-    async fn run(&self, writer: &mut FramedWriter, reader: &mut FramedReader) -> Result<(), P2pError> {
+    async fn run(
+        &self, peer: &PeerIdentity, writer: &mut FramedWriter, reader: &mut FramedReader,
+    ) -> Result<(), P2pError> {
         let peer_manifest = read_or_busy(reader).await?;
 
         let local_manifest = self.service.build_manifest().await?;
@@ -145,11 +155,15 @@ impl FileSyncInbound {
         write_json(writer, &FileWantList { wanted: my_wanted.clone() }).await?;
 
         // Fase 1: eu envio primeiro o que o peer (outbound) pediu.
-        send_files(writer, &their_wanted.wanted, &self.service, &self.emit, PROGRESS_EVENT).await?;
+        send_files(writer, &their_wanted.wanted, &self.service, &self.emit, PROGRESS_EVENT, &self.transfer)
+            .await?;
 
         // Fase 2: eu recebo o que eu pedi.
-        receive_files(reader, my_wanted.len(), &self.service, &self.emit, PROGRESS_EVENT, ERROR_EVENT)
-            .await?;
+        receive_files(
+            reader, my_wanted.len(), &self.service, &self.emit, PROGRESS_EVENT, ERROR_EVENT, peer,
+            &self.transfer,
+        )
+        .await?;
 
         Ok(())
     }
@@ -172,7 +186,7 @@ impl Handler for FileSyncInbound {
 
         (self.emit)(STARTED_EVENT, peer.id.clone());
 
-        match self.run(&mut writer, &mut reader).await {
+        match self.run(peer, &mut writer, &mut reader).await {
             Ok(()) => {
                 (self.emit)(COMPLETE_EVENT, peer.id.clone());
                 self.log_repo
@@ -206,8 +220,13 @@ mod tests {
     use acerola_p2p::api::peer::PeerIdentity;
 
     use super::*;
+    use crate::infra::sync::protocol::transfer::InMemoryChapterTransfer;
 
     type RecordedEvents = Arc<Mutex<Vec<(String, String)>>>;
+
+    fn test_transfer() -> Arc<dyn ChapterTransfer> {
+        InMemoryChapterTransfer::shared_pair().0
+    }
 
     fn mock_emitter() -> (EventEmitter, RecordedEvents) {
         let events = Arc::new(Mutex::new(Vec::new()));
@@ -241,7 +260,7 @@ mod tests {
         let peer = PeerIdentity { id: "peer-busy".to_string(), device_id: None };
         let _held_lease = guard.try_acquire(&peer.id).expect("primeira reserva deveria suceder");
 
-        let inbound = FileSyncInbound::new(emit, service, log_repo, guard);
+        let inbound = FileSyncInbound::new(emit, service, log_repo, guard, test_transfer());
 
         let result =
             inbound.handle(&peer, Box::new(tokio::io::empty()), Box::new(tokio::io::empty())).await;
@@ -265,7 +284,7 @@ mod tests {
         let peer = PeerIdentity { id: "peer-cross".to_string(), device_id: None };
         let _held_lease = guard.try_acquire(&peer.id).expect("reserva inicial deveria suceder");
 
-        let outbound = FileSyncOutbound::new(emit, service, log_repo, guard);
+        let outbound = FileSyncOutbound::new(emit, service, log_repo, guard, test_transfer());
 
         let result = outbound
             .handle(&peer, Box::new(tokio::io::empty()), Box::new(tokio::io::empty()))
@@ -286,7 +305,7 @@ mod tests {
         let (emit, events) = mock_emitter();
 
         let peer = PeerIdentity { id: "peer-free".to_string(), device_id: None };
-        let inbound = FileSyncInbound::new(emit, service, log_repo, guard);
+        let inbound = FileSyncInbound::new(emit, service, log_repo, guard, test_transfer());
 
         let _ =
             inbound.handle(&peer, Box::new(tokio::io::empty()), Box::new(tokio::io::empty())).await;

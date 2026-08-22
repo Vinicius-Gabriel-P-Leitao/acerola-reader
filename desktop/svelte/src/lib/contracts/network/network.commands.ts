@@ -13,6 +13,7 @@ export const NETWORK_COMMANDS = {
 	syncAll: 'sync_all',
 	syncComic: 'sync_comic',
 	queryRemoteLibrary: 'query_remote_library',
+	queryRemoteCover: 'query_remote_cover',
 	getSyncHistoryLog: 'get_sync_history_log',
 	getSecurityStatus: 'get_security_status'
 } as const;

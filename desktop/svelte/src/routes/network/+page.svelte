@@ -684,14 +684,26 @@
 			<div class="max-h-80 w-full space-y-1 overflow-y-auto">
 				{#each filteredRemoteComics as comic (comic.comicName)}
 					{@const comicSyncing = browsingPeerId ? sync.isSyncing(browsingPeerId, 'comic') : false}
+					{@const coverPath = browsingPeerId ? remoteLibrary.coverPathFor(browsingPeerId, comic.comicName) : undefined}
 					<div
 						class="flex items-center justify-between gap-3 rounded-xl px-3 py-2 hover:bg-muted/50"
 					>
-						<div class="min-w-0 flex-1">
-							<p class="truncate text-sm font-medium text-foreground">{comic.comicName}</p>
-							<p class="text-xs text-muted-foreground">
-								{m['pages.network.remote_library.chapter_count']({ count: comic.chapterCount })}
-							</p>
+						<div class="flex min-w-0 flex-1 items-center gap-3">
+							{#if coverPath}
+								<img
+									src={coverPath}
+									alt=""
+									class="h-10 w-10 shrink-0 rounded-lg object-cover"
+								/>
+							{:else}
+								<div class="h-10 w-10 shrink-0 rounded-lg bg-muted"></div>
+							{/if}
+							<div class="min-w-0">
+								<p class="truncate text-sm font-medium text-foreground">{comic.comicName}</p>
+								<p class="text-xs text-muted-foreground">
+									{m['pages.network.remote_library.chapter_count']({ count: comic.chapterCount })}
+								</p>
+							</div>
 						</div>
 						<AcerolaButton
 							events={{

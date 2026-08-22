@@ -25,6 +25,13 @@ export const NETWORK_EVENTS = {
 	 *  mesmo ALPN usado pelo Android). */
 	libraryQueryResult: 'library:query:result',
 	libraryQueryError: 'library:query:error',
+	/** Resultado de `queryRemoteCover` (`{ peerId, comicName, status, coverVersion, path }`,
+	 *  ver `CoverQueryResultPayload`) — `status` é `"not_modified"`, `"changed"` (com `path`
+	 *  apontando pro cache local recém-gravado, resolvido via `convertFileSrc`) ou
+	 *  `"unavailable"`. Emitido pelo `CoverBrowseOutbound` (`cover_browse_handler.rs`, ALPN
+	 *  `acerola/browse-cover/1`). */
+	coverQueryResult: 'browse:cover:result',
+	coverQueryError: 'browse:cover:error',
 	/** Emitido uma vez na inicialização se o keyring do SO não estiver disponível (ver
 	 *  `infra::security::MasterKeySource::FallbackFile` no backend) — a chave mestra caiu
 	 *  pra um arquivo local sem a proteção extra do SO. Não é um erro fatal (tudo continua
