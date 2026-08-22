@@ -1,6 +1,7 @@
 mod exchange;
 mod model;
 mod session_guard;
+pub(crate) mod transfer;
 
 use std::{
     collections::HashMap,
@@ -18,6 +19,7 @@ use tokio::io::{AsyncRead, AsyncWrite};
 use crate::callbacks::FileSyncProvider;
 use model::FileSyncStats;
 pub(crate) use session_guard::FileSyncSessionGuard;
+pub(crate) use transfer::{BlobChapterTransfer, ChapterTransfer};
 
 pub(crate) const FILE_SYNC_ALPN: &[u8] = b"acerola/sync-files/1";
 
@@ -40,6 +42,7 @@ pub(crate) struct FileSyncOutbound {
     emit: EventEmitter,
     provider: Arc<dyn FileSyncProvider>,
     session_guard: Arc<FileSyncSessionGuard>,
+    transfer: Arc<dyn ChapterTransfer>,
 }
 
 impl FileSyncOutbound {
@@ -47,11 +50,13 @@ impl FileSyncOutbound {
         emit: EventEmitter,
         provider: Arc<dyn FileSyncProvider>,
         session_guard: Arc<FileSyncSessionGuard>,
+        transfer: Arc<dyn ChapterTransfer>,
     ) -> Self {
         Self {
             emit,
             provider,
             session_guard,
+            transfer,
         }
     }
 }
@@ -70,6 +75,7 @@ impl Handler for FileSyncOutbound {
             &self.emit,
             &self.provider,
             &self.session_guard,
+            &self.transfer,
             send,
             recv,
         )
@@ -82,6 +88,7 @@ pub(crate) struct FileSyncInbound {
     emit: EventEmitter,
     provider: Arc<dyn FileSyncProvider>,
     session_guard: Arc<FileSyncSessionGuard>,
+    transfer: Arc<dyn ChapterTransfer>,
 }
 
 impl FileSyncInbound {
@@ -89,11 +96,13 @@ impl FileSyncInbound {
         emit: EventEmitter,
         provider: Arc<dyn FileSyncProvider>,
         session_guard: Arc<FileSyncSessionGuard>,
+        transfer: Arc<dyn ChapterTransfer>,
     ) -> Self {
         Self {
             emit,
             provider,
             session_guard,
+            transfer,
         }
     }
 }
@@ -112,6 +121,7 @@ impl Handler for FileSyncInbound {
             &self.emit,
             &self.provider,
             &self.session_guard,
+            &self.transfer,
             send,
             recv,
         )
@@ -119,18 +129,20 @@ impl Handler for FileSyncInbound {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn run_and_report(
     outbound_role: bool,
     peer: &PeerIdentity,
     emit: &EventEmitter,
     provider: &Arc<dyn FileSyncProvider>,
     session_guard: &Arc<FileSyncSessionGuard>,
+    transfer: &Arc<dyn ChapterTransfer>,
     send: Box<dyn AsyncWrite + Send + Unpin>,
     recv: Box<dyn AsyncRead + Send + Unpin>,
 ) -> Result<(), P2pError> {
     let result = match session_guard.try_acquire(&peer.id) {
         Some(_lease) => {
-            exchange::run_exchange(outbound_role, peer, emit, provider, send, recv).await
+            exchange::run_exchange(outbound_role, peer, emit, provider, transfer, send, recv).await
         }
         None => {
             let reason = format!("sync-files session already in progress for peer {}", peer.id);
@@ -167,6 +179,7 @@ pub(crate) struct ComicSyncOutbound {
     emit: EventEmitter,
     provider: Arc<dyn FileSyncProvider>,
     session_guard: Arc<FileSyncSessionGuard>,
+    transfer: Arc<dyn ChapterTransfer>,
     pending_scope: PendingComicScope,
 }
 
@@ -175,9 +188,10 @@ impl ComicSyncOutbound {
         emit: EventEmitter,
         provider: Arc<dyn FileSyncProvider>,
         session_guard: Arc<FileSyncSessionGuard>,
+        transfer: Arc<dyn ChapterTransfer>,
         pending_scope: PendingComicScope,
     ) -> Self {
-        Self { emit, provider, session_guard, pending_scope }
+        Self { emit, provider, session_guard, transfer, pending_scope }
     }
 }
 
@@ -200,6 +214,7 @@ impl Handler for ComicSyncOutbound {
             &self.emit,
             &self.provider,
             &self.session_guard,
+            &self.transfer,
             comic_name,
             send,
             recv,
@@ -215,6 +230,7 @@ pub(crate) struct ComicSyncInbound {
     emit: EventEmitter,
     provider: Arc<dyn FileSyncProvider>,
     session_guard: Arc<FileSyncSessionGuard>,
+    transfer: Arc<dyn ChapterTransfer>,
 }
 
 impl ComicSyncInbound {
@@ -222,8 +238,9 @@ impl ComicSyncInbound {
         emit: EventEmitter,
         provider: Arc<dyn FileSyncProvider>,
         session_guard: Arc<FileSyncSessionGuard>,
+        transfer: Arc<dyn ChapterTransfer>,
     ) -> Self {
-        Self { emit, provider, session_guard }
+        Self { emit, provider, session_guard, transfer }
     }
 }
 
@@ -235,7 +252,10 @@ impl Handler for ComicSyncInbound {
         send: Box<dyn AsyncWrite + Send + Unpin>,
         recv: Box<dyn AsyncRead + Send + Unpin>,
     ) -> Result<(), P2pError> {
-        run_and_report_scoped(false, peer, &self.emit, &self.provider, &self.session_guard, None, send, recv).await
+        run_and_report_scoped(
+            false, peer, &self.emit, &self.provider, &self.session_guard, &self.transfer, None, send, recv,
+        )
+        .await
     }
 }
 
@@ -246,19 +266,31 @@ impl Handler for ComicSyncInbound {
 /// exatamente pelo mesmo motivo (dobrar a varredura de biblioteca/I-O) que já vale entre duas
 /// sessões `sync-files`. Por isso os eventos emitidos são os MESMOS `sync:files:*` de sempre —
 /// nunca há ambiguidade sobre qual sessão está ativa pra um peer.
+#[allow(clippy::too_many_arguments)]
 async fn run_and_report_scoped(
     outbound_role: bool,
     peer: &PeerIdentity,
     emit: &EventEmitter,
     provider: &Arc<dyn FileSyncProvider>,
     session_guard: &Arc<FileSyncSessionGuard>,
+    transfer: &Arc<dyn ChapterTransfer>,
     comic_name_outbound: Option<String>,
     send: Box<dyn AsyncWrite + Send + Unpin>,
     recv: Box<dyn AsyncRead + Send + Unpin>,
 ) -> Result<(), P2pError> {
     let result = match session_guard.try_acquire(&peer.id) {
         Some(_lease) => {
-            exchange::run_exchange_scoped(outbound_role, peer, emit, provider, comic_name_outbound, send, recv).await
+            exchange::run_exchange_scoped(
+                outbound_role,
+                peer,
+                emit,
+                provider,
+                transfer,
+                comic_name_outbound,
+                send,
+                recv,
+            )
+            .await
         }
         None => {
             let reason = format!("sync-comic session already in progress for peer {}", peer.id);
@@ -302,6 +334,10 @@ mod concurrency_tests {
 
     use super::*;
     use crate::callbacks::FfiFileManifestEntry;
+
+    fn test_transfer() -> Arc<dyn ChapterTransfer> {
+        transfer::InMemoryChapterTransfer::shared_pair().0
+    }
 
     struct CountingProvider {
         manifest_calls: Arc<AtomicUsize>,
@@ -375,6 +411,7 @@ mod concurrency_tests {
             &emit,
             &provider,
             &session_guard,
+            &test_transfer(),
             Box::new(send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(recv) as Box<dyn AsyncRead + Send + Unpin>,
         )
@@ -433,12 +470,16 @@ mod concurrency_tests {
         let (_unused_read2, server_send) = tokio::io::split(server_to_dialer);
         let (client_recv, _unused_write2) = tokio::io::split(dialer_reads_server);
 
+        let dialer_transfer = test_transfer();
+        let rejecter_transfer = test_transfer();
+
         // Lado que discou (outbound) esperando o manifesto normalmente.
         let dialer = exchange::run_exchange(
             true,
             &peer,
             &emit,
             &provider,
+            &dialer_transfer,
             Box::new(client_send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(client_recv) as Box<dyn AsyncRead + Send + Unpin>,
         );
@@ -450,6 +491,7 @@ mod concurrency_tests {
             &emit,
             &provider,
             &session_guard,
+            &rejecter_transfer,
             Box::new(server_send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(server_recv) as Box<dyn AsyncRead + Send + Unpin>,
         );
@@ -492,6 +534,7 @@ mod concurrency_tests {
             &emit,
             &provider,
             &session_guard,
+            &test_transfer(),
             Some("Comic A".to_string()),
             Box::new(send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(recv) as Box<dyn AsyncRead + Send + Unpin>,
@@ -525,6 +568,7 @@ mod concurrency_tests {
             &emit,
             &provider,
             &session_guard,
+            &test_transfer(),
             Box::new(send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(recv) as Box<dyn AsyncRead + Send + Unpin>,
         )

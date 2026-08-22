@@ -47,6 +47,19 @@ class P2pUseCase
             p2pService.browseLibrary(peerAddress)
         }
 
+        fun browseCover(
+            peerAddress: PeerAddress,
+            comicName: String,
+            knownVersion: Long?,
+        ) {
+            AcerolaLogger.i(
+                "P2pUseCase",
+                "Browsing cover of '$comicName' from peer: ${peerAddress.id}",
+                LogSource.NETWORK,
+            )
+            p2pService.browseCover(peerAddress, comicName, knownVersion)
+        }
+
         fun switchToLocal() {
             AcerolaLogger.i("P2pUseCase", "Switching to LOCAL mode", LogSource.NETWORK)
             p2pService.switchToLocal()

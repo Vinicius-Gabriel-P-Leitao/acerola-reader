@@ -89,6 +89,7 @@ fn result_payload(peer: &PeerIdentity, summary: &LibrarySummary) -> String {
             serde_json::json!({
                 "comicName": entry.comic_name,
                 "chapterCount": entry.chapter_count,
+                "coverVersion": entry.cover_version,
             })
         })
         .collect();

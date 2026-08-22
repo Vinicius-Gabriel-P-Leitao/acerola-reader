@@ -3,13 +3,16 @@ use std::{collections::HashMap, sync::Arc, time::Duration};
 use acerola_p2p::api::{error::P2pError, peer::PeerIdentity, protocol::EventEmitter};
 use futures::SinkExt;
 use serde::{de::DeserializeOwned, Serialize};
-use tokio::io::{AsyncRead, AsyncWrite};
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite};
 use tokio_stream::StreamExt;
 use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
 
-use super::model::{
-    build_manifest, ComicSyncScope, FileComicInfo, FileHeader, FileManifest, FileSyncStats, FileWantList,
-    SessionBusy,
+use super::{
+    model::{
+        build_manifest, ComicSyncScope, FileComicInfo, FileHeader, FileManifest, FileSyncStats, FileWantList,
+        SessionBusy,
+    },
+    transfer::ChapterTransfer,
 };
 use crate::{callbacks::FileSyncProvider, protocol::ffi_blocking::run_blocking};
 
@@ -75,24 +78,6 @@ async fn read_manifest_or_busy(reader: &mut Recv) -> Result<FileManifest, P2pErr
 
     serde_json::from_value(value)
         .map_err(|err| P2pError::StreamFailed(format!("failed to decode file sync message: {err}")))
-}
-
-/// Escreve um frame binário cru (sem envelope JSON) — usado só para bytes de arquivo,
-/// igual ao `write_bytes` do Desktop.
-async fn write_bytes(send: &mut Writer, bytes: Vec<u8>) -> Result<(), P2pError> {
-    send.send(bytes.into())
-        .await
-        .map_err(|err| P2pError::StreamFailed(format!("failed to write file chunk: {err}")))
-}
-
-async fn read_bytes(recv: &mut Recv) -> Result<Vec<u8>, P2pError> {
-    let frame = tokio::time::timeout(FRAME_READ_TIMEOUT, recv.next())
-        .await
-        .map_err(|_| P2pError::StreamFailed("timed out reading file chunk".into()))?
-        .ok_or_else(|| P2pError::StreamFailed("stream closed before file chunk".into()))?
-        .map_err(|err| P2pError::StreamFailed(format!("failed to read file chunk: {err}")))?;
-
-    Ok(frame.to_vec())
 }
 
 // --- Fronteira FFI (Kotlin): uma função por método de `FileSyncProvider`, cada uma só
@@ -215,45 +200,50 @@ async fn write_missing_header(writer: &mut Writer, comic_name: &str, chapter: &s
             file_name: String::new(),
             size: 0,
             checksum: None,
+            blob_hash: None,
         },
     )
     .await
 }
 
-/// Lê e escreve o conteúdo de um capítulo já aberto (`handle` válido) um chunk de cada vez —
-/// nunca carrega o arquivo inteiro em memória (regra 7).
-async fn stream_chapter_out(
-    writer: &mut Writer, provider: &Arc<dyn FileSyncProvider>, handle: i64, total_size: u64, emit: &EventEmitter,
-    peer: &PeerIdentity, comic_name: &str, chapter: &str,
-) -> Result<(), P2pError> {
-    let mut sent_bytes: u64 = 0;
+/// Lê o capítulo já aberto (`handle` válido) um chunk de cada vez e publica os bytes
+/// acumulados no blob store local (`ChapterTransfer::publish`) — devolve o hash de blob (hex)
+/// que vai no `FileHeader`. A leitura em si continua chunk a chunk (nunca destrava o loop de
+/// progresso existente), só o destino dos bytes muda: iam pro wire, agora vão pro `put()`.
+async fn publish_chapter_to_blob(
+    provider: &Arc<dyn FileSyncProvider>, handle: i64, total_size: u64, emit: &EventEmitter, peer: &PeerIdentity,
+    comic_name: &str, chapter: &str, transfer: &Arc<dyn ChapterTransfer>,
+) -> Result<String, P2pError> {
+    let mut bytes = Vec::new();
+    let mut read_bytes_total: u64 = 0;
     let mut bytes_since_progress: u64 = 0;
 
-    while sent_bytes < total_size {
+    while read_bytes_total < total_size {
         let chunk = read_chapter_chunk(provider, handle).await?;
         if chunk.is_empty() {
             break;
         }
 
-        sent_bytes += chunk.len() as u64;
+        read_bytes_total += chunk.len() as u64;
         bytes_since_progress += chunk.len() as u64;
-        write_bytes(writer, chunk).await?;
+        bytes.extend_from_slice(&chunk);
 
         if bytes_since_progress >= PROGRESS_EVERY_BYTES {
             bytes_since_progress = 0;
-            emit_progress(emit, peer, comic_name, chapter, sent_bytes, total_size);
+            emit_progress(emit, peer, comic_name, chapter, read_bytes_total, total_size);
         }
     }
 
-    Ok(())
+    transfer.publish(bytes).await
 }
 
-/// Envia um único capítulo pedido: abre, escreve o header, transmite os bytes, fecha.
-/// `Ok(false)` sinaliza "não pôde atender" (item sumiu ou handle inválido) — header vazio já
-/// escrito, sem transferência.
+/// Envia um único capítulo pedido: abre, publica os bytes no blob store local, escreve o
+/// header com o hash resultante, fecha. `Ok(false)` sinaliza "não pôde atender" (item sumiu ou
+/// handle inválido) — header vazio já escrito, sem publicação.
 async fn send_one_chapter(
     writer: &mut Writer, provider: &Arc<dyn FileSyncProvider>, comic_name: &str, chapter: &str,
     entry: &super::model::FileChapterInfo, emit: &EventEmitter, peer: &PeerIdentity,
+    transfer: &Arc<dyn ChapterTransfer>,
 ) -> Result<bool, P2pError> {
     let handle = open_chapter_for_read(provider, comic_name.to_string(), chapter.to_string()).await?;
     if handle < 0 {
@@ -261,17 +251,17 @@ async fn send_one_chapter(
         return Ok(false);
     }
 
-    // Log estratégico 1/4: o checksum aqui é `entry.checksum`, que veio de
-    // `FileChapterInfo` — montado em `build_manifest` a partir do `FfiFileManifestEntry`
-    // que acabou de atravessar a FFI vindo do Kotlin (`getFileManifest`). Se esse valor já
-    // vier errado daqui, o bug está do lado Kotlin ou na travessia Kotlin -> Rust; se vier
-    // certo, o problema é mais adiante (framing/wire ou lado do receptor).
+    let publish_result =
+        publish_chapter_to_blob(provider, handle, entry.size, emit, peer, comic_name, chapter, transfer).await;
+    close_read_handle(provider, handle).await?;
+    let blob_hash = publish_result?;
+
     tracing::debug!(
         comic = %comic_name,
         chapter = %chapter,
-        checksum = %entry.checksum.as_deref().unwrap_or("<none>"),
+        blob_hash = %blob_hash,
         size = entry.size,
-        "sync-files: enviando header com checksum declarado (pós-FFI Kotlin->Rust)",
+        "sync-files: publicado no blob store local, enviando header",
     );
 
     write_json(
@@ -282,12 +272,10 @@ async fn send_one_chapter(
             file_name: entry.file_name.clone(),
             size: entry.size,
             checksum: entry.checksum.clone(),
+            blob_hash: Some(blob_hash),
         },
     )
     .await?;
-
-    stream_chapter_out(writer, provider, handle, entry.size, emit, peer, comic_name, chapter).await?;
-    close_read_handle(provider, handle).await?;
 
     Ok(true)
 }
@@ -299,6 +287,7 @@ async fn send_one_chapter(
 async fn send_files(
     writer: &mut Writer, provider: &Arc<dyn FileSyncProvider>, local_manifest: &FileManifest,
     requested: &[(String, String)], emit: &EventEmitter, peer: &PeerIdentity, stats: &mut FileSyncStats,
+    transfer: &Arc<dyn ChapterTransfer>,
 ) -> Result<(), P2pError> {
     let by_key = manifest_index(local_manifest);
 
@@ -308,7 +297,7 @@ async fn send_files(
             continue;
         };
 
-        if send_one_chapter(writer, provider, comic_name, chapter, entry, emit, peer).await? {
+        if send_one_chapter(writer, provider, comic_name, chapter, entry, emit, peer, transfer).await? {
             stats.sent_count += 1;
         }
     }
@@ -317,11 +306,12 @@ async fn send_files(
 }
 
 /// Recebe exatamente `expected_count` capítulos (a mesma contagem que este lado pediu em
-/// `FileWantList`), cada um como `FileHeader` seguido de frames binários crus até somar
-/// `size` bytes. `size: 0` sinaliza "peer não tem mais esse capítulo" — sem corpo a seguir.
+/// `FileWantList`), cada um como um `FileHeader` seguido de `ChapterTransfer::fetch_reader` +
+/// escrita chunk a chunk. `size: 0` sinaliza "peer não tem mais esse capítulo" — sem blob a
+/// buscar.
 async fn receive_files(
     reader: &mut Recv, expected_count: usize, provider: &Arc<dyn FileSyncProvider>, emit: &EventEmitter,
-    peer: &PeerIdentity, stats: &mut FileSyncStats,
+    peer: &PeerIdentity, stats: &mut FileSyncStats, transfer: &Arc<dyn ChapterTransfer>,
 ) -> Result<(), P2pError> {
     for _ in 0..expected_count {
         let header: FileHeader = read_json(reader).await?;
@@ -330,45 +320,65 @@ async fn receive_files(
             continue;
         }
 
-        // Log estratégico 2/4: checksum como decodificado do frame JSON que acabou de
-        // chegar pela rede. Comparar isto com o log 1/4 do lado que enviou (mesmo
-        // comic/chapter) isola se a corrupção aconteceu no wire/framing — se os dois
-        // valores baterem, o checksum sobreviveu à rede intacto.
         tracing::debug!(
             comic = %header.comic_name,
             chapter = %header.chapter,
-            checksum = %header.checksum.as_deref().unwrap_or("<none>"),
+            blob_hash = %header.blob_hash.as_deref().unwrap_or("<none>"),
             size = header.size,
             "sync-files: header recebido do wire",
         );
 
-        receive_one_chapter(reader, provider, emit, peer, &header, stats).await?;
+        receive_one_chapter(provider, emit, peer, &header, stats, transfer).await?;
     }
 
     Ok(())
 }
 
-/// Lê o corpo de um capítulo até somar `header.size` bytes, gravando cada chunk assim que
-/// chega. Retorna `true` se alguma escrita falhou no meio do caminho (`handle` inválido conta
-/// como falha imediata) — quem chama decide o que fazer com isso.
-async fn receive_chapter_bytes(
-    reader: &mut Recv, provider: &Arc<dyn FileSyncProvider>, handle: i64, header: &FileHeader, emit: &EventEmitter,
-    peer: &PeerIdentity,
+/// Busca o blob referenciado por `header.blob_hash` no peer (`ChapterTransfer::fetch_reader`) e
+/// grava o resultado chunk a chunk via `FileSyncProvider::write_chapter_chunk`, preservando os
+/// mesmos eventos de progresso de antes — só a origem dos bytes mudou (era o wire cru, agora é
+/// o `AsyncRead` devolvido pelo blob store após `fetch`). Retorna `true` se a busca ou alguma
+/// escrita falhou (`handle` inválido conta como falha imediata).
+async fn receive_chapter_from_blob(
+    provider: &Arc<dyn FileSyncProvider>, handle: i64, header: &FileHeader, emit: &EventEmitter,
+    peer: &PeerIdentity, transfer: &Arc<dyn ChapterTransfer>,
 ) -> Result<bool, P2pError> {
+    let Some(blob_hash) = header.blob_hash.as_deref() else {
+        return Ok(true);
+    };
+
+    let mut blob_reader = match transfer.fetch_reader(blob_hash, peer).await {
+        Ok(reader) => reader,
+        Err(err) => {
+            tracing::warn!(
+                comic = %header.comic_name,
+                chapter = %header.chapter,
+                blob_hash,
+                error = %err,
+                "sync-files: falha ao buscar blob do peer",
+            );
+            return Ok(true);
+        }
+    };
+
     let mut received_bytes: u64 = 0;
     let mut bytes_since_progress: u64 = 0;
     let mut write_failed = handle < 0;
+    let mut buf = vec![0u8; CHUNK_SIZE];
 
-    while received_bytes < header.size {
-        let chunk = read_bytes(reader).await?;
-        if chunk.is_empty() {
+    loop {
+        let n = blob_reader
+            .read(&mut buf)
+            .await
+            .map_err(|err| P2pError::StreamFailed(format!("failed to read fetched blob: {err}")))?;
+        if n == 0 {
             break;
         }
 
-        received_bytes += chunk.len() as u64;
-        bytes_since_progress += chunk.len() as u64;
+        received_bytes += n as u64;
+        bytes_since_progress += n as u64;
 
-        if !write_failed && !write_chapter_chunk(provider, handle, chunk).await? {
+        if !write_failed && !write_chapter_chunk(provider, handle, buf[..n].to_vec()).await? {
             write_failed = true;
         }
 
@@ -396,11 +406,11 @@ fn chapter_failed_payload(peer: &PeerIdentity, header: &FileHeader) -> String {
 }
 
 async fn receive_one_chapter(
-    reader: &mut Recv, provider: &Arc<dyn FileSyncProvider>, emit: &EventEmitter, peer: &PeerIdentity,
-    header: &FileHeader, stats: &mut FileSyncStats,
+    provider: &Arc<dyn FileSyncProvider>, emit: &EventEmitter, peer: &PeerIdentity, header: &FileHeader,
+    stats: &mut FileSyncStats, transfer: &Arc<dyn ChapterTransfer>,
 ) -> Result<(), P2pError> {
     let handle = begin_chapter_write(provider, header).await?;
-    let write_failed = receive_chapter_bytes(reader, provider, handle, header, emit, peer).await?;
+    let write_failed = receive_chapter_from_blob(provider, handle, header, emit, peer, transfer).await?;
 
     let succeeded = if !write_failed && handle >= 0 {
         finalize_chapter_write(provider, handle).await?
@@ -494,14 +504,14 @@ async fn exchange_want_lists(
 async fn transfer_files(
     outbound_role: bool, writer: &mut Writer, reader: &mut Recv, provider: &Arc<dyn FileSyncProvider>,
     local_manifest: &FileManifest, wanted_locally: &[(String, String)], their_wanted: &[(String, String)],
-    emit: &EventEmitter, peer: &PeerIdentity, stats: &mut FileSyncStats,
+    emit: &EventEmitter, peer: &PeerIdentity, stats: &mut FileSyncStats, transfer: &Arc<dyn ChapterTransfer>,
 ) -> Result<(), P2pError> {
     if outbound_role {
-        receive_files(reader, wanted_locally.len(), provider, emit, peer, stats).await?;
-        send_files(writer, provider, local_manifest, their_wanted, emit, peer, stats).await?;
+        receive_files(reader, wanted_locally.len(), provider, emit, peer, stats, transfer).await?;
+        send_files(writer, provider, local_manifest, their_wanted, emit, peer, stats, transfer).await?;
     } else {
-        send_files(writer, provider, local_manifest, their_wanted, emit, peer, stats).await?;
-        receive_files(reader, wanted_locally.len(), provider, emit, peer, stats).await?;
+        send_files(writer, provider, local_manifest, their_wanted, emit, peer, stats, transfer).await?;
+        receive_files(reader, wanted_locally.len(), provider, emit, peer, stats, transfer).await?;
     }
 
     Ok(())
@@ -513,7 +523,7 @@ async fn transfer_files(
 /// foi montado/filtrado antes de chegar aqui.
 async fn run_exchange_with_manifest(
     outbound_role: bool, peer: &PeerIdentity, emit: &EventEmitter, provider: &Arc<dyn FileSyncProvider>,
-    local_manifest: FileManifest, writer: &mut Writer, reader: &mut Recv,
+    local_manifest: FileManifest, writer: &mut Writer, reader: &mut Recv, transfer: &Arc<dyn ChapterTransfer>,
 ) -> Result<FileSyncStats, P2pError> {
     let mut stats = FileSyncStats::default();
 
@@ -539,6 +549,7 @@ async fn run_exchange_with_manifest(
         emit,
         peer,
         &mut stats,
+        transfer,
     )
     .await?;
 
@@ -550,13 +561,15 @@ async fn run_exchange_with_manifest(
 /// (1) troca de manifesto; (2) troca de want-list; (3) transferência de arquivos.
 pub(super) async fn run_exchange(
     outbound_role: bool, peer: &PeerIdentity, emit: &EventEmitter, provider: &Arc<dyn FileSyncProvider>,
-    send: Box<dyn AsyncWrite + Send + Unpin>, recv: Box<dyn AsyncRead + Send + Unpin>,
+    transfer: &Arc<dyn ChapterTransfer>, send: Box<dyn AsyncWrite + Send + Unpin>,
+    recv: Box<dyn AsyncRead + Send + Unpin>,
 ) -> Result<FileSyncStats, P2pError> {
     let mut writer: Writer = FramedWrite::new(send, LengthDelimitedCodec::new());
     let mut reader: Recv = FramedRead::new(recv, LengthDelimitedCodec::new());
 
     let local_manifest = build_local_manifest(provider).await?;
-    run_exchange_with_manifest(outbound_role, peer, emit, provider, local_manifest, &mut writer, &mut reader).await
+    run_exchange_with_manifest(outbound_role, peer, emit, provider, local_manifest, &mut writer, &mut reader, transfer)
+        .await
 }
 
 /// Fase 0 exclusiva do `acerola/sync-comic/1`: outbound manda `ComicSyncScope` (o quadrinho
@@ -593,10 +606,11 @@ fn filter_manifest_to_comic(manifest: FileManifest, comic_name: &str) -> FileMan
 /// acordado — cobre push (usuário manda um quadrinho que já tem) e pull (usuário pede um
 /// quadrinho que só existe no peer, manifesto local filtrado fica vazio) com o mesmo código,
 /// já que a troca é sempre simétrica dos dois lados.
+#[allow(clippy::too_many_arguments)]
 pub(super) async fn run_exchange_scoped(
     outbound_role: bool, peer: &PeerIdentity, emit: &EventEmitter, provider: &Arc<dyn FileSyncProvider>,
-    comic_name_outbound: Option<String>, send: Box<dyn AsyncWrite + Send + Unpin>,
-    recv: Box<dyn AsyncRead + Send + Unpin>,
+    transfer: &Arc<dyn ChapterTransfer>, comic_name_outbound: Option<String>,
+    send: Box<dyn AsyncWrite + Send + Unpin>, recv: Box<dyn AsyncRead + Send + Unpin>,
 ) -> Result<FileSyncStats, P2pError> {
     let mut writer: Writer = FramedWrite::new(send, LengthDelimitedCodec::new());
     let mut reader: Recv = FramedRead::new(recv, LengthDelimitedCodec::new());
@@ -607,7 +621,8 @@ pub(super) async fn run_exchange_scoped(
     let local_manifest = build_local_manifest(provider).await?;
     let local_manifest = filter_manifest_to_comic(local_manifest, &comic_name);
 
-    run_exchange_with_manifest(outbound_role, peer, emit, provider, local_manifest, &mut writer, &mut reader).await
+    run_exchange_with_manifest(outbound_role, peer, emit, provider, local_manifest, &mut writer, &mut reader, transfer)
+        .await
 }
 
 #[cfg(test)]
@@ -623,6 +638,15 @@ mod tests {
 
     use super::*;
     use crate::callbacks::FfiFileManifestEntry;
+    use crate::protocol::files::transfer::InMemoryChapterTransfer;
+
+    /// Um par de transports em memória que compartilham o mesmo hash->bytes — simula os dois
+    /// lados de uma conexão real publicando/buscando no mesmo "store de rede" content-addressed,
+    /// sem precisar de um `Endpoint` iroh de verdade (só `BlobChapterTransfer`, usado em
+    /// produção, precisa disso).
+    fn test_transfer_pair() -> (Arc<dyn ChapterTransfer>, Arc<dyn ChapterTransfer>) {
+        InMemoryChapterTransfer::shared_pair()
+    }
 
     /// Provider que nunca é usado pra transferir nada — todos os métodos de dados retornam
     /// "vazio"/"-1"/"false". Só `get_file_manifest` faz algo (definido por closure em cada
@@ -714,12 +738,14 @@ mod tests {
 
         let peer = make_peer("peer-x");
         let emit = no_op_emitter();
+        let (outbound_transfer, inbound_transfer) = test_transfer_pair();
 
         let outbound_fut = run_exchange(
             true,
             &peer,
             &emit,
             &outbound_provider,
+            &outbound_transfer,
             Box::new(client_send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(client_recv) as Box<dyn AsyncRead + Send + Unpin>,
         );
@@ -728,6 +754,7 @@ mod tests {
             &peer,
             &emit,
             &inbound_provider,
+            &inbound_transfer,
             Box::new(server_send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(server_recv) as Box<dyn AsyncRead + Send + Unpin>,
         );
@@ -924,6 +951,7 @@ mod tests {
 
         let peer = make_peer("peer-x");
         let emit = no_op_emitter();
+        let (outbound_transfer, inbound_transfer) = test_transfer_pair();
 
         let outbound_dyn: Arc<dyn FileSyncProvider> = Arc::clone(&outbound_provider) as Arc<dyn FileSyncProvider>;
         let inbound_dyn: Arc<dyn FileSyncProvider> = Arc::clone(&inbound_provider) as Arc<dyn FileSyncProvider>;
@@ -933,6 +961,7 @@ mod tests {
             &peer,
             &emit,
             &outbound_dyn,
+            &outbound_transfer,
             Box::new(client_send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(client_recv) as Box<dyn AsyncRead + Send + Unpin>,
         );
@@ -941,6 +970,7 @@ mod tests {
             &peer,
             &emit,
             &inbound_dyn,
+            &inbound_transfer,
             Box::new(server_send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(server_recv) as Box<dyn AsyncRead + Send + Unpin>,
         );
@@ -1003,6 +1033,7 @@ mod tests {
 
         let peer = make_peer("peer-stress");
         let emit = no_op_emitter();
+        let (outbound_transfer, inbound_transfer) = test_transfer_pair();
 
         let outbound_dyn: Arc<dyn FileSyncProvider> = Arc::clone(&outbound_provider) as Arc<dyn FileSyncProvider>;
         let inbound_dyn: Arc<dyn FileSyncProvider> = Arc::clone(&inbound_provider) as Arc<dyn FileSyncProvider>;
@@ -1012,6 +1043,7 @@ mod tests {
             &peer,
             &emit,
             &outbound_dyn,
+            &outbound_transfer,
             Box::new(client_send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(client_recv) as Box<dyn AsyncRead + Send + Unpin>,
         );
@@ -1020,6 +1052,7 @@ mod tests {
             &peer,
             &emit,
             &inbound_dyn,
+            &inbound_transfer,
             Box::new(server_send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(server_recv) as Box<dyn AsyncRead + Send + Unpin>,
         );
@@ -1077,6 +1110,7 @@ mod tests {
 
         let peer = make_peer("peer-scoped");
         let emit = no_op_emitter();
+        let (outbound_transfer, inbound_transfer) = test_transfer_pair();
 
         let outbound_dyn: Arc<dyn FileSyncProvider> = Arc::clone(&outbound_provider) as Arc<dyn FileSyncProvider>;
         let inbound_dyn: Arc<dyn FileSyncProvider> = Arc::clone(&inbound_provider) as Arc<dyn FileSyncProvider>;
@@ -1086,6 +1120,7 @@ mod tests {
             &peer,
             &emit,
             &outbound_dyn,
+            &outbound_transfer,
             Some("Comic A".to_string()),
             Box::new(client_send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(client_recv) as Box<dyn AsyncRead + Send + Unpin>,
@@ -1095,6 +1130,7 @@ mod tests {
             &peer,
             &emit,
             &inbound_dyn,
+            &inbound_transfer,
             None,
             Box::new(server_send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(server_recv) as Box<dyn AsyncRead + Send + Unpin>,
@@ -1132,6 +1168,7 @@ mod tests {
 
         let peer = make_peer("peer-pull");
         let emit = no_op_emitter();
+        let (outbound_transfer, inbound_transfer) = test_transfer_pair();
 
         let outbound_dyn: Arc<dyn FileSyncProvider> = Arc::clone(&outbound_provider) as Arc<dyn FileSyncProvider>;
         let inbound_dyn: Arc<dyn FileSyncProvider> = Arc::clone(&inbound_provider) as Arc<dyn FileSyncProvider>;
@@ -1141,6 +1178,7 @@ mod tests {
             &peer,
             &emit,
             &outbound_dyn,
+            &outbound_transfer,
             Some("Comic Only On Peer".to_string()),
             Box::new(client_send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(client_recv) as Box<dyn AsyncRead + Send + Unpin>,
@@ -1150,6 +1188,7 @@ mod tests {
             &peer,
             &emit,
             &inbound_dyn,
+            &inbound_transfer,
             None,
             Box::new(server_send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(server_recv) as Box<dyn AsyncRead + Send + Unpin>,
@@ -1181,6 +1220,7 @@ mod tests {
             &peer,
             &emit,
             &provider,
+            &test_transfer_pair().0,
             None,
             Box::new(send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(recv) as Box<dyn AsyncRead + Send + Unpin>,

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoStories
 import androidx.compose.material3.CircularProgressIndicator
@@ -19,6 +20,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,6 +32,7 @@ import br.acerola.comic.common.ux.theme.AcerolaTheme
 import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.service.network.ComicSummary
 import br.acerola.comic.ui.R
+import coil.compose.AsyncImage
 
 /**
  * Lists a peer's library (name + chapter count only, via `acerola/browse-library/1`) and lets
@@ -44,6 +48,9 @@ fun RemoteLibrarySheet(
     errorMessage: String?,
     onSelectComic: (comicName: String) -> Unit,
     onDismiss: () -> Unit,
+    /** Caminho local (`file://...`) da capa já baixada via `acerola/browse-cover/1`, se
+     *  houver — `null` mostra o ícone padrão em vez de uma imagem. */
+    coverPathFor: (comicName: String) -> String? = { null },
 ) {
     Acerola.Component.AdaptiveSheet(
         onDismissRequest = onDismiss,
@@ -84,7 +91,20 @@ fun RemoteLibrarySheet(
                     items(items = comics, key = { it.comicName }) { comic ->
                         ListItem(
                             leadingContent = {
-                                Icon(imageVector = Icons.Rounded.AutoStories, contentDescription = null)
+                                val coverPath = coverPathFor(comic.comicName)
+                                if (coverPath != null) {
+                                    AsyncImage(
+                                        model = coverPath,
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier =
+                                            Modifier
+                                                .size(40.dp)
+                                                .clip(RoundedCornerShape(SpacingTokens.Small)),
+                                    )
+                                } else {
+                                    Icon(imageVector = Icons.Rounded.AutoStories, contentDescription = null)
+                                }
                             },
                             headlineContent = { Text(text = comic.comicName) },
                             supportingContent = {
@@ -118,8 +138,8 @@ private fun RemoteLibrarySheetPreview() {
             peerDisplayName = "Pixel 8",
             comics =
                 listOf(
-                    ComicSummary(comicName = "Berserk", chapterCount = 42),
-                    ComicSummary(comicName = "Solo Leveling", chapterCount = 12),
+                    ComicSummary(comicName = "Berserk", chapterCount = 42, coverVersion = 0),
+                    ComicSummary(comicName = "Solo Leveling", chapterCount = 12, coverVersion = 0),
                 ),
             isLoading = false,
             errorMessage = null,

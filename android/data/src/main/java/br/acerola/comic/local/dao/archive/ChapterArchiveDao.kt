@@ -172,7 +172,7 @@ interface ChapterArchiveDao : BaseDao<ChapterArchive> {
     // biblioteca grande (ver `FileSyncProviderImpl.getLibrarySummary`).
     @Query(
         value = """
-            SELECT cd.name AS comic_name, COUNT(ca.id) AS chapter_count
+            SELECT cd.name AS comic_name, COUNT(ca.id) AS chapter_count, cd.last_modified AS cover_version
             FROM comic_directory cd
             JOIN chapter_archive ca ON ca.comic_directory_fk = cd.id
             GROUP BY cd.name

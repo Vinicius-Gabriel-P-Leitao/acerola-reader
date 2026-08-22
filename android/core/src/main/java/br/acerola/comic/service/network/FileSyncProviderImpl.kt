@@ -108,7 +108,11 @@ class FileSyncProviderImpl
         override fun getLibrarySummary(): List<FfiComicSummaryEntry> =
             runBlocking {
                 chapterArchiveDao.getLibrarySummary().map { row ->
-                    FfiComicSummaryEntry(comicName = row.comicName, chapterCount = row.chapterCount.toUInt())
+                    FfiComicSummaryEntry(
+                        comicName = row.comicName,
+                        chapterCount = row.chapterCount.toUInt(),
+                        coverVersion = row.coverVersion,
+                    )
                 }
             }
 

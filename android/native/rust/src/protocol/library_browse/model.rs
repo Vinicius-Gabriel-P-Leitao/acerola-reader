@@ -8,6 +8,10 @@ use serde::{Deserialize, Serialize};
 pub(crate) struct ComicSummaryEntry {
     pub comic_name: String,
     pub chapter_count: u32,
+    /// Reaproveita `ComicDirectory.lastModified` — sem hash novo. O peer compara contra a
+    /// versão já cacheada localmente pra decidir se precisa buscar uma capa nova via
+    /// `acerola/browse-cover/1`.
+    pub cover_version: i64,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

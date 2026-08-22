@@ -52,7 +52,13 @@ pub(crate) struct FileHeader {
     pub chapter: String,
     pub file_name: String,
     pub size: u64,
+    /// SHA-256 do manifesto (`FileChapterInfo.checksum`) — repassado tal e qual pra
+    /// `FileSyncProvider::begin_chapter_write`/verificação Kotlin, sem relação com blobs.
     pub checksum: Option<String>,
+    /// Hash de blob (BLAKE3, hex) devolvido por `P2pBlobStore::put` no lado que enviou —
+    /// é o que o lado que recebe usa em `P2pBlobStore::fetch` pra puxar os bytes de verdade.
+    /// `None` só no header vazio de "não tenho mais esse capítulo" (`size: 0`).
+    pub blob_hash: Option<String>,
 }
 
 /// Mensagem enviada no lugar do manifesto quando o `FileSyncSessionGuard` já rejeitou a

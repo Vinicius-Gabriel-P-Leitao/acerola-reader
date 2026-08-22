@@ -25,7 +25,11 @@ pub(super) async fn build_summary(provider: &Arc<dyn FileSyncProvider>) -> Resul
 
     let mut comics: Vec<ComicSummaryEntry> = entries
         .into_iter()
-        .map(|entry| ComicSummaryEntry { comic_name: entry.comic_name, chapter_count: entry.chapter_count })
+        .map(|entry| ComicSummaryEntry {
+            comic_name: entry.comic_name,
+            chapter_count: entry.chapter_count,
+            cover_version: entry.cover_version,
+        })
         .collect();
     comics.sort_by(|a, b| a.comic_name.cmp(&b.comic_name));
 
@@ -103,7 +107,7 @@ mod tests {
     }
 
     fn summary_entry(comic_name: &str, chapter_count: u32) -> FfiComicSummaryEntry {
-        FfiComicSummaryEntry { comic_name: comic_name.to_string(), chapter_count }
+        FfiComicSummaryEntry { comic_name: comic_name.to_string(), chapter_count, cover_version: 0 }
     }
 
     /// `build_summary` só mapeia/ordena o que `get_library_summary()` (agrupamento já feito no

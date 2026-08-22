@@ -127,4 +127,38 @@ pub struct FfiFileManifestEntry {
 pub struct FfiComicSummaryEntry {
     pub comic_name: String,
     pub chapter_count: u32,
+    /// Reaproveita `ComicDirectory.lastModified`/`comic_directory.last_modified` — sem hash
+    /// novo. O peer compara contra a versão já cacheada localmente pra decidir se precisa
+    /// buscar uma capa nova via `acerola/browse-cover/1`.
+    pub cover_version: i64,
+}
+
+/// Fonte/destino da capa (`cover.jpg`) de um quadrinho, usada pelo protocolo
+/// `acerola/browse-cover/1`. Separada de `FileSyncProvider` de propósito: capas são pequenas o
+/// bastante (thumbnail) pra trafegar como `Vec<u8>` inteiro numa chamada FFI só, sem precisar da
+/// máquina de handles opacos que os capítulos (potencialmente centenas de MB) exigem.
+#[uniffi::export(with_foreign)]
+pub trait CoverBrowseProvider: Send + Sync {
+    /// Capa local de `comic_name`, se existir. `bytes: None` cobre tanto "quadrinho não existe"
+    /// quanto "existe mas não tem capa salva" — os dois casos resultam na mesma resposta
+    /// `not_modified`/ausência pro peer, não há necessidade de distinguir no wire.
+    fn get_local_cover(&self, comic_name: String) -> FfiCoverEntry;
+
+    /// Grava a capa recebida de `peer_id` pra `comic_name` num cache local (nunca na árvore do
+    /// usuário) e devolve o caminho/URI resultante, pra UI carregar via Coil. Chave de cache
+    /// `(peer_id, comic_name, cover_version)` — quem chama decide se já tem essa versão cacheada
+    /// antes de disparar a busca, isto aqui só persiste o que já foi baixado.
+    fn save_remote_cover(
+        &self,
+        peer_id: String,
+        comic_name: String,
+        cover_version: i64,
+        bytes: Vec<u8>,
+    ) -> String;
+}
+
+#[derive(uniffi::Record, Debug, Clone, Serialize, Deserialize)]
+pub struct FfiCoverEntry {
+    pub cover_version: i64,
+    pub bytes: Option<Vec<u8>>,
 }

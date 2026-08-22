@@ -47,6 +47,11 @@ data class SyncUiState(
      *  an empty library" — [remoteLibrary] alone can't tell those apart once it's empty. */
     val remoteLibraryLoaded: Boolean = false,
     val browseLibraryError: String? = null,
+    /** `"$peerId:$comicName"` -> caminho local (`file://...`) da capa já baixada via
+     *  `acerola/browse-cover/1`, pronto pro Coil carregar. Cache em memória — nunca rebaixa a
+     *  mesma versão duas vezes dentro da mesma sessão do app (ver
+     *  [br.acerola.comic.module.main.sync.SyncViewModel]). */
+    val remoteCoverPaths: Map<String, String> = emptyMap(),
 )
 
 data class SyncResult(

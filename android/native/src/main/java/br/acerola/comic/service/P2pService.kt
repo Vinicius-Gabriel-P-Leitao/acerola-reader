@@ -3,6 +3,7 @@ package br.acerola.comic.service
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import p2p.CoverBrowseProvider
 import p2p.FfiNetworkMode
 import p2p.FfiPeerAddr
 import p2p.FileSyncProvider
@@ -35,6 +36,7 @@ class P2pService(
     secureStore: SecureBlobStore,
     historyProvider: HistorySyncProvider,
     fileProvider: FileSyncProvider,
+    coverProvider: CoverBrowseProvider,
     private val eventListener: (event: String, data: String) -> Unit,
 ) : Closeable {
     private val p2pNode: P2pNode
@@ -54,6 +56,9 @@ class P2pService(
         // Only used by Rust to migrate identity/peers/trust from the old plain-text format
         // into `SecureBlobStore` once — see `storage.rs`/`trust_store.rs`.
         val legacyDataDir = context.filesDir.resolve("p2p").absolutePath
+        // Store local de blobs content-addressed (`iroh-blobs-adapter`) — cache separado da
+        // árvore de biblioteca do usuário (SAF), reclamado por GC interno da lib, não pelo app.
+        val blobsDir = context.filesDir.resolve("blobs").absolutePath
         val appVersion =
             runCatching {
                 context.packageManager.getPackageInfo(context.packageName, 0).versionName
@@ -62,12 +67,14 @@ class P2pService(
             P2pNode(
                 callbackHandler,
                 legacyDataDir,
+                blobsDir,
                 relayUrlOverride,
                 Build.MODEL,
                 appVersion,
                 secureStore,
                 historyProvider,
                 fileProvider,
+                coverProvider,
             )
     }
 
@@ -124,6 +131,25 @@ class P2pService(
                 addrs = peerAddress.addrs,
             )
         p2pNode.browseLibrary(ffiAddr)
+    }
+
+    /** Busca a capa de UM quadrinho remoto — `knownVersion` é a versão já cacheada localmente
+     *  (`null` se nunca buscou essa capa antes). Resultado chega via evento
+     *  `browse:cover:result`/`browse:cover:error`, com o caminho local salvo no payload
+     *  (`path`) quando `status == "changed"`. */
+    fun browseCover(
+        peerAddress: PeerAddress,
+        comicName: String,
+        knownVersion: Long?,
+    ) {
+        Log.d("P2pService", "Browsing cover of '$comicName' from peer: ${peerAddress.id}")
+        val ffiAddr =
+            FfiPeerAddr(
+                id = peerAddress.id,
+                deviceId = peerAddress.deviceId,
+                addrs = peerAddress.addrs,
+            )
+        p2pNode.browseCover(ffiAddr, comicName, knownVersion)
     }
 
     fun switchToLocal() {

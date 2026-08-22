@@ -16,6 +16,7 @@ import br.acerola.comic.module.main.sync.state.SyncResult
 import br.acerola.comic.module.main.sync.state.SyncUiState
 import br.acerola.comic.module.main.sync.state.TransferLogEntry
 import br.acerola.comic.service.PeerAddress
+import br.acerola.comic.service.network.ComicSummary
 import br.acerola.comic.service.network.P2pEvent
 import br.acerola.comic.service.network.P2pEventBus
 import br.acerola.comic.usecase.network.P2pUseCase
@@ -34,6 +35,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 
@@ -55,6 +57,12 @@ internal fun syncKey(
     kind: String,
 ) = "$peerId:$kind"
 
+/** Shared with [RemoteLibrarySheet] to look up [SyncUiState.remoteCoverPaths] per item. */
+internal fun coverKey(
+    peerId: String,
+    comicName: String,
+) = "$peerId:$comicName"
+
 @HiltViewModel
 class SyncViewModel
     @Inject
@@ -68,6 +76,12 @@ class SyncViewModel
         val uiState: StateFlow<SyncUiState> = _uiState.asStateFlow()
 
         private val nextLogId = AtomicLong(0)
+
+        /** `"$peerId:$comicName"` -> última versão de capa confirmada (cacheada ou já sabida
+         *  como atual) — usado como `known_version` em `browseCover`, pra nunca rebaixar a mesma
+         *  versão duas vezes na mesma sessão do app. Fora do `SyncUiState` de propósito: não
+         *  precisa disparar recomposição sozinho, só [SyncUiState.remoteCoverPaths] importa pra UI. */
+        private val knownCoverVersions = ConcurrentHashMap<String, Long>()
 
         init {
             viewModelScope.launch { refreshLocalInfo() }
@@ -173,6 +187,24 @@ class SyncViewModel
                         )
                     }
                 is SyncAction.SyncComic -> syncComic(action.peerId, action.comicName)
+            }
+        }
+
+        /** Dispara `acerola/browse-cover/1` em paralelo pra cada quadrinho da lista — streams são
+         *  baratas numa conexão já pooled por `(peer, alpn)` (ver `acerola-p2p`), então não há
+         *  necessidade de serializar. `known_version` vem do cache em memória
+         *  ([knownCoverVersions]); ausente = primeira vez que essa capa é vista nesta sessão. */
+        private fun fetchCoversFor(
+            peerId: String,
+            comics: List<ComicSummary>,
+        ) {
+            viewModelScope.launch(Dispatchers.IO) {
+                val addr = p2pUseCase.getPairedPeers().find { it.id == peerId } ?: return@launch
+                comics.forEach { comic ->
+                    val key = coverKey(peerId, comic.comicName)
+                    if (knownCoverVersions[key] == comic.coverVersion) return@forEach
+                    p2pUseCase.browseCover(addr, comic.comicName, knownCoverVersions[key])
+                }
             }
         }
 
@@ -410,11 +442,22 @@ class SyncViewModel
                 is P2pEvent.LibraryBrowseResult ->
                     if (event.peerId == _uiState.value.browsingPeerId) {
                         _uiState.update { it.copy(remoteLibrary = event.comics, remoteLibraryLoaded = true) }
+                        fetchCoversFor(event.peerId, event.comics)
                     }
                 is P2pEvent.LibraryBrowseError ->
                     if (event.peerId == _uiState.value.browsingPeerId) {
                         _uiState.update { it.copy(browseLibraryError = event.message) }
                     }
+
+                is P2pEvent.CoverBrowseResult -> {
+                    val key = coverKey(event.peerId, event.comicName)
+                    event.coverVersion?.let { knownCoverVersions[key] = it }
+                    val path = event.path
+                    if (event.status == "changed" && path != null) {
+                        _uiState.update { it.copy(remoteCoverPaths = it.remoteCoverPaths + (key to path)) }
+                    }
+                }
+                is P2pEvent.CoverBrowseError -> Unit // best-effort — a lista continua sem thumb pra esse item
 
                 else -> Unit
             }
