@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.LayersClear
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -18,6 +20,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import br.acerola.comic.common.state.SyncActionVisualState
+import br.acerola.comic.common.ux.Acerola
+import br.acerola.comic.common.ux.component.Dialog
+import br.acerola.comic.common.ux.component.DialogButton
+import br.acerola.comic.common.ux.component.HeroButton
 import br.acerola.comic.config.preference.types.VolumeViewType
 import br.acerola.comic.module.comic.Comic
 import br.acerola.comic.module.comic.component.ComicCategorySelector
@@ -177,6 +183,50 @@ fun Comic.Template.configSection(
             comicInfoState = getSyncActionVisualState(ComicSyncAction.SyncComicInfo),
             modifier = itemModifier,
         )
+    }
+
+    scope.item { Spacer(modifier = Modifier.height(8.dp)) }
+
+    scope.item {
+        var showClearMetadataDialog by remember { mutableStateOf(false) }
+
+        Acerola.Component.HeroButton(
+            title = stringResource(id = R.string.action_clear_metadata),
+            description = stringResource(id = R.string.description_clear_metadata),
+            icon = Icons.Rounded.LayersClear,
+            iconTint = MaterialTheme.colorScheme.onErrorContainer,
+            iconBackground = MaterialTheme.colorScheme.errorContainer,
+            onClick = { showClearMetadataDialog = true },
+            modifier = itemModifier,
+        )
+
+        if (showClearMetadataDialog) {
+            Acerola.Component.Dialog(
+                show = true,
+                onDismiss = { showClearMetadataDialog = false },
+                title = stringResource(id = R.string.dialog_clear_metadata_title),
+                confirmButtonContent = {
+                    Acerola.Component.DialogButton(
+                        text = stringResource(id = R.string.action_clear_metadata),
+                        onClick = {
+                            showClearMetadataDialog = false
+                            onAction(ComicAction.ClearMetadata)
+                        },
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError,
+                        fontWeight = FontWeight.Bold,
+                    )
+                },
+                dismissButtonContent = {
+                    Acerola.Component.DialogButton(
+                        text = stringResource(id = R.string.action_cancel),
+                        onClick = { showClearMetadataDialog = false },
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                },
+                content = { Text(text = stringResource(id = R.string.dialog_clear_metadata_message)) },
+            )
+        }
     }
 
     scope.item {

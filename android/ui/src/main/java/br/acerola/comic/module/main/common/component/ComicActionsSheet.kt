@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.BookmarkBorder
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.LayersClear
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
@@ -66,6 +67,7 @@ fun Main.Common.Component.ComicActionsSheet(
     categories: List<CategoryDto>,
     onHide: () -> Unit,
     onDelete: () -> Unit,
+    onClearMetadata: () -> Unit,
     onBookmark: (categoryId: Long?) -> Unit,
     onDismiss: () -> Unit,
     pairedPeers: List<PairedPeer> = emptyList(),
@@ -75,6 +77,7 @@ fun Main.Common.Component.ComicActionsSheet(
     var showCategorySheet by remember { mutableStateOf(false) }
     var showHideDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showClearMetadataDialog by remember { mutableStateOf(false) }
     var showPeerPicker by remember { mutableStateOf(false) }
 
     val title = comic.remoteInfo?.title ?: comic.directory.name
@@ -186,6 +189,15 @@ fun Main.Common.Component.ComicActionsSheet(
 
         ListItem(
             leadingContent = {
+                Icon(imageVector = Icons.Rounded.LayersClear, contentDescription = null)
+            },
+            headlineContent = { Text(text = stringResource(id = R.string.action_clear_metadata)) },
+            supportingContent = { Text(text = stringResource(id = R.string.description_clear_metadata)) },
+            modifier = Modifier.clickable { showClearMetadataDialog = true },
+        )
+
+        ListItem(
+            leadingContent = {
                 Icon(
                     imageVector = Icons.Rounded.Delete,
                     contentDescription = null,
@@ -291,6 +303,35 @@ fun Main.Common.Component.ComicActionsSheet(
                 )
             },
             content = { Text(text = stringResource(id = R.string.dialog_delete_message)) },
+        )
+    }
+
+    if (showClearMetadataDialog) {
+        Acerola.Component.Dialog(
+            show = true,
+            onDismiss = { showClearMetadataDialog = false },
+            title = stringResource(id = R.string.dialog_clear_metadata_title),
+            confirmButtonContent = {
+                Acerola.Component.DialogButton(
+                    text = stringResource(id = R.string.action_clear_metadata),
+                    onClick = {
+                        onClearMetadata()
+                        showClearMetadataDialog = false
+                        onDismiss()
+                    },
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            dismissButtonContent = {
+                Acerola.Component.DialogButton(
+                    text = stringResource(id = R.string.action_cancel),
+                    onClick = { showClearMetadataDialog = false },
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            },
+            content = { Text(text = stringResource(id = R.string.dialog_clear_metadata_message)) },
         )
     }
 
@@ -484,6 +525,7 @@ private fun ComicActionsSheetPreview() {
             categories = emptyList(),
             onHide = {},
             onDelete = {},
+            onClearMetadata = {},
             onBookmark = {},
             onDismiss = {},
         )

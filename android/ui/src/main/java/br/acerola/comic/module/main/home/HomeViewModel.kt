@@ -29,6 +29,7 @@ import br.acerola.comic.usecase.comic.DeleteComicUseCase
 import br.acerola.comic.usecase.comic.HideComicUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.history.ObserveHistoryUseCase
+import br.acerola.comic.usecase.metadata.ClearMetadataUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
 import br.acerola.comic.usecase.network.P2pUseCase
 import br.acerola.comic.usecase.network.SyncComicWithPeerUseCase
@@ -65,6 +66,7 @@ class HomeViewModel
         private val manageCategoriesUseCase: ManageCategoriesUseCase,
         private val hideComicUseCase: HideComicUseCase,
         private val deleteComicUseCase: DeleteComicUseCase,
+        private val clearMetadataUseCase: ClearMetadataUseCase,
         @param:ApplicationContext private val context: Context,
         @param:MangadexCase private val mangadexObserve: ObserveLibraryUseCase<ComicMetadataDto>,
         @param:DirectoryCase private val directoryObserve: ObserveLibraryUseCase<ComicDirectoryDto>,
@@ -238,6 +240,20 @@ class HomeViewModel
                         _uiEvents.send(error)
                     }
                 }
+                clearComicSelection()
+            }
+        }
+
+        fun clearMetadata(comicId: Long) {
+            viewModelScope.launch {
+                clearMetadataUseCase(comicId)
+            }
+        }
+
+        fun clearMetadataForSelectedComics() {
+            val idsToUpdate = _selectedComicIds.value
+            viewModelScope.launch {
+                idsToUpdate.forEach { id -> clearMetadataUseCase(id) }
                 clearComicSelection()
             }
         }

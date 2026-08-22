@@ -336,6 +336,10 @@
     <string name="dialog_unhide_message">Este quadrinho voltará a ser exibido na biblioteca principal.</string>
     <string name="dialog_delete_title">Deletar quadrinho?</string>
     <string name="dialog_delete_message">Esta ação remove o quadrinho do banco de dados e apaga a pasta do dispositivo. Não pode ser desfeita.</string>
+    <string name="action_clear_metadata">Limpar Metadados</string>
+    <string name="description_clear_metadata">Remove título, descrição, autores, gêneros e fonte sincronizada</string>
+    <string name="dialog_clear_metadata_title">Limpar metadados?</string>
+    <string name="dialog_clear_metadata_message">Esta ação remove os metadados sincronizados deste quadrinho (título, descrição, autores, gêneros e fonte). Os arquivos no dispositivo não são afetados. Não pode ser desfeita.</string>
     <string name="label_selection_count">%1$d selecionado(s)</string>
     <string name="action_select_all">Selecionar tudo</string>
     <string name="action_deselect_all">Desmarcar tudo</string>
@@ -345,6 +349,8 @@
     <string name="dialog_batch_unhide_message">Os quadrinhos selecionados voltarão a ser exibidos na biblioteca principal.</string>
     <string name="dialog_batch_delete_title">Deletar %1$d quadrinhos?</string>
     <string name="dialog_batch_delete_message">Esta ação removerá %1$d quadrinhos selecionados do banco de dados e apagará suas pastas do dispositivo. Não pode ser desfeita.</string>
+    <string name="dialog_batch_clear_metadata_title">Limpar metadados de %1$d quadrinhos?</string>
+    <string name="dialog_batch_clear_metadata_message">Esta ação remove os metadados sincronizados dos %1$d quadrinhos selecionados (título, descrição, autores, gêneros e fonte). Os arquivos no dispositivo não são afetados. Não pode ser desfeita.</string>
     <string name="description_batch_category_mixed">Categoria presente em apenas alguns dos quadrinhos selecionados</string>
     <string name="description_batch_category_all">Categoria presente em todos os quadrinhos selecionados</string>
     <string name="description_batch_category_none">Categoria não presente nos quadrinhos selecionados</string>

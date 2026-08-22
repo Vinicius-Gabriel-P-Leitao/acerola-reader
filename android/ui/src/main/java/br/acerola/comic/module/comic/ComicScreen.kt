@@ -341,6 +341,7 @@ fun ComicScreen(
                     action.enabled,
                 )
             is ComicAction.UpdateVolumeView -> comicViewModel.updateVolumeViewMode(action.mode)
+            ComicAction.ClearMetadata -> comicMetadataViewModel.clearMetadata(uiState.comic.directory.id)
         }
     }
 

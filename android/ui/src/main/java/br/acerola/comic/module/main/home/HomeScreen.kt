@@ -53,6 +53,7 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.LayersClear
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
@@ -207,6 +208,7 @@ fun Main.Home.Template.Screen(
     var showBatchCategorySheet by remember { mutableStateOf(false) }
     var showBatchHideDialog by remember { mutableStateOf(false) }
     var showBatchDeleteDialog by remember { mutableStateOf(false) }
+    var showBatchClearMetadataDialog by remember { mutableStateOf(false) }
 
     val onAction: (HomeAction) -> Unit = { action ->
         when (action) {
@@ -519,6 +521,11 @@ fun Main.Home.Template.Screen(
                             onClick = { showBatchHideDialog = true },
                         ),
                         SelectionAction(
+                            icon = Icons.Rounded.LayersClear,
+                            label = stringResource(id = R.string.action_clear_metadata),
+                            onClick = { showBatchClearMetadataDialog = true },
+                        ),
+                        SelectionAction(
                             icon = Icons.Rounded.Delete,
                             label = stringResource(id = R.string.action_delete),
                             onClick = { showBatchDeleteDialog = true },
@@ -540,6 +547,7 @@ fun Main.Home.Template.Screen(
                 categories = allCategories,
                 onHide = { homeViewModel.hideManga(activeManga.directory.id) },
                 onDelete = { homeViewModel.deleteComic(activeManga.directory.id) },
+                onClearMetadata = { homeViewModel.clearMetadata(activeManga.directory.id) },
                 onBookmark = { categoryId -> homeViewModel.setMangaCategory(activeManga.directory.id, categoryId) },
                 onDismiss = { selectedMangaForActions = null },
                 pairedPeers = pairedPeers,
@@ -633,6 +641,34 @@ fun Main.Home.Template.Screen(
                     )
                 },
                 content = { Text(text = stringResource(id = R.string.dialog_batch_delete_message, selectedComicIds.size)) },
+            )
+        }
+
+        if (showBatchClearMetadataDialog) {
+            Acerola.Component.Dialog(
+                show = true,
+                onDismiss = { showBatchClearMetadataDialog = false },
+                title = stringResource(id = R.string.dialog_batch_clear_metadata_title, selectedComicIds.size),
+                confirmButtonContent = {
+                    Acerola.Component.DialogButton(
+                        text = stringResource(id = R.string.action_clear_metadata),
+                        onClick = {
+                            showBatchClearMetadataDialog = false
+                            homeViewModel.clearMetadataForSelectedComics()
+                        },
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError,
+                        fontWeight = FontWeight.Bold,
+                    )
+                },
+                dismissButtonContent = {
+                    Acerola.Component.DialogButton(
+                        text = stringResource(id = R.string.action_cancel),
+                        onClick = { showBatchClearMetadataDialog = false },
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                },
+                content = { Text(text = stringResource(id = R.string.dialog_batch_clear_metadata_message, selectedComicIds.size)) },
             )
         }
 

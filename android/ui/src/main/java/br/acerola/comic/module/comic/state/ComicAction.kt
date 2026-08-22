@@ -26,6 +26,8 @@ sealed interface ComicAction {
     data class UpdateVolumeView(
         val mode: VolumeViewType,
     ) : ComicAction
+
+    data object ClearMetadata : ComicAction
 }
 
 sealed interface ComicChapterAction {
