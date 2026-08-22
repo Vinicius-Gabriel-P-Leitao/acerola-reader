@@ -152,7 +152,32 @@ let node = AcerolaP2p::builder(emit, IrohTransportBuilder::default(), device_inf
     .await?;
 ```
 
-### 3. Provedores Nativos de Informações do Dispositivo
+### 3. Blobs — Storage Content-Addressed (`iroh-blobs-adapter`)
+
+Atrás da feature `iroh-blobs-adapter` (ativa `iroh` automaticamente), o `IrohTransportBuilder` pode montar um store de blobs content-addressed (BLAKE3, dedup e download verificado via o motor real do [`iroh-blobs`](https://github.com/n0-computer/iroh-blobs)) sobre o mesmo `Endpoint` do transporte:
+
+```toml
+[dependencies]
+acerola-p2p = { git = "https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p", features = ["iroh-blobs-adapter"] }
+```
+
+```rust
+use acerola_p2p::api::{transport::IrohTransportBuilder, blobs::IrohBlobsConfig};
+
+// Store em memória (não sobrevive a reinícios, ideal para testes)
+let transport_builder = IrohTransportBuilder::default().blobs(IrohBlobsConfig::mem());
+
+// ...ou persistente em disco
+let transport_builder = IrohTransportBuilder::default().blobs(IrohBlobsConfig::fs("./blobs"));
+
+let node = AcerolaP2p::builder(emit, transport_builder, device_info)
+    .build()
+    .await?;
+```
+
+Sem `.blobs(...)` configurado (ou com um transporte que não suporte a capacidade), `node.blobs()` simplesmente retorna `None` — ver a seção [Blobs em Tempo de Execução](#blobs-em-tempo-de-execução) abaixo.
+
+### 4. Provedores Nativos de Informações do Dispositivo
 
 O módulo `identity` oferece provedores por plataforma com detecção automática de sistema operacional e hostname:
 
@@ -313,6 +338,43 @@ node.switch_guard(novo_guard, NetworkMode::Relay).await?;
 // Encerra os loops em background, fecha sockets e conexões QUIC
 node.shutdown().await?;
 ```
+
+---
+
+## Blobs em Tempo de Execução
+
+Com `.blobs(...)` configurado no builder (feature `iroh-blobs-adapter`, ver [Configurações Avançadas](#3-blobs--storage-content-addressed-iroh-blobs-adapter)), `node.blobs()` devolve a capacidade de armazenamento/transferência content-addressed:
+
+```rust
+use acerola_p2p::api::blobs::P2pBlobStore;
+use tokio::io::AsyncReadExt;
+
+// `None` se `.blobs(...)` não foi configurado no builder, ou se o transporte usado
+// não suportar essa capacidade.
+let Some(blobs) = node.blobs().await else {
+    return Ok(());
+};
+
+// Armazena localmente — o hash retornado é content-addressed (BLAKE3)
+let hash = blobs.put(b"conteudo qualquer".to_vec()).await?;
+
+// Confirma presença local sem baixar o blob inteiro
+assert!(blobs.has(&hash).await?);
+
+// Lê de volta como stream
+let mut reader = blobs.get(&hash).await?;
+let mut bytes = Vec::new();
+reader.read_to_end(&mut bytes).await?;
+
+// Baixa um blob de um peer remoto específico (download real, verificado por hash)
+blobs.fetch(&hash, &peer_addr).await?;
+
+// Remove a tag local associada ao hash — a reclamação física do espaço acontece no
+// próximo ciclo de garbage collection do store, não é imediata (ver nota abaixo)
+blobs.remove(&hash).await?;
+```
+
+`BlobHash` é um wrapper opaco sobre 32 bytes (`Display`/`FromStr` em hex, `Serialize`/`Deserialize`), independente do tipo de hash usado internamente pelo adapter escolhido. `remove()` é "lógico": o `iroh-blobs` restringe deleção física de blob a garbage collection interno de propósito — `remove()` apaga a tag que protege o hash, e o GC (intervalo configurável em `IrohBlobsConfig`) reclama o espaço depois.
 
 ---
 
