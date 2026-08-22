@@ -6,7 +6,7 @@ use iroh::{
 use iroh_mdns_address_lookup as mdns;
 use secrecy::{ExposeSecret, SecretBox};
 
-use super::transport::IrohTransport;
+use super::{blobs_bridge::BlobsIntegration, transport::IrohTransport};
 use crate::{core::transport::TransportP2pBuilder, infra::error::ConnectionError};
 
 const IDENTITY_DERIVE_CONTEXT: &str = "acerola-p2p 2026 node identity";
@@ -16,6 +16,7 @@ const IDENTITY_DERIVE_CONTEXT: &str = "acerola-p2p 2026 node identity";
 pub struct IrohTransportBuilder {
     relay_urls: Vec<String>,
     seed: Option<SecretBox<[u8; 32]>>,
+    blobs_config: super::blobs_bridge::BlobsConfigSlot,
 }
 
 impl IrohTransportBuilder {
@@ -28,6 +29,14 @@ impl IrohTransportBuilder {
     /// Define a seed bruta de 32 bytes para a geração de identidade criptográfica do nó.
     pub fn seed(mut self, seed: [u8; 32]) -> Self {
         self.seed = Some(SecretBox::new(Box::new(seed)));
+        self
+    }
+
+    /// Ativa o adapter de blobs (`iroh-blobs`) sobre este transporte, usando a configuração de
+    /// storage local informada.
+    #[cfg(feature = "iroh-blobs-adapter")]
+    pub fn blobs(mut self, config: crate::core::blobs::iroh::IrohBlobsConfig) -> Self {
+        self.blobs_config = Some(config);
         self
     }
 }
@@ -45,6 +54,11 @@ impl TransportP2pBuilder for IrohTransportBuilder {
     }
 
     async fn build(self, alpns: Vec<Vec<u8>>) -> Result<IrohTransport, ConnectionError> {
+        let mut alpns = alpns;
+        if let Some(alpn) = super::blobs_bridge::wants_alpn(&self.blobs_config) {
+            alpns.push(alpn.to_vec());
+        }
+
         tracing::debug!(
             layer = "iroh_transport",
             alpns = ?alpns.iter().map(|it| String::from_utf8_lossy(it)).collect::<Vec<_>>(),
@@ -62,7 +76,8 @@ impl TransportP2pBuilder for IrohTransportBuilder {
             "iroh transport bound successfully"
         );
 
-        Ok(IrohTransport::new(endpoint))
+        let blobs = BlobsIntegration::configure(&self.blobs_config, &endpoint).await?;
+        Ok(IrohTransport::new(endpoint, blobs))
     }
 }
 

@@ -1,5 +1,7 @@
 //! Módulo de componentes centrais da arquitetura do AcerolaP2P.
 
+/// Abstração de armazenamento e transferência de blobs content-addressed.
+pub mod blobs;
 /// Detecção de informações do dispositivo hospedeiro.
 pub mod device;
 pub(crate) mod guard;

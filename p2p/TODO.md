@@ -90,3 +90,50 @@ A camada de rede do Acerola deve expor um enum/interface de alto nível represen
 - [ ] **Atualizar o `README.md`**:
   - Adicionar seção dedicada explicando os 4 modos e como construir um componente de seleção visual de Relay (Dropdown / Radio buttons).
   - Incluir exemplo de código consumindo `node.switch_relay(...)` e escutando `"network:relay_changed"`.
+
+---
+
+# TODO: Abstração de Blobs (transferência de dados content-addressed)
+
+> ✅ **Concluído** (branch `release/blobs-interface`). A abstração e o adapter `iroh-blobs` estão implementados, testados e documentados no `README.md`. O desenho final divergiu do rascunho original em alguns pontos — ver "Notas de implementação" no fim desta seção antes de usar este documento como referência de API.
+
+O `acerola-p2p` já trata o `iroh` como **adapter**, não como infraestrutura: `P2pTransport` é a trait genérica (`core/transport/mod.rs`), `IrohTransport` é só a implementação concreta escolhida hoje, ativada por um feature flag (`iroh`) que não é o default estrutural — é o default de *conveniência*. Trocar de motor de transporte no futuro (outro backend QUIC, ou nenhum) não deveria vazar pra API pública nem pros apps consumidores.
+
+Hoje isso **não vale** pra transferência de arquivo: cada protocolo de aplicação (`sync-files`, `sync-comic`, e o `browse-cover` planejado nos TODOs do Desktop/Android) reinventa a própria máquina de chunking + checksum na mão, em cada app, em vez de existir uma abstração de "blob" na lib. `iroh-blobs` (a crate irmã do `iroh`, com chunking, verificação BLAKE3 e resume automáticos) nem é dependência do `acerola-p2p` hoje — foi checado e confirmado que não tem nenhuma referência a `iroh_blobs`/`iroh-blobs` no `Cargo.lock` nem no código-fonte.
+
+A tarefa aqui não é "adicionar `iroh-blobs`" direto — é dar a ele o mesmo tratamento de adapter que o `iroh` já tem pro transporte, pra um blob store diferente (ou nenhum) poder ser plugado sem quebrar quem consome a API.
+
+> A migração de fato dos protocolos de app (`sync-files`, `sync-comic`, `browse-cover`) pra consumir essa abstração é trabalho de cada app consumidor, já anotado nos `TODO.md` do Desktop e do Android — não é tarefa desta lib nem deste documento.
+
+## Tarefas de Implementação
+
+### 1. Definição da abstração (`core/blobs/`)
+
+- [x] **Criar trait `P2pBlobStore`** (mesmo espírito de `P2pTransport`) — `put(Vec<u8>) -> BlobHash`, `get(&hash) -> Box<dyn AsyncRead + Send + Unpin>`, `has(&hash) -> bool`, `remove(&hash)`, e mais um método além do rascunho original: `fetch(&hash, &PeerAddr)`, que baixa de um peer remoto específico pro store local (ver notas abaixo).
+- [x] **Tipo `BlobHash` genérico na lib** (`core/blobs/hash.rs`) — wrapper opaco sobre `[u8; 32]`, com `Display`/`FromStr` em hex e `Serialize`/`Deserialize`, sem amarra ao tipo `Hash` do `iroh-blobs`.
+- [x] **`InMemoryBlobStore`** como implementação de referência (mesmo padrão de `InMemoryStorage`), usada em testes e como store local sem capacidade de rede.
+- [ ] ~~Registrar blob store no builder via `.blobs(impl P2pBlobStore)` no `AcerolaP2pBuilder`~~ — **não foi assim que ficou**, ver "Notas de implementação".
+
+### 2. Adapter `iroh-blobs` (feature flag próprio)
+
+- [x] **`iroh-blobs` como dependência opcional**, atrás da feature `iroh-blobs-adapter` (junto com `irpc` e `n0-error`, exigidas pra conversão de erro e opções de GC do store).
+- [x] **`IrohBlobStore: P2pBlobStore`** em `core/blobs/iroh/` (`mod.rs`, `config.rs`, `gc.rs`), com conversão de erro própria em `infra/error/iroh_blobs.rs`, espelhando a separação que `core/transport/iroh/` já tem.
+- [x] **Transferência real de blob entre peers**, mas **não** via um ALPN registrado pelo mecanismo genérico `inbound`/`outbound`/`ProtocolHandler` — ver "Notas de implementação".
+
+### 3. Testes
+
+- [x] **Testes unitários de `InMemoryBlobStore`** (`core/blobs/mem.rs`) e de **`IrohBlobStore` contra `MemStore`** (`core/blobs/iroh/mod.rs`) — `put`→`get` bytes idênticos, hash desconhecido retorna `ConnectionError::BlobNotFound`, `has()` não baixa o blob, `remove()` reflete em `has()` (com polling, já que a reclamação é assíncrona via GC do store).
+- [x] **Teste de round-trip real** (`src/tests/blob_transfer.rs::run_in_isolation::real_two_node_blob_round_trip_via_fetch`) — dois nós de verdade, `put` em A, `fetch`+`get` em B, comparação BLAKE3.
+- [x] **Testes de estresse**: puts/gets concorrentes de 50 blobs (`concurrent_puts_and_gets_of_multiple_blobs`) e blob de 16 MiB medindo throughput (`large_blob_throughput_and_integrity`), ambos em `run_in_isolation`.
+- [x] **Testes de caminho triste** (não previstos no rascunho original, adicionados após revisão): `fetch` de hash inexistente num peer online, e `fetch` contra peer genuinamente inalcançável (falha em ~30s — timeout padrão de handshake QUIC do iroh, sem timeout menor configurado) seguido de recuperação contra um peer real.
+- [ ] **Mutation testing com `cargo-mutants`**: os `exclude_re` triviais já foram adicionados em `.cargo/mutants.toml` (conversões de hash, getter trivial, null-object da feature desligada), mas **rodar `cargo-mutants` de fato contra `core/blobs/` ainda não foi feito** — passo manual/CI separado, fica pendente.
+
+## Notas de implementação (desvios do rascunho original)
+
+Discutido e decidido durante a implementação — registrado aqui pra quem for consumir isso não estranhar o desenho:
+
+- **Blobs não são configurados no `AcerolaP2pBuilder`, e sim no `IrohTransportBuilder`** (`.blobs(IrohBlobsConfig::mem())` / `.fs(path)`), e acessados em runtime via `node.blobs() -> Option<Arc<dyn P2pBlobStore>>`. A trait `P2pTransport` ganhou um método `blobs()` com default `None` (mesmo padrão de `is_connected`) — qualquer adapter pode expor essa capacidade opcionalmente, sem mexer em `IncomingConnection`.
+- **A feature `iroh-blobs-adapter` depende de `iroh`** (`iroh-blobs-adapter = ["dep:iroh-blobs", ..., "iroh"]`), ao contrário do que o rascunho original sugeria. Motivo: o adapter monta o motor de transferência real do `iroh-blobs` (BLAKE3, dedup, download verificado) direto sobre o `Endpoint` que o `IrohTransport` já possui — não faz sentido sem o transporte iroh.
+- **Não existe ALPN de blob passando pelo `inbound`/`outbound`/`ProtocolHandler` genérico.** O `BlobsProtocol` real do `iroh-blobs` precisa da `Connection` inteira (não de um stream já isolado), então a detecção do ALPN de blob acontece direto em `drive_incoming_connections` (`core/transport/iroh/transport.rs`), delegada pra uma ponte dedicada (`core/transport/iroh/blobs_bridge.rs`) que vira "null object" quando a feature está desligada.
+- **`remove()` é "lógico", não imediato**: o `iroh-blobs` mantém a deleção física de blob restrita a garbage collection interno de propósito (a API pública não expõe deleção síncrona). `remove()` apaga a tag associada ao hash; a reclamação física acontece no próximo ciclo de GC do store (intervalo configurável em `IrohBlobsConfig`).
+- **Achado incidental, fora de escopo desta feature**: `AcerolaP2p::shutdown()`/`drop()` não fecha o `Endpoint` do iroh de verdade hoje — `NetworkManager::run()` só encerra o loop local (`break`), sem chamar `transport.shutdown()`, e a task `drive_incoming_connections` mantém sua própria cópia do `Endpoint` viva indefinidamente. Não é bug dos blobs (é pré-existente na camada de transporte), mas afeta qualquer teste/uso que dependa de um nó "desligado" ficar de fato inalcançável. Fica registrado aqui como possível TODO futuro — decisão de como/se endereçar (`Endpoint::close()` do iroh é um drain gracioso de ~3s que notifica peers, o que colide com o design já documentado de shutdown "prompt, sem notificação") fica para quando for priorizado.

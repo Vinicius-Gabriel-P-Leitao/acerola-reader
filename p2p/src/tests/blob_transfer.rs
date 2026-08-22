@@ -1,0 +1,250 @@
+//! Testes de integração da transferência real de blobs entre dois nós (adapter `iroh-blobs`).
+
+#![cfg(feature = "iroh-blobs-adapter")]
+
+use std::{sync::Arc, time::Duration};
+
+use tokio::time::sleep;
+
+use crate::{
+    api::{
+        blobs::{BlobHash, IrohBlobsConfig},
+        identity::DeviceInfo,
+        peer::{PeerAddr, PeerIdentity},
+        transport::IrohTransportBuilder,
+        AcerolaP2p,
+    },
+    data::protocol::EventEmitter,
+};
+
+fn no_op_emitter() -> EventEmitter {
+    Arc::new(|_: &str, _: String| {})
+}
+
+fn test_device_info() -> DeviceInfo {
+    DeviceInfo {
+        name: "blob-test-node".to_string(),
+        os: "linux".to_string(),
+        version: "1.0.0".to_string(),
+    }
+}
+
+async fn build_node_with_blobs() -> AcerolaP2p {
+    AcerolaP2p::builder(
+        no_op_emitter(),
+        IrohTransportBuilder::default().blobs(IrohBlobsConfig::mem()),
+        test_device_info(),
+    )
+    .build()
+    .await
+    .unwrap()
+}
+
+/// Espera mDNS descobrir o peer, mesmo padrão já usado em `acerola_builder.rs`/`acerola_p2p.rs`.
+async fn wait_for_mdns() {
+    sleep(Duration::from_millis(1500)).await;
+}
+
+/// Endereço sintético de um nó que nunca existiu — chave pública válida (o handshake QUIC
+/// exige uma), mas apontando pra uma porta local que nada escuta. Diferente de derrubar um
+/// `AcerolaP2p` de verdade (o `Endpoint` do iroh não fecha o socket enquanto qualquer clone dele
+/// — inclusive o da task de fundo `drive_incoming_connections` — continuar vivo, então "derrubar"
+/// um nó não garante inalcançabilidade hoje), isso testa unreachability real e determinística.
+fn unreachable_peer_addr() -> PeerAddr {
+    let node_id = iroh::SecretKey::generate().public();
+    let endpoint_addr = iroh::EndpointAddr::new(node_id)
+        .with_ip_addr(std::net::SocketAddr::from(([127, 0, 0, 1], 1)));
+    let addrs = serde_json::to_vec(&endpoint_addr).unwrap();
+    PeerAddr { id: PeerIdentity::from_public_key(node_id.to_string(), node_id.as_bytes()), addrs }
+}
+
+#[tokio::test]
+async fn blobs_capability_is_none_without_blobs_config() {
+    let node =
+        AcerolaP2p::builder(no_op_emitter(), IrohTransportBuilder::default(), test_device_info())
+            .build()
+            .await
+            .unwrap();
+
+    assert!(node.blobs().await.is_none());
+}
+
+#[tokio::test]
+async fn blobs_capability_is_some_when_configured() {
+    let node = build_node_with_blobs().await;
+    assert!(node.blobs().await.is_some());
+}
+
+mod run_in_isolation {
+    use tokio::io::AsyncReadExt;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn real_two_node_blob_round_trip_via_fetch() {
+        let node_a = build_node_with_blobs().await;
+        let node_b = build_node_with_blobs().await;
+
+        let addr_a = node_a.local_addr().clone();
+        let payload = b"acerola blob round trip payload".to_vec();
+
+        let blobs_a = node_a.blobs().await.unwrap();
+        let hash = blobs_a.put(payload.clone()).await.unwrap();
+
+        wait_for_mdns().await;
+
+        let blobs_b = node_b.blobs().await.unwrap();
+        blobs_b.fetch(&hash, &addr_a).await.unwrap();
+
+        let mut reader = blobs_b.get(&hash).await.unwrap();
+        let mut received = Vec::new();
+        reader.read_to_end(&mut received).await.unwrap();
+
+        assert_eq!(received, payload);
+        assert_eq!(blake3::hash(&received), blake3::hash(&payload));
+    }
+
+    #[tokio::test]
+    async fn concurrent_puts_and_gets_of_multiple_blobs() {
+        let node = build_node_with_blobs().await;
+        let blobs = node.blobs().await.unwrap();
+
+        const BLOB_COUNT: usize = 50;
+        let mut handles = Vec::with_capacity(BLOB_COUNT);
+
+        for index in 0..BLOB_COUNT {
+            let blobs = Arc::clone(&blobs);
+            handles.push(tokio::spawn(async move {
+                let payload = format!("blob-payload-{index}").into_bytes();
+                let hash = blobs.put(payload.clone()).await.unwrap();
+
+                let mut reader = blobs.get(&hash).await.unwrap();
+                let mut received = Vec::new();
+                reader.read_to_end(&mut received).await.unwrap();
+
+                assert_eq!(received, payload);
+            }));
+        }
+
+        for handle in handles {
+            handle.await.unwrap();
+        }
+    }
+
+    #[tokio::test]
+    async fn large_blob_throughput_and_integrity() {
+        let node_a = build_node_with_blobs().await;
+        let node_b = build_node_with_blobs().await;
+
+        let addr_a = node_a.local_addr().clone();
+
+        const PAYLOAD_SIZE: usize = 16 * 1024 * 1024; // 16 MiB
+        let payload: Vec<u8> = (0..PAYLOAD_SIZE).map(|i| (i % 251) as u8).collect();
+        let expected_hash = blake3::hash(&payload);
+
+        let blobs_a = node_a.blobs().await.unwrap();
+        let hash = blobs_a.put(payload).await.unwrap();
+
+        wait_for_mdns().await;
+
+        let blobs_b = node_b.blobs().await.unwrap();
+
+        let start = std::time::Instant::now();
+        blobs_b.fetch(&hash, &addr_a).await.unwrap();
+        let elapsed = start.elapsed();
+
+        let mut reader = blobs_b.get(&hash).await.unwrap();
+        let mut received = Vec::new();
+        reader.read_to_end(&mut received).await.unwrap();
+
+        assert_eq!(blake3::hash(&received), expected_hash);
+        tracing::info!(
+            bytes = PAYLOAD_SIZE,
+            elapsed_ms = elapsed.as_millis(),
+            "large blob transfer throughput"
+        );
+    }
+
+    /// Limite de segurança pra nenhum teste de caminho triste travar o suite pra sempre caso a
+    /// premissa de "falha rápido, sem relay" pare de valer numa versão futura do iroh.
+    const SAD_PATH_TIMEOUT: Duration = Duration::from_secs(10);
+
+    #[tokio::test]
+    async fn fetch_fails_when_remote_peer_does_not_have_the_requested_hash() {
+        let node_a = build_node_with_blobs().await;
+        let node_b = build_node_with_blobs().await;
+
+        let addr_a = node_a.local_addr().clone();
+
+        // Hash que não corresponde a nenhum conteúdo real que node_a tenha armazenado —
+        // simula pedir um blob errado a um peer que está online mas não o possui.
+        let unknown_hash = BlobHash::from_bytes([0x7a; 32]);
+
+        wait_for_mdns().await;
+
+        let blobs_b = node_b.blobs().await.unwrap();
+        let result =
+            tokio::time::timeout(SAD_PATH_TIMEOUT, blobs_b.fetch(&unknown_hash, &addr_a)).await;
+
+        assert!(result.is_ok(), "fetch must fail cleanly instead of hanging forever");
+        assert!(
+            result.unwrap().is_err(),
+            "fetch must return an error when the remote peer doesn't have the hash"
+        );
+        assert!(
+            !blobs_b.has(&unknown_hash).await.unwrap(),
+            "a failed fetch must not leave a phantom/partial entry in the local store"
+        );
+    }
+
+    #[tokio::test]
+    async fn fetch_fails_cleanly_when_peer_is_unreachable_then_succeeds_against_a_real_peer() {
+        let node_b = build_node_with_blobs().await;
+        let payload = b"acerola resilience payload".to_vec();
+
+        let blobs_b = node_b.blobs().await.unwrap();
+        let dead_addr = unreachable_peer_addr();
+
+        // Hash arbitrário — o peer nem existe, então não há blob real associado a ele; o que
+        // importa aqui é só a inalcançabilidade do endereço, não o conteúdo.
+        let target_hash = BlobHash::from_bytes(*blake3::hash(&payload).as_bytes());
+
+        // Medido empiricamente: um peer genuinamente inalcançável (sem resposta nenhuma, ao
+        // contrário de "online mas sem o blob") só desiste após o timeout padrão de handshake
+        // QUIC do iroh, ~30s — bem maior que o SAD_PATH_TIMEOUT usado nos outros casos, que
+        // assumem um peer que responde ativamente.
+        let dead_peer_result =
+            tokio::time::timeout(Duration::from_secs(40), blobs_b.fetch(&target_hash, &dead_addr))
+                .await;
+
+        assert!(
+            dead_peer_result.is_ok(),
+            "fetch against an unreachable peer must not hang forever"
+        );
+        assert!(
+            dead_peer_result.unwrap().is_err(),
+            "fetch must return an error when the peer is unreachable"
+        );
+        assert!(
+            !blobs_b.has(&target_hash).await.unwrap(),
+            "a failed fetch against a dead peer must not leave a phantom entry in the local store"
+        );
+
+        // Depois da falha, uma tentativa contra um peer de verdade, online, com o mesmo conteúdo
+        // (mesmo hash, content-addressed) — confirma que a falha anterior não deixou nenhum
+        // estado corrompido em blobs_b que impeça uma recuperação normal.
+        let node_c = build_node_with_blobs().await;
+        let blobs_c = node_c.blobs().await.unwrap();
+        let hash_c = blobs_c.put(payload.clone()).await.unwrap();
+        assert_eq!(target_hash, hash_c, "same content must be content-addressed to the same hash");
+
+        wait_for_mdns().await;
+
+        blobs_b.fetch(&target_hash, &node_c.local_addr().clone()).await.unwrap();
+
+        let mut reader = blobs_b.get(&target_hash).await.unwrap();
+        let mut received = Vec::new();
+        reader.read_to_end(&mut received).await.unwrap();
+        assert_eq!(received, payload);
+    }
+}

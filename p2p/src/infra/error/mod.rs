@@ -1,5 +1,7 @@
 #[cfg(feature = "iroh")]
 pub(crate) mod iroh;
+#[cfg(feature = "iroh-blobs-adapter")]
+pub(crate) mod iroh_blobs;
 pub(crate) mod rpc;
 
 use thiserror::Error;
@@ -43,6 +45,10 @@ pub enum ConnectionError {
     /// Falha na alocação de recursos locais ao iniciar a rede (ex: portas em uso).
     #[error("failed to initialize connection: {0}")]
     StartupFailed(String),
+
+    /// O hash de blob solicitado não está disponível no store local.
+    #[error("blob not found: {0}")]
+    BlobNotFound(String),
 }
 
 /// Erros restritos ao contexto de RPC (Remote Procedure Call) e framings customizados.
@@ -184,5 +190,14 @@ mod tests {
         let converted_error = ConnectionError::from(getrandom::Error::UNSUPPORTED);
 
         assert!(matches!(converted_error, ConnectionError::StartupFailed(_)));
+    }
+
+    /// Verifica que BlobNotFound exibe "blob not found" e o hash informado.
+    #[test]
+    fn connection_error_blob_not_found_display() {
+        let error_message = ConnectionError::BlobNotFound("abc123".to_string()).to_string();
+
+        assert!(error_message.contains("blob not found"));
+        assert!(error_message.contains("abc123"));
     }
 }

@@ -4,6 +4,10 @@
 #[cfg(test)]
 pub mod api_integration;
 
+/// Testes de integração da transferência real de blobs entre nós.
+#[cfg(test)]
+pub mod blob_transfer;
+
 /// Implementação de transporte simulado em memória (MockTransport).
 pub mod mock_transport;
 
