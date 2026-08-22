@@ -5,4 +5,13 @@ exclude_re = [
     ".*::tests::.*",
     ".*::test_.*",
     ".*ConnectionWriter.*",
+    # Conversões triviais de bytes entre BlobHash e iroh_blobs::Hash — sem lógica de negócio,
+    # mesmo critério já aplicado a ConnectionWriter.
+    ".*to_iroh_hash.*",
+    ".*to_blob_hash.*",
+    # Getter trivial, só repassa a referência interna.
+    ".*IrohBlobStore::inner_store.*",
+    # Null object da feature iroh-blobs-adapter desligada — sempre retorna None/false por
+    # definição, não há lógica pra mutar.
+    ".*blobs_bridge::disabled::.*",
 ]
