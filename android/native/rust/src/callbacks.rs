@@ -46,6 +46,15 @@ pub trait FileSyncProvider: Send + Sync {
     /// Todos os capítulos locais com checksum/tamanho, com chave natural `(comic_name, chapter)`.
     fn get_file_manifest(&self) -> Vec<FfiFileManifestEntry>;
 
+    /// Resumo por quadrinho (nome + contagem de capítulos), direto do Room — usado só por
+    /// `acerola/browse-library/1`. Existe separado de `get_file_manifest()` de propósito: aquele
+    /// método faz um `DocumentFile.exists()` via SAF por capítulo (uma transação binder cada),
+    /// que só compensa quando o resultado realmente precisa apontar pra um arquivo (transferência
+    /// de verdade). Pra só listar títulos isso é custo puro, e já estourou o timeout do
+    /// protocolo numa biblioteca grande/recém-escaneada — ver o comentário em
+    /// `FileSyncProviderImpl.getFileManifest()`.
+    fn get_library_summary(&self) -> Vec<FfiComicSummaryEntry>;
+
     /// Abre um capítulo local para leitura em chunks (lado que envia). `-1` se não encontrado.
     fn open_chapter_for_read(&self, comic_name: String, chapter: String) -> i64;
 
@@ -112,4 +121,10 @@ pub struct FfiFileManifestEntry {
     pub file_name: String,
     pub checksum: String,
     pub size_bytes: u64,
+}
+
+#[derive(uniffi::Record, Debug, Clone, Serialize, Deserialize)]
+pub struct FfiComicSummaryEntry {
+    pub comic_name: String,
+    pub chapter_count: u32,
 }

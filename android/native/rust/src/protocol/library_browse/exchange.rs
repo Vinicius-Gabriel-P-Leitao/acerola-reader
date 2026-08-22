@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 
 use acerola_p2p::api::error::P2pError;
 use futures::SinkExt;
@@ -14,21 +14,18 @@ const RESPONSE_READ_TIMEOUT: Duration = Duration::from_secs(15);
 type Recv = FramedRead<Box<dyn AsyncRead + Send + Unpin>, LengthDelimitedCodec>;
 type Writer = FramedWrite<Box<dyn AsyncWrite + Send + Unpin>, LengthDelimitedCodec>;
 
-/// Reaproveita `get_file_manifest()` (já usado por `acerola/sync-files/1`) em vez de pedir um
-/// método FFI novo — só agrupa por `comic_name` e conta capítulos, descartando checksum/nome de
-/// arquivo, que não servem pra esse propósito (ver `model.rs`).
+/// Usa `get_library_summary()` (consulta só de Room/SQLite, sem SAF) em vez de
+/// `get_file_manifest()` — este último faz um `DocumentFile.exists()` por capítulo (uma
+/// transação binder cada), que é custo desnecessário só pra listar títulos e já foi a causa de
+/// `browse-library` estourar `RESPONSE_READ_TIMEOUT` numa biblioteca grande. Ver o comentário em
+/// `callbacks::FileSyncProvider::get_library_summary`.
 pub(super) async fn build_summary(provider: &Arc<dyn FileSyncProvider>) -> Result<LibrarySummary, P2pError> {
     let provider = Arc::clone(provider);
-    let entries = run_blocking(move || provider.get_file_manifest()).await?;
+    let entries = run_blocking(move || provider.get_library_summary()).await?;
 
-    let mut counts: HashMap<String, u32> = HashMap::new();
-    for entry in entries {
-        *counts.entry(entry.comic_name).or_insert(0) += 1;
-    }
-
-    let mut comics: Vec<ComicSummaryEntry> = counts
+    let mut comics: Vec<ComicSummaryEntry> = entries
         .into_iter()
-        .map(|(comic_name, chapter_count)| ComicSummaryEntry { comic_name, chapter_count })
+        .map(|entry| ComicSummaryEntry { comic_name: entry.comic_name, chapter_count: entry.chapter_count })
         .collect();
     comics.sort_by(|a, b| a.comic_name.cmp(&b.comic_name));
 
@@ -70,15 +67,18 @@ mod tests {
     use std::sync::Mutex;
 
     use super::*;
-    use crate::callbacks::FfiFileManifestEntry;
+    use crate::callbacks::{FfiComicSummaryEntry, FfiFileManifestEntry};
 
     struct StubProvider {
-        entries: Vec<FfiFileManifestEntry>,
+        summary: Vec<FfiComicSummaryEntry>,
     }
 
     impl FileSyncProvider for StubProvider {
         fn get_file_manifest(&self) -> Vec<FfiFileManifestEntry> {
-            self.entries.clone()
+            vec![]
+        }
+        fn get_library_summary(&self) -> Vec<FfiComicSummaryEntry> {
+            self.summary.clone()
         }
         fn open_chapter_for_read(&self, _comic_name: String, _chapter: String) -> i64 {
             -1
@@ -102,27 +102,16 @@ mod tests {
         fn abort_chapter_write(&self, _handle: i64) {}
     }
 
-    fn entry(comic_name: &str, chapter: &str) -> FfiFileManifestEntry {
-        FfiFileManifestEntry {
-            comic_name: comic_name.to_string(),
-            chapter: chapter.to_string(),
-            file_name: format!("{chapter}.cbz"),
-            checksum: "irrelevant".to_string(),
-            size_bytes: 1,
-        }
+    fn summary_entry(comic_name: &str, chapter_count: u32) -> FfiComicSummaryEntry {
+        FfiComicSummaryEntry { comic_name: comic_name.to_string(), chapter_count }
     }
 
-    /// Prova o agrupamento: 3 capítulos de "Comic A" e 1 de "Comic B" viram exatamente 2
-    /// entradas com as contagens corretas, ordenadas por nome.
+    /// `build_summary` só mapeia/ordena o que `get_library_summary()` (agrupamento já feito no
+    /// SQL, ver `ChapterArchiveDao.getLibrarySummary`) devolveu — não agrupa mais nada em Rust.
     #[tokio::test]
-    async fn build_summary_groups_by_comic_and_counts_chapters() {
+    async fn build_summary_sorts_by_comic_name() {
         let provider: Arc<dyn FileSyncProvider> = Arc::new(StubProvider {
-            entries: vec![
-                entry("Comic B", "Ch. 1"),
-                entry("Comic A", "Ch. 1"),
-                entry("Comic A", "Ch. 2"),
-                entry("Comic A", "Ch. 3"),
-            ],
+            summary: vec![summary_entry("Comic B", 1), summary_entry("Comic A", 3)],
         });
 
         let summary = build_summary(&provider).await.unwrap();
@@ -141,7 +130,7 @@ mod tests {
     #[tokio::test]
     async fn run_outbound_reads_exactly_what_run_inbound_sent() {
         let provider: Arc<dyn FileSyncProvider> =
-            Arc::new(StubProvider { entries: vec![entry("Solo Leveling", "Ch. 1"), entry("Solo Leveling", "Ch. 2")] });
+            Arc::new(StubProvider { summary: vec![summary_entry("Solo Leveling", 2)] });
 
         let (client_io, server_io) = tokio::io::duplex(64 * 1024);
         let (client_recv, _client_send) = tokio::io::split(client_io);

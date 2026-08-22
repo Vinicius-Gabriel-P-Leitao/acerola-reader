@@ -312,6 +312,9 @@ mod concurrency_tests {
             self.manifest_calls.fetch_add(1, Ordering::SeqCst);
             vec![]
         }
+        fn get_library_summary(&self) -> Vec<crate::callbacks::FfiComicSummaryEntry> {
+            vec![]
+        }
         fn open_chapter_for_read(&self, _comic_name: String, _chapter: String) -> i64 {
             -1
         }

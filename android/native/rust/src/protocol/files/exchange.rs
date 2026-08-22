@@ -640,6 +640,9 @@ mod tests {
             }
             vec![]
         }
+        fn get_library_summary(&self) -> Vec<crate::callbacks::FfiComicSummaryEntry> {
+            vec![]
+        }
         fn open_chapter_for_read(&self, _comic_name: String, _chapter: String) -> i64 {
             -1
         }
@@ -809,6 +812,10 @@ mod tests {
                     size_bytes: bytes.len() as u64,
                 })
                 .collect()
+        }
+
+        fn get_library_summary(&self) -> Vec<crate::callbacks::FfiComicSummaryEntry> {
+            vec![]
         }
 
         fn open_chapter_for_read(&self, comic_name: String, chapter: String) -> i64 {

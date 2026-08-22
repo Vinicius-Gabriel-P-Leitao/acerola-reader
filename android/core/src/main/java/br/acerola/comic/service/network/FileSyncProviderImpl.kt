@@ -16,6 +16,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import p2p.FfiComicSummaryEntry
 import p2p.FfiFileManifestEntry
 import p2p.FileSyncProvider
 import java.io.IOException
@@ -96,6 +97,18 @@ class FileSyncProviderImpl
                             )
                         }
                     }.awaitAll().filterNotNull()
+                }
+            }
+
+        // Só Room/SQLite — nenhum `DocumentFile`/SAF aqui, de propósito. `getFileManifest()`
+        // acima paga um `DocumentFile.exists()` por capítulo (uma transação binder cada) porque
+        // precisa apontar pra um arquivo de verdade pra transferência; `browse-library` só
+        // precisa de nome + contagem, então usa a consulta agregada direto no DB e nunca toca
+        // SAF — é o mesmo custo que estourava o timeout do protocolo antes dessa separação.
+        override fun getLibrarySummary(): List<FfiComicSummaryEntry> =
+            runBlocking {
+                chapterArchiveDao.getLibrarySummary().map { row ->
+                    FfiComicSummaryEntry(comicName = row.comicName, chapterCount = row.chapterCount.toUInt())
                 }
             }
 
