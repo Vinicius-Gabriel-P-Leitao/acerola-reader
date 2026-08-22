@@ -10,9 +10,15 @@ use tokio::{
     sync::{mpsc, Mutex, RwLock},
 };
 
-use super::connection::{ConnectionReader, ConnectionWriter, IrohIncoming};
+use super::{
+    blobs_bridge::BlobsIntegration,
+    connection::{ConnectionReader, ConnectionWriter, IrohIncoming},
+};
 use crate::{
-    core::transport::{IncomingConnection, P2pTransport},
+    core::{
+        blobs::P2pBlobStore,
+        transport::{IncomingConnection, P2pTransport},
+    },
     infra::{
         error::ConnectionError,
         peer::{PeerAddr, PeerId},
@@ -58,10 +64,13 @@ pub struct IrohTransport {
     /// de existirem: uma conexão reaproveitada pode receber várias streams ao longo da vida dela,
     /// não só uma, então algo precisa continuar escutando cada conexão depois do primeiro stream.
     incoming_rx: Mutex<mpsc::UnboundedReceiver<Box<dyn IncomingConnection>>>,
+    /// Integração opcional com o adapter de blobs — "null object" quando a feature
+    /// `iroh-blobs-adapter` está desligada, ver `blobs_bridge.rs`.
+    blobs: BlobsIntegration,
 }
 
 impl IrohTransport {
-    pub(crate) fn new(endpoint: Endpoint) -> Self {
+    pub(crate) fn new(endpoint: Endpoint, blobs: BlobsIntegration) -> Self {
         let connections: Arc<RwLock<HashMap<ConnectionKey, Connection>>> =
             Arc::new(RwLock::new(HashMap::new()));
         let (incoming_tx, incoming_rx) = mpsc::unbounded_channel();
@@ -70,6 +79,7 @@ impl IrohTransport {
             endpoint.clone(),
             Arc::clone(&connections),
             incoming_tx,
+            blobs.clone(),
         ));
 
         Self {
@@ -77,6 +87,7 @@ impl IrohTransport {
             connections,
             dial_locks: Mutex::new(HashMap::new()),
             incoming_rx: Mutex::new(incoming_rx),
+            blobs,
         }
     }
 
@@ -227,6 +238,10 @@ impl P2pTransport for IrohTransport {
             .next()
     }
 
+    async fn blobs(&self) -> Option<Arc<dyn P2pBlobStore>> {
+        self.blobs.as_capability()
+    }
+
     async fn is_connected(&self, peer: &PeerId) -> bool {
         self.connections
             .read()
@@ -267,7 +282,7 @@ fn to_peer_addr(node_id: EndpointId, addr: EndpointAddr) -> Result<PeerAddr, Con
 /// numa conexão já estabelecida.
 async fn drive_incoming_connections(
     endpoint: Endpoint, connections: Arc<RwLock<HashMap<ConnectionKey, Connection>>>,
-    incoming_tx: mpsc::UnboundedSender<Box<dyn IncomingConnection>>,
+    incoming_tx: mpsc::UnboundedSender<Box<dyn IncomingConnection>>, blobs: BlobsIntegration,
 ) {
     loop {
         let Some(incoming) = endpoint.accept().await else { break };
@@ -285,6 +300,14 @@ async fn drive_incoming_connections(
 
         let remote_id = conn.remote_id();
         let alpn = conn.alpn().to_vec();
+
+        // O ALPN de blobs não passa pelo dispatch genérico por ALPN registrado no
+        // `NetworkManager` — o `BlobsProtocol` real do iroh-blobs precisa da `Connection`
+        // inteira (não de um stream já isolado via `accept_bi`), então é atendido aqui.
+        if blobs.try_accept(&alpn, &conn).await {
+            continue;
+        }
+
         let endpoint_addr = resolve_endpoint_addr(remote_id, &incoming_addr);
 
         let peer = to_peer_id(remote_id);

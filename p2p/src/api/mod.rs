@@ -8,6 +8,13 @@
 pub mod error {
     pub use crate::infra::error::ConnectionError as P2pError;
 }
+/// Abstração de armazenamento e transferência de blobs content-addressed.
+pub mod blobs {
+    #[cfg(feature = "iroh-blobs-adapter")]
+    pub use crate::core::blobs::iroh::{IrohBlobStore, IrohBlobsConfig};
+    pub use crate::core::blobs::{BlobHash, BlobHashParseError, InMemoryBlobStore, P2pBlobStore};
+}
+
 /// Utilitários ligados ao sistema de middlewares (Guards) de rede.
 pub mod guard {
     pub use crate::core::guard::{

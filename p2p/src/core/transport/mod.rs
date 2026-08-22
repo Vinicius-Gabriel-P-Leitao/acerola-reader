@@ -7,12 +7,17 @@
 #[cfg(feature = "iroh")]
 pub mod iroh;
 
+use std::sync::Arc;
+
 use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncWrite};
 
-use crate::infra::{
-    error::ConnectionError,
-    peer::{PeerAddr, PeerId},
+use crate::{
+    core::blobs::P2pBlobStore,
+    infra::{
+        error::ConnectionError,
+        peer::{PeerAddr, PeerId},
+    },
 };
 
 /// Representa um handshake inicial recebido pelo daemon aguardando conversão em fluxos úteis.
@@ -80,6 +85,15 @@ pub trait P2pTransport: Send + Sync {
         false
     }
 
+    /// Retorna o store de blobs deste transporte, se o adapter suportar essa capacidade.
+    ///
+    /// A maioria dos adapters não suporta blobs e herda o `None` padrão — apenas adapters que
+    /// escolherem expor essa capacidade (ex: `IrohTransport` com a feature `iroh-blobs-adapter`)
+    /// sobrescrevem este método.
+    async fn blobs(&self) -> Option<Arc<dyn P2pBlobStore>> {
+        None
+    }
+
     /// Realiza a destruição graciosa das portas e threads ocupadas pelo driver físico.
     async fn shutdown(&self) -> Result<(), ConnectionError>;
 }
@@ -122,5 +136,11 @@ mod tests {
         let mut dummy_builder = MinimalDummyBuilder;
         dummy_builder.set_seed([0xAA; 32]);
         assert!(dummy_builder.get_seed().is_none());
+    }
+
+    #[tokio::test]
+    async fn default_blobs_capability_is_none() {
+        let (transport, _handle) = crate::tests::mock_transport::mock_transport();
+        assert!(transport.blobs().await.is_none());
     }
 }
