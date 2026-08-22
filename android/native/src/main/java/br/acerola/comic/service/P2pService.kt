@@ -39,8 +39,6 @@ class P2pService(
     coverProvider: CoverBrowseProvider,
     private val eventListener: (event: String, data: String) -> Unit,
 ) : Closeable {
-    private val p2pNode: P2pNode
-
     private val callbackHandler =
         object : P2pCallback {
             override fun onEvent(
@@ -52,7 +50,16 @@ class P2pService(
             }
         }
 
-    init {
+    // `P2pNode(...)` chama `P2PNode::new()` no Rust, que faz `runtime.block_on(...)` — uma
+    // chamada síncrona bloqueante (ver TODO.md, item crítico de ANR). Antes, isso rodava direto
+    // no `init{}`, então bloqueava QUALQUER thread que instanciasse `P2pService` — hoje em dia,
+    // a thread principal, porque o Hilt resolve esse singleton pela primeira vez ao construir
+    // `HomeViewModel`/`P2pUseCase` na primeira tela. Trocado por `lazy` (thread-safe por
+    // padrão) disparado numa thread dedicada logo abaixo: o construtor de `P2pService` agora
+    // retorna na hora, e a construção pesada roda em background. Quem chamar um método deste
+    // serviço antes dessa construção terminar ainda bloqueia (o `Lazy` sincroniza via lock), mas
+    // isso deixa de ser garantido a cada vez — só quando o uso realmente corre com o warm-up.
+    private val p2pNode: P2pNode by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         // Only used by Rust to migrate identity/peers/trust from the old plain-text format
         // into `SecureBlobStore` once — see `storage.rs`/`trust_store.rs`.
         val legacyDataDir = context.filesDir.resolve("p2p").absolutePath
@@ -63,19 +70,22 @@ class P2pService(
             runCatching {
                 context.packageManager.getPackageInfo(context.packageName, 0).versionName
             }.getOrNull() ?: "unknown"
-        p2pNode =
-            P2pNode(
-                callbackHandler,
-                legacyDataDir,
-                blobsDir,
-                relayUrlOverride,
-                Build.MODEL,
-                appVersion,
-                secureStore,
-                historyProvider,
-                fileProvider,
-                coverProvider,
-            )
+        P2pNode(
+            callbackHandler,
+            legacyDataDir,
+            blobsDir,
+            relayUrlOverride,
+            Build.MODEL,
+            appVersion,
+            secureStore,
+            historyProvider,
+            fileProvider,
+            coverProvider,
+        )
+    }
+
+    init {
+        Thread({ p2pNode }, "P2pNode-warmup").apply { isDaemon = true }.start()
     }
 
     fun getLocalId(): String = p2pNode.getLocalId()
