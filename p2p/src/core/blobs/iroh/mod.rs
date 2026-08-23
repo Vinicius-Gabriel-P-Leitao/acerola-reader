@@ -10,7 +10,7 @@ mod gc;
 
 use async_trait::async_trait;
 use iroh::{Endpoint, EndpointAddr};
-use iroh_blobs::{api::Store, Hash};
+use iroh_blobs::{api::Store, Hash, HashAndFormat};
 use tokio::io::AsyncRead;
 
 pub use self::config::IrohBlobsConfig;
@@ -79,8 +79,23 @@ impl P2pBlobStore for IrohBlobStore {
 
     async fn fetch(&self, hash: &BlobHash, from: &PeerAddr) -> Result<(), ConnectionError> {
         let addr = parse_endpoint_addr(from)?;
+        let iroh_hash = to_iroh_hash(hash);
         let conn = self.endpoint.connect(addr, iroh_blobs::ALPN).await?;
-        self.store.remote().fetch(conn, to_iroh_hash(hash)).complete().await?;
+        self.store.remote().fetch(conn, iroh_hash).complete().await?;
+
+        // `remote().fetch()` só escreve os bytes baixados no store local — ao contrário de
+        // `put()` (que passa por `AddProgress::with_tag()` e já sai com uma tag permanente),
+        // o blob baixado aqui fica SEM NENHUMA proteção contra o GC periódico do store
+        // (`DEFAULT_GC_INTERVAL`, ver `config.rs`). Sem essa tag, existe uma janela real entre
+        // este `fetch()` retornar e o próximo `get()` do chamador (`fetch_reader` em
+        // `acerola-desktop`/`acerola-android`) onde uma varredura de GC pode reciclar o blob
+        // recém-baixado antes de alguém lê-lo — foi exatamente esse bug, reproduzido ao vivo,
+        // que causava `BlobNotFound` esporádico em transferências de vários capítulos (alguns
+        // fetches caem na borda de uma varredura de GC, outros não). Cria a mesma tag
+        // permanente que `put()` já cria, protegendo o blob até `remove()` ser chamado
+        // explicitamente.
+        self.store.tags().create(HashAndFormat::raw(iroh_hash)).await?;
+
         Ok(())
     }
 }
@@ -110,6 +125,28 @@ mod tests {
 
     async fn mem_store() -> IrohBlobStore {
         mem_store_with_gc_interval(Duration::from_secs(30)).await
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn fs_store_load_does_not_hang() {
+        let dir = std::env::temp_dir().join(format!("acerola-p2p-fs-store-test-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let config = IrohBlobsConfig::fs(&dir);
+        let result = tokio::time::timeout(
+            Duration::from_secs(15),
+            IrohBlobStore::new(&config, unbound_endpoint().await),
+        )
+        .await;
+        assert!(result.is_ok(), "IrohBlobStore::new with Fs config timed out after 15s");
+        let store = result.unwrap().unwrap();
+
+        let hash = store.put(b"hello fs store".to_vec()).await.unwrap();
+        let mut reader = store.get(&hash).await.unwrap();
+        let mut buf = Vec::new();
+        reader.read_to_end(&mut buf).await.unwrap();
+        assert_eq!(buf, b"hello fs store");
+
+        std::fs::remove_dir_all(&dir).ok();
     }
 
     #[tokio::test]
