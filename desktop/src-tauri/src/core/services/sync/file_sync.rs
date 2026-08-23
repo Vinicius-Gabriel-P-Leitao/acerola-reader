@@ -40,9 +40,10 @@ fn sanitize_folder_name(name: &str) -> String {
 /// Monta e aplica manifestos de arquivos (os `.cbz`/`.cbr` reais) entre dois devices.
 ///
 /// Diferente do sync de histórico, este PODE criar quadrinhos novos localmente — é o
-/// mecanismo que efetivamente "leva a biblioteca" de um device pro outro. Arquivos
-/// recebidos são gravados em `<library_root>/synced/<nome sanitizado>/`, nunca dentro da
-/// árvore que o usuário organizou manualmente.
+/// mecanismo que efetivamente "leva a biblioteca" de um device pro outro. Quadrinho novo
+/// (sem entrada local ainda) é gravado direto em `<library_root>/<nome sanitizado>/` —
+/// mesmo lugar que o scanner normal da biblioteca criaria se o usuário tivesse adicionado
+/// manualmente, sem pasta `synced/` intermediária.
 #[derive(Clone)]
 pub struct FileSyncService {
     comic_repo: ComicRepository,
@@ -204,6 +205,24 @@ impl FileSyncService {
         Ok(Some((comic.last_modified, bytes)))
     }
 
+    /// Resolve o `ComicDirectory` de um quadrinho por nome, criando-o (via
+    /// `create_synced_comic`) se ainda não existir localmente, e garante que a pasta exista
+    /// em disco. Público pra quem recebe bytes (`transfer::receive_files`) poder gravar o
+    /// arquivo temporário JÁ dentro dessa pasta antes de saber que o download terminou —
+    /// evita depender de uma pasta de staging à parte (`rename` teria que ser garantido no
+    /// mesmo volume de qualquer forma) e não deixa nenhuma pasta extra visível na biblioteca.
+    pub async fn resolve_comic_dir(&self, comic_name: &str) -> Result<ComicDirectory, ComicError> {
+        let comic = match self.comic_repo.find_by_name(comic_name).await? {
+            Some(existing) => existing,
+            None => self.create_synced_comic(comic_name).await?,
+        };
+
+        let comic_dir = PathBuf::from(&comic.path);
+        tokio::fs::create_dir_all(&comic_dir).await.map_err(ComicError::Io)?;
+
+        Ok(comic)
+    }
+
     /// Move o arquivo já recebido (e verificado) de `temp_path` pro destino final dentro da
     /// biblioteca, criando o quadrinho no banco se ainda não existir, e indexa o capítulo
     /// reaproveitando o mesmo padrão de insert/update do scanner.
@@ -228,14 +247,8 @@ impl FileSyncService {
         &self, comic_name: &str, chapter: &str, file_name: &str, temp_path: &Path,
         checksum: String,
     ) -> Result<(), ComicError> {
-        let comic = match self.comic_repo.find_by_name(comic_name).await? {
-            Some(existing) => existing,
-            None => self.create_synced_comic(comic_name).await?,
-        };
-
+        let comic = self.resolve_comic_dir(comic_name).await?;
         let comic_dir = PathBuf::from(&comic.path);
-        tokio::fs::create_dir_all(&comic_dir).await.map_err(ComicError::Io)?;
-
         let dest_path = comic_dir.join(file_name);
         tokio::fs::rename(temp_path, &dest_path).await.map_err(ComicError::Io)?;
 
@@ -291,10 +304,12 @@ impl FileSyncService {
         }
     }
 
-    /// Cria um novo `comic_directory` sob `<library_root>/synced/<nome>` — usado quando um
-    /// capítulo recebido pertence a um quadrinho que ainda não existe localmente.
+    /// Cria um novo `comic_directory` sob `<library_root>/<nome>` — usado quando um
+    /// capítulo recebido pertence a um quadrinho que ainda não existe localmente. Mesmo
+    /// path que o scanner normal da biblioteca usaria pra um quadrinho adicionado
+    /// manualmente — sem pasta `synced/` intermediária.
     async fn create_synced_comic(&self, comic_name: &str) -> Result<ComicDirectory, ComicError> {
-        let comic_dir = self.library_root().join("synced").join(sanitize_folder_name(comic_name));
+        let comic_dir = self.library_root().join(sanitize_folder_name(comic_name));
 
         let comic = ComicDirectory {
             id: path_hash(&comic_dir),

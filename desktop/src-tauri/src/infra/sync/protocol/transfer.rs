@@ -203,9 +203,6 @@ pub async fn receive_files(
     reader: &mut FramedReader, expected_count: usize, service: &FileSyncService, emit: &EventEmitter,
     progress_event: &str, error_event: &str, peer: &PeerIdentity, transfer: &Arc<dyn ChapterTransfer>,
 ) -> Result<usize, P2pError> {
-    let incoming_dir = service.library_root().join("synced");
-    tokio::fs::create_dir_all(&incoming_dir).await.map_err(RpcError::from)?;
-
     let mut skipped = 0usize;
 
     for _ in 0..expected_count {
@@ -283,7 +280,27 @@ pub async fn receive_files(
             }
         }
 
-        let temp_path = incoming_dir.join(format!(".incoming-{}.tmp", rand::random::<u64>()));
+        // Resolve a pasta do quadrinho ANTES de gravar o arquivo temporário — grava já no
+        // destino final (mesma pasta que `persist_received_chapter` vai usar pro rename),
+        // sem uma pasta de staging à parte que sobrava visível na biblioteca do usuário.
+        let comic_dir = match service.resolve_comic_dir(&header.comic_name).await {
+            Ok(comic) => std::path::PathBuf::from(comic.path),
+            Err(err) => {
+                tracing::warn!(
+                    comic_name = %header.comic_name,
+                    chapter = %header.chapter,
+                    error = %err,
+                    "[FileSync] failed to resolve comic directory — skipping"
+                );
+                skipped += 1;
+                (emit)(
+                    error_event,
+                    format!("failed to resolve comic directory: {} - {}", header.comic_name, header.chapter),
+                );
+                continue;
+            },
+        };
+        let temp_path = comic_dir.join(format!(".incoming-{}.tmp", rand::random::<u64>()));
         tokio::fs::write(&temp_path, &bytes).await.map_err(RpcError::from)?;
 
         service
