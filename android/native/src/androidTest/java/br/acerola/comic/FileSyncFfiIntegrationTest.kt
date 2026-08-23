@@ -7,6 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import p2p.FfiChapterReadEntry
+import p2p.FfiComicSummaryEntry
 import p2p.FfiFileManifestEntry
 import p2p.FfiPeerAddr
 import p2p.FfiReadingProgressEntry
@@ -110,6 +111,12 @@ class FileSyncFfiIntegrationTest {
                 val (fileName, bytes) = value
                 FfiFileManifestEntry(comicName, chapter, fileName, sha256(bytes), bytes.size.toULong())
             }
+
+        override fun getLibrarySummary(): List<FfiComicSummaryEntry> =
+            readable.keys
+                .groupingBy { (comicName, _) -> comicName }
+                .eachCount()
+                .map { (comicName, count) -> FfiComicSummaryEntry(comicName, count.toUInt()) }
 
         override fun openChapterForRead(
             comicName: String,

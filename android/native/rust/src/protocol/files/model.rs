@@ -35,13 +35,30 @@ pub(crate) struct FileWantList {
     pub wanted: Vec<(String, String)>,
 }
 
+/// Fase 0 exclusiva do protocolo `acerola/sync-comic/1` (sincronização de um único
+/// quadrinho) — trocada antes de qualquer coisa do protocolo `sync-files` normal. Só o lado
+/// outbound sabe qual quadrinho o usuário escolheu (veio de uma chamada FFI Kotlin ->
+/// `P2PNode::sync_comic`, não do wire); o inbound aprende por aqui e filtra seu próprio
+/// manifesto ao mesmo `comic_name` antes de seguir para as fases 1-3 compartilhadas com
+/// `run_exchange`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct ComicSyncScope {
+    pub comic_name: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct FileHeader {
     pub comic_name: String,
     pub chapter: String,
     pub file_name: String,
     pub size: u64,
+    /// SHA-256 do manifesto (`FileChapterInfo.checksum`) — repassado tal e qual pra
+    /// `FileSyncProvider::begin_chapter_write`/verificação Kotlin, sem relação com blobs.
     pub checksum: Option<String>,
+    /// Hash de blob (BLAKE3, hex) devolvido por `P2pBlobStore::put` no lado que enviou —
+    /// é o que o lado que recebe usa em `P2pBlobStore::fetch` pra puxar os bytes de verdade.
+    /// `None` só no header vazio de "não tenho mais esse capítulo" (`size: 0`).
+    pub blob_hash: Option<String>,
 }
 
 /// Mensagem enviada no lugar do manifesto quando o `FileSyncSessionGuard` já rejeitou a

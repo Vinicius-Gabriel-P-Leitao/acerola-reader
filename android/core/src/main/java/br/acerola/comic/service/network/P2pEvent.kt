@@ -70,8 +70,47 @@ sealed interface P2pEvent {
         val failedCount: Int,
     ) : P2pEvent
 
+    data class LibraryBrowseResult(
+        val peerId: String,
+        val comics: List<ComicSummary>,
+    ) : P2pEvent
+
+    data class LibraryBrowseError(
+        val peerId: String,
+        val message: String,
+    ) : P2pEvent
+
+    /** Resultado de `acerola/browse-cover/1` — `status` é `"not_modified"`, `"changed"` (com
+     *  `path` apontando pro cache local recém-gravado) ou `"unavailable"` (peer não tem essa
+     *  capa). `coverVersion` vem junto pra atualizar o cache local de versão conhecida mesmo
+     *  em `not_modified` (confirma que a versão já cacheada continua valendo). */
+    data class CoverBrowseResult(
+        val peerId: String,
+        val comicName: String,
+        val status: String,
+        val coverVersion: Long?,
+        val path: String?,
+    ) : P2pEvent
+
+    data class CoverBrowseError(
+        val peerId: String,
+        val comicName: String,
+        val message: String,
+    ) : P2pEvent
+
     data class Unknown(
         val event: String,
         val data: String,
     ) : P2pEvent
 }
+
+/** Um quadrinho da biblioteca de um peer remoto — resumido a nome + contagem de capítulos, não
+ *  o manifesto completo (checksum/nome de arquivo por capítulo). Usado só pra escolher qual
+ *  quadrinho pedir via `SyncAction.SyncComic` depois. `coverVersion` reaproveita
+ *  `ComicDirectory.lastModified` do peer — usado pra decidir se `acerola/browse-cover/1` precisa
+ *  buscar uma capa nova antes de disparar a busca. */
+data class ComicSummary(
+    val comicName: String,
+    val chapterCount: Int,
+    val coverVersion: Long,
+)

@@ -26,6 +26,7 @@ import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
 import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.service.cache.ChapterCacheHandler
+import br.acerola.comic.service.network.P2pEventBus
 import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
 import br.acerola.comic.usecase.chapter.ObserveCombinedChaptersUseCase
 import br.acerola.comic.usecase.chapter.ObserveVolumeChaptersUseCase
@@ -35,6 +36,8 @@ import br.acerola.comic.usecase.history.TrackReadingProgressUseCase
 import br.acerola.comic.usecase.metadata.ExtractAllVolumeCoversUseCase
 import br.acerola.comic.usecase.metadata.ExtractVolumeCoverUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
+import br.acerola.comic.usecase.network.P2pUseCase
+import br.acerola.comic.usecase.network.SyncComicWithPeerUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -44,6 +47,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -80,6 +84,9 @@ class ComicViewModelTest {
     private val extractVolumeCoverUseCase = mockk<ExtractVolumeCoverUseCase>(relaxed = true)
     private val extractAllVolumeCoversUseCase = mockk<ExtractAllVolumeCoversUseCase>(relaxed = true)
     private val cacheHandler = mockk<ChapterCacheHandler>(relaxed = true)
+    private val p2pUseCase = mockk<P2pUseCase>(relaxed = true)
+    private val syncComicWithPeerUseCase = mockk<SyncComicWithPeerUseCase>(relaxed = true)
+    private val p2pEventBus = mockk<P2pEventBus>(relaxed = true)
 
     private val localChaptersFlow = MutableStateFlow(ChapterPageDto(emptyList(), emptyList(), 20, 0, 0))
     private val hasRootChaptersFlow = MutableStateFlow(true)
@@ -163,6 +170,7 @@ class ComicViewModelTest {
         every { directoryObserveVolumeChapters.observeHasRootChapters(any()) } returns hasRootChaptersFlow
         coEvery { directoryObserveVolumeChapters.loadVolumePage(any(), any(), any(), any(), any(), any()) } returns emptyList()
         every { directoryChapterReadRepo.observeChapters(any(), any(), any()) } returns allChaptersFlow
+        every { p2pEventBus.events } returns MutableSharedFlow()
 
         observeComicHistoryUseCase = ObserveComicHistoryUseCase(historyGateway)
         mangadexObserve = ObserveLibraryUseCase(comicRepository = mangadexRepo)
@@ -199,6 +207,9 @@ class ComicViewModelTest {
             extractVolumeCoverUseCase = extractVolumeCoverUseCase,
             extractAllVolumeCoversUseCase = extractAllVolumeCoversUseCase,
             cacheHandler = cacheHandler,
+            p2pUseCase = p2pUseCase,
+            syncComicWithPeerUseCase = syncComicWithPeerUseCase,
+            p2pEventBus = p2pEventBus,
         )
 
     @Test
