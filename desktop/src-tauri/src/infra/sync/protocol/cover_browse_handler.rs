@@ -218,7 +218,11 @@ mod tests {
     use super::*;
     use crate::infra::sync::protocol::transfer::InMemoryChapterTransfer;
 
-    fn mock_emitter() -> (EventEmitter, Arc<Mutex<Vec<(String, String)>>>) {
+    // Mesmo alias usado em `comic_handler.rs`/`file_handler.rs` — evita o lint de
+    // `type_complexity` do clippy pro tipo de retorno de `mock_emitter` abaixo.
+    type RecordedEvents = Arc<Mutex<Vec<(String, String)>>>;
+
+    fn mock_emitter() -> (EventEmitter, RecordedEvents) {
         let events = Arc::new(Mutex::new(Vec::new()));
         let events_clone = Arc::clone(&events);
         let emit: EventEmitter =

@@ -50,7 +50,7 @@ dependencies = [
 [[package]]
 name = "acerola-p2p"
 version = "0.0.6"
-source = "git+https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p.git?branch=main#7e4307955cd291fda181fd4595c44deb623c6b22"
+source = "git+https://github.com/Vinicius-Gabriel-P-Leitao/acerola-p2p.git?branch=main#15f5f3cb9edc9cb0d9968c2c09b6a3500ee6c1f2"
 dependencies = [
  "async-trait",
  "blake3",
@@ -1526,7 +1526,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ccc2776f0c61eca1ca32528f85548abd1a4be8fb53d1b21c013e4f18da1e7090"
 dependencies = [
  "data-encoding",
- "syn 1.0.109",
+ "syn 2.0.118",
 ]
 
 [[package]]

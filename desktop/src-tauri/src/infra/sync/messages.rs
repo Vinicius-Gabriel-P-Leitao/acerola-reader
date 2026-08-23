@@ -87,6 +87,25 @@ pub struct ComicSyncRequest {
     pub comic_name: String,
 }
 
+/// Marcador mínimo escrito pelo lado outbound de `acerola/browse-library/1` antes de ler a
+/// resposta — não carrega nenhum dado de verdade (o pedido em si é "liste sua biblioteca"),
+/// mas *precisa* existir por causa de uma regra da própria `quinn` (biblioteca QUIC por baixo
+/// do `iroh`), documentada em `Connection::open_bi()`: "the Connection that calls open_bi()
+/// must write to its SendStream before the other Connection is able to accept_bi() (...)
+/// waiting on the RecvStream without writing anything to SendStream will never succeed".
+///
+/// Era exatamente esse o bug reaberto em 22/08/2026 (timeout de 30s, `FRAME_TIMEOUT`, nos dois
+/// lados): `LibraryBrowseOutbound` abria o stream e só lia, nunca escrevia nada — o
+/// `accept_bi()` do lado inbound nunca disparava, então o handler inbound nunca era sequer
+/// invocado, e o outbound ficava esperando uma resposta que nunca seria escrita. Os outros
+/// protocolos (`sync-history`, `sync-files`, `sync-comic`) nunca tiveram esse problema porque o
+/// lado outbound deles sempre escreve algo primeiro (`FileManifest`/`ComicSyncRequest`).
+///
+/// O lado inbound só precisa drenar essa mensagem, não olhar o conteúdo dela — por isso não
+/// carrega nenhum campo.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct LibraryBrowseRequest {}
+
 /// Resumo de um quadrinho da biblioteca remota, usado só pra listar/buscar (sem transferir
 /// nada ainda) — ver protocolo `acerola/browse-library/1`. Nomes espelhados no Android
 /// (`protocol/library_browse/model.rs::ComicSummaryEntry`/`LibrarySummary`).
@@ -201,5 +220,15 @@ mod wire_contract_tests {
         });
         let decoded: HistoryManifest = serde_json::from_value(android_wire).unwrap();
         assert_eq!(decoded.entries[0].chapter, "12");
+    }
+
+    /// `LibraryBrowseRequest` só precisa existir no wire (ver doc do tipo) — trava que o
+    /// formato é um objeto vazio, então um peer antigo (design "conexão é o pedido", sem
+    /// nenhuma leitura antes de responder) recebe um JSON inofensivo e ignorável, não algo
+    /// que possa confundir um parser mais estrito do outro lado.
+    #[test]
+    fn library_browse_request_serializes_as_empty_object() {
+        let value = serde_json::to_value(LibraryBrowseRequest::default()).unwrap();
+        assert_eq!(value, serde_json::json!({}));
     }
 }

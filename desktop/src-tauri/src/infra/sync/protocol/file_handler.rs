@@ -51,9 +51,12 @@ impl FileSyncOutbound {
         Self { emit, service, log_repo, guard, transfer }
     }
 
+    /// Ver doc de `receive_files`/`send_files` (`transfer.rs`) — o `usize` retornado é a soma
+    /// de capítulos que não foram transferidos de verdade nas duas fases. `handle()` usa isso
+    /// pra não reportar a sessão como "completa" quando algo ficou faltando.
     async fn run(
         &self, peer: &PeerIdentity, writer: &mut FramedWriter, reader: &mut FramedReader,
-    ) -> Result<(), P2pError> {
+    ) -> Result<usize, P2pError> {
         let local_manifest = self.service.build_manifest().await?;
         write_json(writer, &local_manifest).await?;
 
@@ -65,17 +68,18 @@ impl FileSyncOutbound {
         let their_wanted: FileWantList = read_json(reader).await?;
 
         // Fase 1: o peer envia primeiro o que eu pedi.
-        receive_files(
+        let received_skipped = receive_files(
             reader, my_wanted.len(), &self.service, &self.emit, PROGRESS_EVENT, ERROR_EVENT, peer,
             &self.transfer,
         )
         .await?;
 
         // Fase 2: eu envio o que o peer pediu.
-        send_files(writer, &their_wanted.wanted, &self.service, &self.emit, PROGRESS_EVENT, &self.transfer)
-            .await?;
+        let sent_skipped =
+            send_files(writer, &their_wanted.wanted, &self.service, &self.emit, PROGRESS_EVENT, &self.transfer)
+                .await?;
 
-        Ok(())
+        Ok(received_skipped + sent_skipped)
     }
 }
 
@@ -97,7 +101,7 @@ impl Handler for FileSyncOutbound {
         (self.emit)(STARTED_EVENT, peer.id.clone());
 
         match self.run(peer, &mut writer, &mut reader).await {
-            Ok(()) => {
+            Ok(0) => {
                 (self.emit)(COMPLETE_EVENT, peer.id.clone());
                 self.log_repo
                     .base
@@ -105,6 +109,22 @@ impl Handler for FileSyncOutbound {
                     .await
                     .ok();
                 Ok(())
+            },
+            Ok(skipped) => {
+                let message = format!(
+                    "{skipped} capítulo(s) não sincronizado(s) — veja o log do backend pra detalhes"
+                );
+                tracing::warn!(peer = %peer.id, skipped, "[FileSync] session finished with missing chapters");
+                (self.emit)(
+                    ERROR_EVENT,
+                    serde_json::json!({ "peerId": peer.id, "message": &message }).to_string(),
+                );
+                self.log_repo
+                    .base
+                    .insert(&SyncHistoryLogEntry::new(&peer.id, LOG_KIND, "error", Some(&message)))
+                    .await
+                    .ok();
+                Err(P2pError::StreamFailed(message))
             },
             Err(error) => {
                 let message = error.to_string();
@@ -141,9 +161,10 @@ impl FileSyncInbound {
         Self { emit, service, log_repo, guard, transfer }
     }
 
+    /// Ver doc equivalente em `FileSyncOutbound::run`.
     async fn run(
         &self, peer: &PeerIdentity, writer: &mut FramedWriter, reader: &mut FramedReader,
-    ) -> Result<(), P2pError> {
+    ) -> Result<usize, P2pError> {
         let peer_manifest = read_or_busy(reader).await?;
 
         let local_manifest = self.service.build_manifest().await?;
@@ -155,17 +176,18 @@ impl FileSyncInbound {
         write_json(writer, &FileWantList { wanted: my_wanted.clone() }).await?;
 
         // Fase 1: eu envio primeiro o que o peer (outbound) pediu.
-        send_files(writer, &their_wanted.wanted, &self.service, &self.emit, PROGRESS_EVENT, &self.transfer)
-            .await?;
+        let sent_skipped =
+            send_files(writer, &their_wanted.wanted, &self.service, &self.emit, PROGRESS_EVENT, &self.transfer)
+                .await?;
 
         // Fase 2: eu recebo o que eu pedi.
-        receive_files(
+        let received_skipped = receive_files(
             reader, my_wanted.len(), &self.service, &self.emit, PROGRESS_EVENT, ERROR_EVENT, peer,
             &self.transfer,
         )
         .await?;
 
-        Ok(())
+        Ok(sent_skipped + received_skipped)
     }
 }
 
@@ -187,7 +209,7 @@ impl Handler for FileSyncInbound {
         (self.emit)(STARTED_EVENT, peer.id.clone());
 
         match self.run(peer, &mut writer, &mut reader).await {
-            Ok(()) => {
+            Ok(0) => {
                 (self.emit)(COMPLETE_EVENT, peer.id.clone());
                 self.log_repo
                     .base
@@ -195,6 +217,22 @@ impl Handler for FileSyncInbound {
                     .await
                     .ok();
                 Ok(())
+            },
+            Ok(skipped) => {
+                let message = format!(
+                    "{skipped} capítulo(s) não sincronizado(s) — veja o log do backend pra detalhes"
+                );
+                tracing::warn!(peer = %peer.id, skipped, "[FileSync] session finished with missing chapters");
+                (self.emit)(
+                    ERROR_EVENT,
+                    serde_json::json!({ "peerId": peer.id, "message": &message }).to_string(),
+                );
+                self.log_repo
+                    .base
+                    .insert(&SyncHistoryLogEntry::new(&peer.id, LOG_KIND, "error", Some(&message)))
+                    .await
+                    .ok();
+                Err(P2pError::StreamFailed(message))
             },
             Err(error) => {
                 let message = error.to_string();

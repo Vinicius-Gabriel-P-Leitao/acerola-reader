@@ -129,14 +129,26 @@ pub async fn read_or_busy<T: DeserializeOwned>(reader: &mut FramedReader) -> Res
 /// "indisponível" (`size: 0`) em vez de abortar a sessão inteira. Os bytes não trafegam mais
 /// no stream de controle — são publicados no blob store local (`ChapterTransfer::publish`) e o
 /// hash resultante vai no `FileHeader`; quem recebe busca sob demanda via `fetch_reader`.
+///
+/// Retorna quantos itens de `wanted` NÃO foram enviados de verdade (arquivo sumiu localmente
+/// entre o want-list e o envio) — o chamador usa essa contagem pra decidir se a sessão pode
+/// mesmo ser reportada como "completa" pro usuário (ver `ComicSyncOutbound`/`FileSyncOutbound`).
 pub async fn send_files(
     writer: &mut FramedWriter, wanted: &[(String, String)], service: &FileSyncService,
     emit: &EventEmitter, progress_event: &str, transfer: &Arc<dyn ChapterTransfer>,
-) -> Result<(), P2pError> {
+) -> Result<usize, P2pError> {
+    let mut skipped = 0usize;
+
     for (comic_name, chapter) in wanted {
         let resolved = service.resolve_local_file(comic_name, chapter).await?;
 
         let Some((path, size, checksum, file_name)) = resolved else {
+            tracing::warn!(
+                comic_name = %comic_name,
+                chapter = %chapter,
+                "[FileSync] requested file no longer exists locally — sending unavailable header"
+            );
+            skipped += 1;
             write_json(
                 writer,
                 &FileHeader {
@@ -164,7 +176,7 @@ pub async fn send_files(
         (emit)(progress_event, format!("{} - {}", comic_name, chapter));
     }
 
-    Ok(())
+    Ok(skipped)
 }
 
 /// Recebe, em sequência, `expected_count` arquivos: cada `FileHeader` traz um `blob_hash` em
@@ -172,14 +184,29 @@ pub async fn send_files(
 /// integridade via BLAKE3 antes de devolver o leitor), grava num arquivo temporário e move pro
 /// destino final depois de conferir o SHA-256 legado contra o anunciado no header (continuidade
 /// do histórico/telemetria existente, redundante com a verificação do blob store mas barato o
-/// bastante pra manter). Descarta silenciosamente headers "indisponíveis" (`size: 0`), falhas de
-/// busca do blob ou mismatches de checksum, sem abortar a sessão inteira.
+/// bastante pra manter).
+///
+/// Descarta headers "indisponíveis" (`size: 0`), falhas de busca do blob ou mismatches de
+/// checksum sem abortar a sessão inteira — mas cada um desses casos agora loga via `tracing`
+/// (antes só emitia um evento pro frontend, invisível no log do backend) e é contado no
+/// retorno (`usize` = quantos capítulos de `expected_count` NÃO foram persistidos). Bug
+/// reportado em 22/08/2026: um sync de 2 capítulos persistiu só 1, sem nenhum erro visível no
+/// log — porque essas 4 falhas de item nunca logavam nada, só emitiam evento pro frontend, e a
+/// sessão inteira ainda era reportada como "completa" pro chamador (`ComicSyncOutbound`/
+/// `FileSyncOutbound`) mesmo com itens faltando.
+///
+/// `#[allow(too_many_arguments)]`: dívida técnica pré-existente (já eram 8 parâmetros antes
+/// desta mudança) — agrupar em uma struct de contexto é um refactor maior, fora do escopo do
+/// bug que motivou esta função a mudar.
+#[allow(clippy::too_many_arguments)]
 pub async fn receive_files(
     reader: &mut FramedReader, expected_count: usize, service: &FileSyncService, emit: &EventEmitter,
     progress_event: &str, error_event: &str, peer: &PeerIdentity, transfer: &Arc<dyn ChapterTransfer>,
-) -> Result<(), P2pError> {
+) -> Result<usize, P2pError> {
     let incoming_dir = service.library_root().join("synced");
     tokio::fs::create_dir_all(&incoming_dir).await.map_err(RpcError::from)?;
+
+    let mut skipped = 0usize;
 
     for _ in 0..expected_count {
         let header: FileHeader = read_json(reader).await?;
@@ -192,10 +219,22 @@ pub async fn receive_files(
         );
 
         if header.size == 0 {
+            tracing::warn!(
+                comic_name = %header.comic_name,
+                chapter = %header.chapter,
+                "[FileSync] peer reported chapter as unavailable (size=0) — skipping"
+            );
+            skipped += 1;
             continue;
         }
 
         let Some(blob_hash) = header.blob_hash.as_deref() else {
+            tracing::warn!(
+                comic_name = %header.comic_name,
+                chapter = %header.chapter,
+                "[FileSync] header missing blob_hash — skipping"
+            );
+            skipped += 1;
             (emit)(error_event, format!("missing blob hash: {} - {}", header.comic_name, header.chapter));
             continue;
         };
@@ -203,6 +242,13 @@ pub async fn receive_files(
         let mut blob_reader = match transfer.fetch_reader(blob_hash, peer).await {
             Ok(reader) => reader,
             Err(err) => {
+                tracing::warn!(
+                    comic_name = %header.comic_name,
+                    chapter = %header.chapter,
+                    error = %err,
+                    "[FileSync] failed to fetch chapter blob — skipping"
+                );
+                skipped += 1;
                 (emit)(
                     error_event,
                     format!("blob fetch failed: {} - {}: {err}", header.comic_name, header.chapter),
@@ -221,6 +267,14 @@ pub async fn receive_files(
 
         if let Some(expected) = &header.checksum {
             if expected != &computed_checksum {
+                tracing::warn!(
+                    comic_name = %header.comic_name,
+                    chapter = %header.chapter,
+                    expected = %expected,
+                    computed = %computed_checksum,
+                    "[FileSync] checksum mismatch — skipping"
+                );
+                skipped += 1;
                 (emit)(
                     error_event,
                     format!("checksum mismatch: {} - {}", header.comic_name, header.chapter),
@@ -245,7 +299,7 @@ pub async fn receive_files(
         (emit)(progress_event, format!("{} - {}", header.comic_name, header.chapter));
     }
 
-    Ok(())
+    Ok(skipped)
 }
 
 /// Duplo em memória de `ChapterTransfer` pra testes que não têm um `Endpoint` iroh de verdade

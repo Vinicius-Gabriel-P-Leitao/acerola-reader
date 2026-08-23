@@ -63,9 +63,13 @@ impl ComicSyncOutbound {
         Self { emit, service, log_repo, guard, registry, transfer }
     }
 
+    /// Retorna quantos capítulos (de qualquer uma das duas fases) não foram transferidos de
+    /// verdade — `handle()` usa isso pra decidir se a sessão pode mesmo ser reportada como
+    /// "completa", em vez de mascarar itens faltando atrás de um evento de sucesso genérico
+    /// (ver doc de `receive_files`/`send_files` em `transfer.rs`).
     async fn run(
         &self, peer: &PeerIdentity, writer: &mut FramedWriter, reader: &mut FramedReader,
-    ) -> Result<(), P2pError> {
+    ) -> Result<usize, P2pError> {
         let comic_name = self.registry.take(&peer.id).ok_or_else(|| {
             P2pError::StreamFailed("no pending comic sync scope registered for this peer".into())
         })?;
@@ -83,17 +87,18 @@ impl ComicSyncOutbound {
         let their_wanted: FileWantList = read_json(reader).await?;
 
         // Fase 1: o peer envia primeiro o que eu pedi.
-        receive_files(
+        let received_skipped = receive_files(
             reader, my_wanted.len(), &self.service, &self.emit, PROGRESS_EVENT, ERROR_EVENT, peer,
             &self.transfer,
         )
         .await?;
 
         // Fase 2: eu envio o que o peer pediu.
-        send_files(writer, &their_wanted.wanted, &self.service, &self.emit, PROGRESS_EVENT, &self.transfer)
-            .await?;
+        let sent_skipped =
+            send_files(writer, &their_wanted.wanted, &self.service, &self.emit, PROGRESS_EVENT, &self.transfer)
+                .await?;
 
-        Ok(())
+        Ok(received_skipped + sent_skipped)
     }
 }
 
@@ -115,7 +120,7 @@ impl Handler for ComicSyncOutbound {
         (self.emit)(STARTED_EVENT, peer.id.clone());
 
         match self.run(peer, &mut writer, &mut reader).await {
-            Ok(()) => {
+            Ok(0) => {
                 (self.emit)(COMPLETE_EVENT, peer.id.clone());
                 self.log_repo
                     .base
@@ -123,6 +128,25 @@ impl Handler for ComicSyncOutbound {
                     .await
                     .ok();
                 Ok(())
+            },
+            // Sessão terminou sem erro de protocolo, mas nem todos os capítulos chegaram —
+            // reportar como "complete" aqui esconderia exatamente o tipo de perda de dado
+            // silenciosa que motivou essa mudança (ver doc de `receive_files`).
+            Ok(skipped) => {
+                let message = format!(
+                    "{skipped} capítulo(s) não sincronizado(s) — veja o log do backend pra detalhes"
+                );
+                tracing::warn!(peer = %peer.id, skipped, "[ComicSync] session finished with missing chapters");
+                (self.emit)(
+                    ERROR_EVENT,
+                    serde_json::json!({ "peerId": peer.id, "message": &message }).to_string(),
+                );
+                self.log_repo
+                    .base
+                    .insert(&SyncHistoryLogEntry::new(&peer.id, LOG_KIND, "error", Some(&message)))
+                    .await
+                    .ok();
+                Err(P2pError::StreamFailed(message))
             },
             Err(error) => {
                 let message = error.to_string();
@@ -161,9 +185,11 @@ impl ComicSyncInbound {
         Self { emit, service, log_repo, guard, transfer }
     }
 
+    /// Ver doc equivalente em `ComicSyncOutbound::run` — mesmo contrato de contagem de
+    /// capítulos faltando.
     async fn run(
         &self, peer: &PeerIdentity, writer: &mut FramedWriter, reader: &mut FramedReader,
-    ) -> Result<(), P2pError> {
+    ) -> Result<usize, P2pError> {
         let request: ComicSyncRequest = read_or_busy(reader).await?;
 
         let peer_manifest: FileManifest = read_json(reader).await?;
@@ -177,17 +203,18 @@ impl ComicSyncInbound {
         write_json(writer, &FileWantList { wanted: my_wanted.clone() }).await?;
 
         // Fase 1: eu envio primeiro o que o peer (outbound) pediu.
-        send_files(writer, &their_wanted.wanted, &self.service, &self.emit, PROGRESS_EVENT, &self.transfer)
-            .await?;
+        let sent_skipped =
+            send_files(writer, &their_wanted.wanted, &self.service, &self.emit, PROGRESS_EVENT, &self.transfer)
+                .await?;
 
         // Fase 2: eu recebo o que eu pedi.
-        receive_files(
+        let received_skipped = receive_files(
             reader, my_wanted.len(), &self.service, &self.emit, PROGRESS_EVENT, ERROR_EVENT, peer,
             &self.transfer,
         )
         .await?;
 
-        Ok(())
+        Ok(sent_skipped + received_skipped)
     }
 }
 
@@ -209,7 +236,7 @@ impl Handler for ComicSyncInbound {
         (self.emit)(STARTED_EVENT, peer.id.clone());
 
         match self.run(peer, &mut writer, &mut reader).await {
-            Ok(()) => {
+            Ok(0) => {
                 (self.emit)(COMPLETE_EVENT, peer.id.clone());
                 self.log_repo
                     .base
@@ -217,6 +244,22 @@ impl Handler for ComicSyncInbound {
                     .await
                     .ok();
                 Ok(())
+            },
+            Ok(skipped) => {
+                let message = format!(
+                    "{skipped} capítulo(s) não sincronizado(s) — veja o log do backend pra detalhes"
+                );
+                tracing::warn!(peer = %peer.id, skipped, "[ComicSync] session finished with missing chapters");
+                (self.emit)(
+                    ERROR_EVENT,
+                    serde_json::json!({ "peerId": peer.id, "message": &message }).to_string(),
+                );
+                self.log_repo
+                    .base
+                    .insert(&SyncHistoryLogEntry::new(&peer.id, LOG_KIND, "error", Some(&message)))
+                    .await
+                    .ok();
+                Err(P2pError::StreamFailed(message))
             },
             Err(error) => {
                 let message = error.to_string();

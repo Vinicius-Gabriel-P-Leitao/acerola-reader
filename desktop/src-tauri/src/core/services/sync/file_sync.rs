@@ -244,21 +244,50 @@ impl FileSyncService {
             .and_then(|stem| stem.to_str())
             .unwrap_or(chapter);
 
+        // `(comic_directory_fk, chapter)` já existente cobre um reenvio (sync interrompido e
+        // retomado, ou o mesmo capítulo pedido duas vezes) — nesse caso precisa ser um UPDATE
+        // na linha existente, não um INSERT novo: o `id` dela é o `path_hash` do path ANTIGO,
+        // que só bate com o `path_hash(&dest_path)` calculado abaixo se o nome do arquivo não
+        // mudou entre as duas tentativas. Sem isso, o INSERT colide na constraint UNIQUE, e
+        // como o arquivo já foi renomeado em disco (linha acima), a linha do banco fica
+        // desatualizada silenciosamente (path/checksum antigos) mesmo com o conteúdo novo já
+        // gravado — era exatamente esse o bug: `Err(DbError::UniqueViolation) => Ok(())`
+        // descartava o conflito em vez de propagar o dado novo pra linha existente.
+        let existing =
+            self.chapter_repo.find_by_comic_and_chapter(comic.id, display_chapter).await?;
+
+        // Caminho antigo só é removido depois que o registro novo está de pé — nunca antes,
+        // pra um erro no meio do caminho não deixar nem arquivo nem linha de banco.
+        if let Some(existing) = &existing {
+            if existing.path != dest_path.to_string_lossy() {
+                tokio::fs::remove_file(&existing.path).await.ok();
+            }
+        }
+
         let chapter_row = ChapterArchive {
-            id: path_hash(&dest_path),
+            id: existing.as_ref().map(|c| c.id).unwrap_or_else(|| path_hash(&dest_path)),
             chapter: display_chapter.to_string(),
             path: dest_path.to_string_lossy().to_string(),
             chapter_sort: ChapterArchive::fallback_sort(display_chapter, 0),
             is_special: is_special_name(display_chapter),
             checksum: Some(checksum),
             comic_directory_fk: comic.id,
-            volume_id_fk: None,
+            volume_id_fk: existing.as_ref().and_then(|c| c.volume_id_fk),
             last_modified: now_secs(),
         };
 
-        match self.chapter_repo.base.insert(&chapter_row).await {
-            Ok(_) | Err(DbError::UniqueViolation) => Ok(()),
-            Err(error) => Err(ComicError::from(error)),
+        if existing.is_some() {
+            self.chapter_repo.base.update(&chapter_row).await.map(|_| ()).map_err(ComicError::from)
+        } else {
+            match self.chapter_repo.base.insert(&chapter_row).await {
+                // Corrida genuína (duas inserções concorrentes pro mesmo par no mesmo
+                // instante) ainda pode colidir aqui mesmo depois do `find_by_comic_and_chapter`
+                // não achar nada — janela entre o SELECT e o INSERT sem transação. Continua
+                // sendo um no-op aceitável nesse caso raríssimo: a outra sessão já gravou dado
+                // equivalente (mesmo capítulo, mesmo transfer).
+                Ok(_) | Err(DbError::UniqueViolation) => Ok(()),
+                Err(error) => Err(ComicError::from(error)),
+            }
         }
     }
 
@@ -451,5 +480,52 @@ mod tests {
 
         assert_eq!(chapter.0, "Ch. 1", "chapter não pode carregar a extensão do arquivo");
         assert_eq!(chapter.1, "1");
+    }
+
+    /// Regressão do bug reportado em 22/08/2026: sync de "Omoide Emanon" reenviando um
+    /// capítulo já indexado (retry de uma sessão anterior interrompida) colidia no
+    /// `UNIQUE(comic_directory_fk, chapter)` e o conflito era descartado silenciosamente
+    /// (`Err(DbError::UniqueViolation) => Ok(())`), deixando o checksum/path antigos no banco
+    /// mesmo com o arquivo novo já sobrescrito em disco. Recebimento repetido do mesmo
+    /// `(comic_name, chapter)` precisa fazer UPDATE na linha existente, não descartar.
+    #[tokio::test]
+    async fn persist_received_chapter_updates_existing_row_on_resend_instead_of_dropping_it() {
+        let (pool, dir, service) = setup().await;
+
+        let first_temp = dir.path().join("first.tmp");
+        tokio::fs::write(&first_temp, b"conteudo antigo").await.unwrap();
+        service
+            .persist_received_chapter(
+                "Omoide Emanon",
+                "Ch. 1",
+                "Ch. 1.cbz",
+                &first_temp,
+                "checksum-antigo".to_string(),
+            )
+            .await
+            .unwrap();
+
+        let second_temp = dir.path().join("second.tmp");
+        tokio::fs::write(&second_temp, b"conteudo novo, reenviado").await.unwrap();
+        service
+            .persist_received_chapter(
+                "Omoide Emanon",
+                "Ch. 1",
+                "Ch. 1.cbz",
+                &second_temp,
+                "checksum-novo".to_string(),
+            )
+            .await
+            .unwrap();
+
+        let rows: Vec<(String,)> = sqlx::query_as(
+            "SELECT checksum FROM chapter_archive WHERE comic_directory_fk = (SELECT id FROM comic_directory WHERE name = 'Omoide Emanon') AND chapter = 'Ch. 1'",
+        )
+        .fetch_all(&pool)
+        .await
+        .unwrap();
+
+        assert_eq!(rows.len(), 1, "reenvio não pode criar uma segunda linha pro mesmo capítulo");
+        assert_eq!(rows[0].0, "checksum-novo", "o reenvio precisa sobrescrever o checksum antigo");
     }
 }
