@@ -27,8 +27,6 @@ import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private const val SYNCED_FOLDER_NAME = "synced"
-
 /**
  * Kotlin implementation of [FileSyncProvider] used by the Rust protocol `acerola/sync-files/1`.
  * Reads/writes chapter files via SAF/DocumentFile in chunks — Rust never sees a stream
@@ -168,21 +166,18 @@ class FileSyncProviderImpl
                 val root = libraryRoot() ?: return@runBlocking -1L
 
                 // Se o quadrinho já existe localmente, o capítulo tem que cair na MESMA pasta
-                // que os capítulos já existentes (`comic.path`), não em `synced/<comicName>/`.
-                // Escrever num path diferente splitava um único ComicDirectory entre duas
-                // pastas: os capítulos antigos ficavam com `path` apontando pra pasta original, os
-                // recém-chegados apontavam pra `synced/`. O scan de reconciliação
-                // (`ChapterSyncService`) lista arquivos só pela pasta original — os capítulos
-                // recém-sincronizados eram invisíveis pra ele e acabavam podados do banco no
-                // próximo scan, mesmo com o arquivo físico intacto em `synced/`. Só quadrinhos
-                // novos (sem entrada local ainda) usam `synced/<comicName>/`.
+                // que os capítulos já existentes (`comic.path`). Quadrinho novo cai direto em
+                // `<root>/<comicName>/` — mesmo lugar que o DirectoryScanner criaria se o
+                // usuário tivesse adicionado manualmente. Sem pasta `synced/` intermediária:
+                // ela não tinha nenhuma exclusão no DirectoryScanner (que desce recursivo em
+                // qualquer pasta sem manga direto nela), então um rescan completo podia
+                // redescobrir `synced/<comicName>/` como um segundo ComicDirectory fantasma.
                 val existingComic = comicDirectoryDao.getDirectoryByName(comicName)
                 val comicFolder =
                     if (existingComic != null) {
                         DocumentFile.fromTreeUri(context, Uri.parse(existingComic.path))
                     } else {
-                        val syncedFolder = root.findFile(SYNCED_FOLDER_NAME) ?: root.createDirectory(SYNCED_FOLDER_NAME)
-                        syncedFolder?.findFile(comicName) ?: syncedFolder?.createDirectory(comicName)
+                        root.findFile(comicName) ?: root.createDirectory(comicName)
                     }
                 if (comicFolder == null) return@runBlocking -1L
 
