@@ -1361,7 +1361,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_acerola_checksum_method_p2pnode_get_mode() != 16134.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_checksum_method_p2pnode_get_paired_peers() != 47316.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_p2pnode_get_paired_peers() != 51722.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_acerola_checksum_method_p2pnode_remove_paired_peer() != 11699.toShort()) {
@@ -3416,7 +3416,7 @@ public interface P2pNodeInterface {
      * e fecha). É essa lista, não `get_connected_peers*`, que deve alimentar "dispositivos
      * pareados" na UI.
      */
-    fun `getPairedPeers`(): List<FfiPeerAddr>
+    fun `getPairedPeers`(): List<FfiPairedPeer>
     
     /**
      * Desempareia um peer: some da confiança (`trust_store`) e do cache de endereços
@@ -3646,8 +3646,8 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
      * já que a conexão de handshake em si dura só alguns segundos (troca PING/PONG/DeviceInfo
      * e fecha). É essa lista, não `get_connected_peers*`, que deve alimentar "dispositivos
      * pareados" na UI.
-     */override fun `getPairedPeers`(): List<FfiPeerAddr> {
-            return FfiConverterSequenceTypeFfiPeerAddr.lift(
+     */override fun `getPairedPeers`(): List<FfiPairedPeer> {
+            return FfiConverterSequenceTypeFfiPairedPeer.lift(
     callWithPointer {
     uniffiRustCall() { _status ->
     UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_get_paired_peers(
@@ -4304,6 +4304,58 @@ public object FfiConverterTypeFfiFileManifestEntry: FfiConverterRustBuffer<FfiFi
 
 
 
+/**
+ * Item de `get_paired_peers` — igual a `FfiPeerAddr`, mas com `device_name` a mais. Tipo
+ * separado (em vez de acrescentar o campo em `FfiPeerAddr`) pra não forçar todo call site
+ * que constrói um `FfiPeerAddr` pra discar (`connect`/`sync_comic`/`browse_library`/
+ * `browse_cover`) a passar um `device_name` que não faz sentido nesses casos.
+ */
+data class FfiPairedPeer (
+    var `id`: kotlin.String, 
+    var `deviceId`: kotlin.String?, 
+    var `addrs`: kotlin.ByteArray, 
+    /**
+     * Vem de `AcerolaP2p::known_peers()` (persiste entre reinícios e sobrevive ao handshake
+     * fechar), não de `connected_peers_with_info()` (só tem dado pros poucos segundos em que
+     * a conexão de handshake está de fato aberta) — era essa a troca errada que deixava
+     * `device_name` quase sempre `None` na UI, caindo no fallback pro peer id cru.
+     */
+    var `deviceName`: kotlin.String?
+) {
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFfiPairedPeer: FfiConverterRustBuffer<FfiPairedPeer> {
+    override fun read(buf: ByteBuffer): FfiPairedPeer {
+        return FfiPairedPeer(
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterByteArray.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: FfiPairedPeer) = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterOptionalString.allocationSize(value.`deviceId`) +
+            FfiConverterByteArray.allocationSize(value.`addrs`) +
+            FfiConverterOptionalString.allocationSize(value.`deviceName`)
+    )
+
+    override fun write(value: FfiPairedPeer, buf: ByteBuffer) {
+            FfiConverterString.write(value.`id`, buf)
+            FfiConverterOptionalString.write(value.`deviceId`, buf)
+            FfiConverterByteArray.write(value.`addrs`, buf)
+            FfiConverterOptionalString.write(value.`deviceName`, buf)
+    }
+}
+
+
+
 data class FfiPeerAddr (
     var `id`: kotlin.String, 
     var `deviceId`: kotlin.String?, 
@@ -4713,24 +4765,24 @@ public object FfiConverterSequenceTypeFfiFileManifestEntry: FfiConverterRustBuff
 /**
  * @suppress
  */
-public object FfiConverterSequenceTypeFfiPeerAddr: FfiConverterRustBuffer<List<FfiPeerAddr>> {
-    override fun read(buf: ByteBuffer): List<FfiPeerAddr> {
+public object FfiConverterSequenceTypeFfiPairedPeer: FfiConverterRustBuffer<List<FfiPairedPeer>> {
+    override fun read(buf: ByteBuffer): List<FfiPairedPeer> {
         val len = buf.getInt()
-        return List<FfiPeerAddr>(len) {
-            FfiConverterTypeFfiPeerAddr.read(buf)
+        return List<FfiPairedPeer>(len) {
+            FfiConverterTypeFfiPairedPeer.read(buf)
         }
     }
 
-    override fun allocationSize(value: List<FfiPeerAddr>): ULong {
+    override fun allocationSize(value: List<FfiPairedPeer>): ULong {
         val sizeForLength = 4UL
-        val sizeForItems = value.map { FfiConverterTypeFfiPeerAddr.allocationSize(it) }.sum()
+        val sizeForItems = value.map { FfiConverterTypeFfiPairedPeer.allocationSize(it) }.sum()
         return sizeForLength + sizeForItems
     }
 
-    override fun write(value: List<FfiPeerAddr>, buf: ByteBuffer) {
+    override fun write(value: List<FfiPairedPeer>, buf: ByteBuffer) {
         buf.putInt(value.size)
         value.iterator().forEach {
-            FfiConverterTypeFfiPeerAddr.write(it, buf)
+            FfiConverterTypeFfiPairedPeer.write(it, buf)
         }
     }
 }

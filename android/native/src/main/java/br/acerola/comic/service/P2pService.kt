@@ -22,6 +22,9 @@ data class PeerAddress(
     val id: String,
     val deviceId: String?,
     val addrs: ByteArray,
+    /** Só preenchido pelo retorno de [getPairedPeers] — `null` nos demais usos (endereço só
+     *  pra discar, ex: [connect]/[syncComic]). */
+    val deviceName: String? = null,
 )
 
 data class ConnectedPeerInfo(
@@ -191,7 +194,7 @@ class P2pService(
      */
     fun getPairedPeers(): List<PeerAddress> =
         p2pNode.getPairedPeers().map {
-            PeerAddress(id = it.id, deviceId = it.deviceId, addrs = it.addrs)
+            PeerAddress(id = it.id, deviceId = it.deviceId, addrs = it.addrs, deviceName = it.deviceName)
         }
 
     /** Desempareia um peer — some da confiança e do cache de endereços conhecidos. Uma

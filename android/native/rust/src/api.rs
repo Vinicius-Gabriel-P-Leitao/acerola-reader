@@ -55,6 +55,22 @@ pub struct FfiPeerAddr {
     pub addrs: Vec<u8>,
 }
 
+/// Item de `get_paired_peers` — igual a `FfiPeerAddr`, mas com `device_name` a mais. Tipo
+/// separado (em vez de acrescentar o campo em `FfiPeerAddr`) pra não forçar todo call site
+/// que constrói um `FfiPeerAddr` pra discar (`connect`/`sync_comic`/`browse_library`/
+/// `browse_cover`) a passar um `device_name` que não faz sentido nesses casos.
+#[derive(uniffi::Record)]
+pub struct FfiPairedPeer {
+    pub id: String,
+    pub device_id: Option<String>,
+    pub addrs: Vec<u8>,
+    /// Vem de `AcerolaP2p::known_peers()` (persiste entre reinícios e sobrevive ao handshake
+    /// fechar), não de `connected_peers_with_info()` (só tem dado pros poucos segundos em que
+    /// a conexão de handshake está de fato aberta) — era essa a troca errada que deixava
+    /// `device_name` quase sempre `None` na UI, caindo no fallback pro peer id cru.
+    pub device_name: Option<String>,
+}
+
 #[derive(uniffi::Record)]
 pub struct FfiConnectedPeer {
     pub peer_id: String,
@@ -348,15 +364,24 @@ impl P2PNode {
     /// já que a conexão de handshake em si dura só alguns segundos (troca PING/PONG/DeviceInfo
     /// e fecha). É essa lista, não `get_connected_peers*`, que deve alimentar "dispositivos
     /// pareados" na UI.
-    pub fn get_paired_peers(&self) -> Vec<FfiPeerAddr> {
+    pub fn get_paired_peers(&self) -> Vec<FfiPairedPeer> {
         let storage = Arc::clone(&self.storage);
+        let node = Arc::clone(&self.node);
         self.runtime.block_on(async move {
+            let device_names: HashMap<String, String> = node
+                .known_peers()
+                .await
+                .into_iter()
+                .filter_map(|(peer, _, info)| info.map(|device| (peer.id.clone(), device.name)))
+                .collect();
+
             storage
                 .load_peers()
                 .await
                 .unwrap_or_default()
                 .into_iter()
-                .map(|addr| FfiPeerAddr {
+                .map(|addr| FfiPairedPeer {
+                    device_name: device_names.get(&addr.id.id).cloned(),
                     id: addr.id.id,
                     device_id: addr.id.device_id,
                     addrs: addr.addrs,

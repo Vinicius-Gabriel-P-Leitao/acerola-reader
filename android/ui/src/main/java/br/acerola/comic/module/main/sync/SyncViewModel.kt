@@ -573,10 +573,15 @@ class SyncViewModel
             withContext(Dispatchers.IO) {
                 val localAddress = p2pUseCase.getLocalAddress()
                 val pairingCode = PairingCode.encode(localAddress.id, localAddress.deviceId, localAddress.addrs)
-                val liveDeviceNames = p2pUseCase.getConnectedPeersWithInfo().associate { it.peerId to it.deviceName }
+                // Nome do dispositivo vem de getPairedPeers() (que já resolve via
+                // known_peers() do lado nativo, persistente) -- getConnectedPeersWithInfo()
+                // só serve mais pra saber QUEM está conectado agora (connectedPeerIds), não
+                // pra nome: aquela lista só tem dado durante os poucos segundos em que a
+                // conexão de handshake está de fato aberta.
+                val connectedPeers = p2pUseCase.getConnectedPeersWithInfo()
                 val paired =
                     p2pUseCase.getPairedPeers().map {
-                        PairedPeer(peerId = it.id, deviceName = liveDeviceNames[it.id])
+                        PairedPeer(peerId = it.id, deviceName = it.deviceName)
                     }
                 val localId = p2pUseCase.getLocalId()
                 val mode = p2pUseCase.getMode()
@@ -588,7 +593,7 @@ class SyncViewModel
                         pairingCode = pairingCode,
                         mode = mode,
                         pairedPeers = paired,
-                        connectedPeerIds = liveDeviceNames.keys,
+                        connectedPeerIds = connectedPeers.map { peer -> peer.peerId }.toSet(),
                     )
                 }
             }

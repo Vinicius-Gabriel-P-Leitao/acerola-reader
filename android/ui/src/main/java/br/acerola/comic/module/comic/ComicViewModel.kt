@@ -565,13 +565,11 @@ class ComicViewModel
         }
 
         /** Carrega os peers pareados pro `PeerPickerSheet` — sob demanda (não reativo), já que
-         *  essa lista só é relevante enquanto o sheet estiver aberto. */
+         *  essa lista só é relevante enquanto o sheet estiver aberto. `deviceName` já vem
+         *  resolvido de `getPairedPeers()` (via `known_peers()` do lado nativo, persistente). */
         fun loadPairedPeers() {
             viewModelScope.launch(Dispatchers.IO) {
-                val liveDeviceNames = p2pUseCase.getConnectedPeersWithInfo().associate { it.peerId to it.deviceName }
-                val paired =
-                    p2pUseCase.getPairedPeers().map { PairedPeer(peerId = it.id, deviceName = liveDeviceNames[it.id]) }
-                _pairedPeers.value = paired
+                _pairedPeers.value = p2pUseCase.getPairedPeers().map { PairedPeer(peerId = it.id, deviceName = it.deviceName) }
             }
         }
 

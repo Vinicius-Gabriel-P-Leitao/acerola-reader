@@ -258,13 +258,13 @@ class HomeViewModel
             }
         }
 
-        /** Carrega os peers pareados pro `PeerPickerSheet` — sob demanda, não reativo. */
+        /** Carrega os peers pareados pro `PeerPickerSheet` — sob demanda, não reativo.
+         *  `deviceName` já vem resolvido de `getPairedPeers()` (via `known_peers()` do lado
+         *  nativo, persistente) — não precisa cruzar com `getConnectedPeersWithInfo()`, que só
+         *  tem dado durante os poucos segundos em que a conexão de handshake está aberta. */
         fun loadPairedPeers() {
             viewModelScope.launch(Dispatchers.IO) {
-                val liveDeviceNames = p2pUseCase.getConnectedPeersWithInfo().associate { it.peerId to it.deviceName }
-                val paired =
-                    p2pUseCase.getPairedPeers().map { PairedPeer(peerId = it.id, deviceName = liveDeviceNames[it.id]) }
-                _pairedPeers.value = paired
+                _pairedPeers.value = p2pUseCase.getPairedPeers().map { PairedPeer(peerId = it.id, deviceName = it.deviceName) }
             }
         }
 
