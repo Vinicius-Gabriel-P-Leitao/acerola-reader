@@ -5,6 +5,7 @@
 		title: string;
 		fileName: string;
 		isRead: boolean;
+		hasConflict?: boolean;
 		chapterSort: string;
 		path?: string;
 		volumeId?: string | null;
@@ -48,6 +49,7 @@
 	import CheckSquare from '@lucide/svelte/icons/check-square';
 	import MoreVertical from '@lucide/svelte/icons/more-vertical';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import { m } from '$lib/paraglide/messages';
 
 	let { data, events }: ComicChapterListProps = $props();
@@ -62,6 +64,16 @@
 	const BUTTON_HEIGHT = 100;
 
 	const totalPages = $derived(Math.ceil(data.totalChapters / data.pageSize));
+
+	// Mesma cor de destaque que o círculo/badge do ícone usa pra cada estado — conflito
+	// tem prioridade sobre lido (precisa de resolução do usuário, é mais urgente que um
+	// capítulo já lido).
+	function rowClass(chapter: Chapter): string {
+		const base = 'h-full flex-nowrap overflow-hidden';
+		if (chapter.hasConflict) return `${base} border-destructive/30 bg-destructive/10 hover:bg-destructive/20`;
+		if (chapter.isRead) return `${base} border-primary/30 bg-primary/10 hover:bg-primary/20`;
+		return `${base} border-surface/40 bg-mantle/40 hover:bg-surface/30`;
+	}
 
 	// INFO: Reativo de propósito — decide o que fica montado no DOM. Dado de
 	// capítulo fica em cache pra sempre (não evictamos mais), mas manter todo
@@ -189,9 +201,7 @@
 										: events?.onOpenChapter?.(chapter)
 							}}
 							ui={{
-								class: chapter.isRead
-									? 'h-full flex-nowrap overflow-hidden border-primary/30 bg-primary/10 hover:bg-primary/20'
-									: 'h-full flex-nowrap overflow-hidden border-surface/40 bg-mantle/40 hover:bg-surface/30'
+								class: rowClass(chapter)
 							}}
 						>
 							{#snippet icon()}
@@ -207,23 +217,41 @@
 											<div class="h-5 w-5 rounded-full border-2 border-muted-foreground"></div>
 										</div>
 									{/if}
+								{:else if chapter.hasConflict}
+									<!-- Mesma ideia do círculo de "lido" (ícone principal + cor diferente), mas
+									     com bg-destructive/15 (tintado) em vez de sólido: não existe
+									     --destructive-foreground no tema (nenhum lugar do app usa `destructive`
+									     como fundo sólido com texto/ícone em cima), então não há garantia de
+									     contraste pra essa combinação — tintado, o ícone fica só na cor
+									     `text-destructive` sobre o fundo por trás, que já é usada em outros
+									     lugares do app. -->
+									<div
+										class="flex h-6 w-6 items-center justify-center rounded-full bg-destructive/15 text-destructive"
+									>
+										<TriangleAlert size={16} />
+									</div>
+								{:else if chapter.isRead}
+									<div
+										class="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-crust"
+									>
+										<Check size={16} strokeWidth={3} />
+									</div>
 								{:else}
-									<div class={chapter.isRead ? '' : 'text-primary'}>
-										{#if chapter.isRead}
-											<div
-												class="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-crust"
-											>
-												<Check size={16} strokeWidth={3} />
-											</div>
-										{:else}
-											<BookOpen size={24} />
-										{/if}
+									<div class="text-primary">
+										<BookOpen size={24} />
 									</div>
 								{/if}
 							{/snippet}
 
 							{#snippet action()}
 								<div class="flex items-center gap-2">
+									{#if chapter.hasConflict}
+										<span
+											class="rounded-full bg-muted px-3 py-1 text-[10px] font-black tracking-widest text-muted-foreground uppercase"
+										>
+											{m['pages.comic.metadata.conflict']()}
+										</span>
+									{/if}
 									{#if chapter.isRead}
 										<span
 											class="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-black tracking-widest text-primary uppercase"

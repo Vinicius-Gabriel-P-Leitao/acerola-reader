@@ -276,7 +276,8 @@
 					"count": "{count} Caps"
 				},
 				"read_now": "LER AGORA",
-				"completed": "CONCLUÍDO"
+				"completed": "CONCLUÍDO",
+				"conflict": "CONFLITO"
 			},
 			"preferences": {
 				"reading": "Leitura",
