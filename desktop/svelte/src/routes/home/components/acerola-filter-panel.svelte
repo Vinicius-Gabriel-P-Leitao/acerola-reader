@@ -39,6 +39,7 @@
 	import Eye from '@lucide/svelte/icons/eye';
 	import Bookmark from '@lucide/svelte/icons/bookmark';
 	import AcerolaSwitch from '$lib/components/acerola-switch/acerola-switch.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let { state: controlState, data, events }: FilterPanelProps = $props();
 
@@ -61,19 +62,22 @@
 		wasOpen = isOpen;
 	});
 
-	const sortOptions: { value: SortBy; labelKey: string }[] = [
-		{ value: 'title', labelKey: 'Título' },
-		{ value: 'chapterCount', labelKey: 'Quantidade de Capítulos' },
-		{ value: 'lastUpdated', labelKey: 'Última Atualização' }
-	];
+	const sortOptions = $derived<{ value: SortBy; labelKey: string }[]>([
+		{ value: 'title', labelKey: m['pages.home.filter_panel.sort_options.title']() },
+		{
+			value: 'chapterCount',
+			labelKey: m['pages.home.filter_panel.sort_options.chapter_count']()
+		},
+		{ value: 'lastUpdated', labelKey: m['pages.home.filter_panel.sort_options.last_updated']() }
+	]);
 
-	const metadataSources: { value: MetadataSource; label: string }[] = [
-		{ value: 'all', label: 'Todos' },
-		{ value: 'comicinfo', label: 'ComicInfo' },
-		{ value: 'mangadex', label: 'MangaDex' },
-		{ value: 'anilist', label: 'AniList' },
-		{ value: 'no_metadata', label: 'Sem metadados' }
-	];
+	const metadataSources = $derived<{ value: MetadataSource; label: string }[]>([
+		{ value: 'all', label: m['pages.home.filter_panel.metadata_sources.all']() },
+		{ value: 'comicinfo', label: m['pages.home.filter_panel.metadata_sources.comicinfo']() },
+		{ value: 'mangadex', label: m['pages.home.filter_panel.metadata_sources.mangadex']() },
+		{ value: 'anilist', label: m['pages.home.filter_panel.metadata_sources.anilist']() },
+		{ value: 'no_metadata', label: m['pages.home.filter_panel.metadata_sources.no_metadata']() }
+	]);
 
 	function selectSort(value: SortBy) {
 		if (localSortBy === value) {
@@ -136,16 +140,14 @@
 	<div
 		role="dialog"
 		aria-modal="true"
-		aria-label="Filtrar e Ordenar"
-		class="fixed top-8 right-0 bottom-0 z-50 flex w-full max-w-full sm:max-w-sm flex-col border-l border-border/60 bg-background/95 shadow-2xl backdrop-blur-xl"
+		aria-label={m['pages.home.filter_panel.aria_label']()}
+		class="fixed top-8 right-0 bottom-0 z-50 flex w-full max-w-full flex-col border-l border-border/60 bg-background/95 shadow-2xl backdrop-blur-xl sm:max-w-sm"
 		transition:fly={{ x: 400, duration: 300, easing: cubicOut }}
 	>
 		<!-- Header -->
 		<div class="flex items-center justify-between border-b border-border/40 px-6 py-5">
 			<div class="flex items-center gap-3">
-				<div
-					class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary"
-				>
+				<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						width="16"
@@ -169,17 +171,19 @@
 					</svg>
 				</div>
 				<div>
-					<h2 class="text-base font-bold tracking-tight text-foreground">Filtrar e Ordenar</h2>
+					<h2 class="font-bold tracking-tight text-base text-foreground">
+						{m['pages.home.filter_panel.aria_label']()}
+					</h2>
 					{#if hasActiveFilters}
 						<span class="text-[10px] font-semibold tracking-wider text-primary uppercase"
-							>Filtros ativos</span
+							>{m['pages.home.filter_panel.active_filters']()}</span
 						>
 					{/if}
 				</div>
 			</div>
 			<button
 				type="button"
-				aria-label="Fechar painel de filtros"
+				aria-label={m['pages.home.filter_panel.close_aria']()}
 				class="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
 				onclick={events.onClose}
 			>
@@ -188,13 +192,17 @@
 		</div>
 
 		<!-- Content - scrollable -->
-		<div class="flex-1 overflow-y-auto px-6 py-5 space-y-7">
+		<div class="flex-1 space-y-7 overflow-y-auto px-6 py-5">
 			<!-- Sort Section -->
 			<section>
 				<p class="mb-3 text-[11px] font-bold tracking-widest text-primary uppercase">
-					Ordenar por
+					{m['pages.home.filter_panel.sort_section_title']()}
 				</p>
-				<div class="space-y-1.5" role="radiogroup" aria-label="Opções de ordenação">
+				<div
+					class="space-y-1.5"
+					role="radiogroup"
+					aria-label={m['pages.home.filter_panel.sort_radiogroup_aria']()}
+				>
 					{#each sortOptions as option}
 						{@const isSelected = localSortBy === option.value}
 						<button
@@ -234,7 +242,7 @@
 			<!-- Filter Section -->
 			<section>
 				<p class="mb-3 text-[11px] font-bold tracking-widest text-primary uppercase">
-					Filtrar por
+					{m['pages.home.filter_panel.filter_section_title']()}
 				</p>
 
 				<!-- Show Hidden Toggle Row -->
@@ -242,7 +250,7 @@
 					type="button"
 					role="switch"
 					aria-checked={localShowHidden}
-					class="flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none cursor-pointer"
+					class="flex w-full cursor-pointer items-center justify-between rounded-xl px-3.5 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
 					onclick={() => (localShowHidden = !localShowHidden)}
 				>
 					<div class="flex items-center gap-3">
@@ -252,15 +260,16 @@
 							<Eye size={15} />
 						</div>
 						<div>
-							<p class="text-sm font-medium text-foreground">Mostrar ocultos</p>
-							<p class="text-xs text-muted-foreground">Exibir quadrinhos ocultos</p>
+							<p class="text-sm font-medium text-foreground">
+								{m['pages.home.filter_panel.show_hidden.title']()}
+							</p>
+							<p class="text-xs text-muted-foreground">
+								{m['pages.home.filter_panel.show_hidden.desc']()}
+							</p>
 						</div>
 					</div>
 					<div class="pointer-events-none">
-						<AcerolaSwitch
-							state={{ checked: localShowHidden }}
-							ui={{ size: 'sm' }}
-						/>
+						<AcerolaSwitch state={{ checked: localShowHidden }} ui={{ size: 'sm' }} />
 					</div>
 				</button>
 			</section>
@@ -268,15 +277,19 @@
 			<!-- Metadata Source Section -->
 			<section>
 				<p class="mb-3 text-[11px] font-bold tracking-widest text-primary uppercase">
-					Fontes de Metadados
+					{m['pages.home.filter_panel.metadata_sources_title']()}
 				</p>
-				<div class="flex flex-wrap gap-2" role="group" aria-label="Fontes de metadados">
+				<div
+					class="flex flex-wrap gap-2"
+					role="group"
+					aria-label={m['pages.home.filter_panel.metadata_sources_aria']()}
+				>
 					{#each metadataSources as source}
 						{@const isSelected = localMetadataSource === source.value}
 						<button
 							type="button"
 							aria-pressed={isSelected}
-							class="rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none {isSelected
+							class="rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none active:scale-95 {isSelected
 								? 'border-primary/50 bg-primary/20 text-primary shadow-sm shadow-primary/20'
 								: 'border-border/60 bg-muted/30 text-muted-foreground hover:border-border hover:bg-muted/60 hover:text-foreground'}"
 							onclick={() => (localMetadataSource = source.value)}
@@ -290,31 +303,35 @@
 			<!-- Bookmark Filter Section -->
 			<section>
 				<p class="mb-3 text-[11px] font-bold tracking-widest text-primary uppercase">
-					Filtrar por bookmark
+					{m['pages.home.filter_panel.bookmark_filter_title']()}
 				</p>
-				<div class="flex flex-wrap gap-2" role="group" aria-label="Filtrar por bookmark">
+				<div
+					class="flex flex-wrap gap-2"
+					role="group"
+					aria-label={m['pages.home.filter_panel.bookmark_filter_aria']()}
+				>
 					<button
 						type="button"
 						aria-pressed={localBookmarkFilter === 'all'}
-						class="rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none {localBookmarkFilter ===
+						class="rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none active:scale-95 {localBookmarkFilter ===
 						'all'
 							? 'border-primary/50 bg-primary/20 text-primary shadow-sm shadow-primary/20'
 							: 'border-border/60 bg-muted/30 text-muted-foreground hover:border-border hover:bg-muted/60 hover:text-foreground'}"
 						onclick={() => (localBookmarkFilter = 'all')}
 					>
-						Todos
+						{m['pages.home.filter_panel.bookmark_filter.all']()}
 					</button>
 					<button
 						type="button"
 						aria-pressed={localBookmarkFilter === 'none'}
-						class="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none {localBookmarkFilter ===
+						class="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none active:scale-95 {localBookmarkFilter ===
 						'none'
 							? 'border-primary/50 bg-primary/20 text-primary shadow-sm shadow-primary/20'
 							: 'border-border/60 bg-muted/30 text-muted-foreground hover:border-border hover:bg-muted/60 hover:text-foreground'}"
 						onclick={() => (localBookmarkFilter = 'none')}
 					>
 						<Bookmark size={12} class="opacity-70" />
-						Sem bookmark
+						{m['pages.home.filter_panel.bookmark_filter.none']()}
 					</button>
 					{#each data.bookmarks as category (category.id)}
 						{@const isSelected = localBookmarkFilter === category.id}
@@ -322,14 +339,12 @@
 						<button
 							type="button"
 							aria-pressed={isSelected}
-							class="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none {isSelected
+							class="flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none active:scale-95 {isSelected
 								? 'border-primary/50 bg-primary/20 text-primary shadow-sm shadow-primary/20'
 								: 'border-border/60 bg-muted/30 text-muted-foreground hover:border-border hover:bg-muted/60 hover:text-foreground'}"
 							onclick={() => (localBookmarkFilter = category.id)}
 						>
-							<span
-								class="h-2.5 w-2.5 shrink-0 rounded-full"
-								style="background-color: {hexColor};"
+							<span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background-color: {hexColor};"
 							></span>
 							{category.name}
 						</button>
@@ -343,18 +358,18 @@
 			<div class="flex gap-3">
 				<button
 					type="button"
-					class="flex-1 rounded-xl border border-border/60 bg-muted/30 px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted/60 hover:text-foreground active:scale-[0.98] disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+					class="flex-1 rounded-xl border border-border/60 bg-muted/30 px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-all hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none active:scale-[0.98] disabled:opacity-40"
 					onclick={handleReset}
 					disabled={!hasChanges && !hasActiveFilters}
 				>
-					Resetar
+					{m['pages.home.filter_panel.reset']()}
 				</button>
 				<button
 					type="button"
-					class="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-md shadow-primary/30 transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/40 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+					class="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-md shadow-primary/30 transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/40 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none active:scale-[0.98]"
 					onclick={handleApply}
 				>
-					Aplicar
+					{m['pages.home.filter_panel.apply']()}
 				</button>
 			</div>
 		</div>

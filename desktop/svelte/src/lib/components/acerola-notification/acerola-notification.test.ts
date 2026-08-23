@@ -12,23 +12,23 @@ describe('AcerolaNotification', () => {
 		notificationStore.clearAll();
 	});
 
-	it('renderiza o botão de notificação', () => {
+	it('renders the notification button', () => {
 		render(AcerolaNotification);
 		expect(getTrigger()).toBeInTheDocument();
 	});
 
-	it('não exibe badge quando não há notificações', () => {
+	it('does not show badge when there are no notifications', () => {
 		render(AcerolaNotification);
 		expect(document.querySelector('.bg-primary.rounded-full')).not.toBeInTheDocument();
 	});
 
-	it('exibe badge quando há notificações', () => {
+	it('shows badge when there are notifications', () => {
 		notificationStore.notify.success('Teste');
 		render(AcerolaNotification);
 		expect(document.querySelector('.bg-primary.rounded-full')).toBeInTheDocument();
 	});
 
-	it('abre o popover e exibe a notificação ao clicar no botão', async () => {
+	it('opens popover and displays notification when clicking button', async () => {
 		notificationStore.notify.success('Scan concluído!');
 		render(AcerolaNotification);
 
@@ -38,7 +38,7 @@ describe('AcerolaNotification', () => {
 		expect(screen.getByText('Scan concluído!')).toBeInTheDocument();
 	});
 
-	it('exibe estado vazio quando não há notificações', async () => {
+	it('displays empty state when there are no notifications', async () => {
 		render(AcerolaNotification);
 
 		const user = userEvent.setup();
@@ -47,7 +47,7 @@ describe('AcerolaNotification', () => {
 		expect(screen.getByText('Nenhuma notificação')).toBeInTheDocument();
 	});
 
-	it('remove notificação ao clicar no X', async () => {
+	it('removes notification when clicking X', async () => {
 		notificationStore.notify.error('Erro de sync');
 		render(AcerolaNotification);
 
@@ -60,7 +60,7 @@ describe('AcerolaNotification', () => {
 		expect(screen.queryByText('Erro de sync')).not.toBeInTheDocument();
 	});
 
-	it('limpa todas as notificações ao clicar em limpar tudo', async () => {
+	it('clears all notifications when clicking clear all', async () => {
 		notificationStore.notify.success('Notificação 1');
 		notificationStore.notify.info('Notificação 2');
 		render(AcerolaNotification);
@@ -73,7 +73,7 @@ describe('AcerolaNotification', () => {
 		expect(screen.queryByText('Notificação 2')).not.toBeInTheDocument();
 	});
 
-	it('executa a ação e remove a notificação ao clicar no botão de ação', async () => {
+	it('executes action and removes notification when clicking action button', async () => {
 		const onClick = vi.fn();
 		notificationStore.notify.success('Teste', {
 			action: { label: 'Executar', onClick }

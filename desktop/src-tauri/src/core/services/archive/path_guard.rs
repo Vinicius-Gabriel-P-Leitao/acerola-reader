@@ -59,7 +59,7 @@ mod tests {
     use crate::infra::error::PathError;
 
     #[test]
-    fn teste_caminho_valido_dentro_do_root() {
+    fn test_valid_path_inside_root() {
         let root = tempdir().unwrap();
         let guard = PathGuard::new(root.path().to_path_buf());
         let file = root.path().join("arquivo.cbz");
@@ -69,7 +69,7 @@ mod tests {
     }
 
     #[test]
-    fn teste_caminho_fora_do_root_e_negado() {
+    fn test_path_outside_root_is_denied() {
         let root = tempdir().unwrap();
         let outside = tempdir().unwrap();
         let guard = PathGuard::new(root.path().to_path_buf());
@@ -80,7 +80,7 @@ mod tests {
     }
 
     #[test]
-    fn teste_caminho_inexistente_e_negado() {
+    fn test_nonexistent_path_is_denied() {
         let root = tempdir().unwrap();
         let guard = PathGuard::new(root.path().to_path_buf());
         let fake = root.path().join("nao_existe.cbz");
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn teste_path_traversal_e_negado() {
+    fn test_path_traversal_is_denied() {
         let root = tempdir().unwrap();
         let guard = PathGuard::new(root.path().to_path_buf());
         let traversal = root.path().join("../arquivo_malicioso.cbz");
@@ -98,7 +98,7 @@ mod tests {
     }
 
     #[test]
-    fn teste_action_failure_e_propagado() {
+    fn test_action_failure_is_propagated() {
         let root = tempdir().unwrap();
         let guard = PathGuard::new(root.path().to_path_buf());
         let file = root.path().join("arquivo.cbz");

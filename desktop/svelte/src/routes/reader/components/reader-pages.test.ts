@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, fireEvent } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import ReaderPages from './reader-pages.svelte';
 import type { ReaderPageTracker } from './reader-pages.svelte';
@@ -37,7 +37,7 @@ function props(overrides = {}) {
 }
 
 describe('ReaderPages', () => {
-	it('renderiza mensagem quando capitulo esta indisponivel', () => {
+	it('renders message when chapter is unavailable', () => {
 		render(ReaderPages, {
 			props: props({
 				data: {
@@ -58,7 +58,7 @@ describe('ReaderPages', () => {
 		expect(screen.getByText('Capítulo indisponível')).toBeInTheDocument();
 	});
 
-	it('prioriza fallback de indisponivel sobre loading', () => {
+	it('prioritizes unavailable fallback over loading', () => {
 		render(ReaderPages, {
 			props: props({
 				data: {
@@ -74,7 +74,7 @@ describe('ReaderPages', () => {
 		expect(screen.queryByRole('img')).not.toBeInTheDocument();
 	});
 
-	it('renderiza loading quando capitulo esta disponivel sem paginas', () => {
+	it('renders loading when chapter is available without pages', () => {
 		const { container } = render(ReaderPages, {
 			props: props({
 				data: {
@@ -88,7 +88,7 @@ describe('ReaderPages', () => {
 		expect(container.querySelector('section')).not.toBeInTheDocument();
 	});
 
-	it('renderiza uma secao por pagina e aplica rastreamento', () => {
+	it('renders one section per page and applies tracking', () => {
 		const tracker = trackPage();
 
 		const { container } = render(ReaderPages, {
@@ -113,7 +113,7 @@ describe('ReaderPages', () => {
 		expect(container.querySelectorAll('.animate-spin')).toHaveLength(2);
 	});
 
-	it('aplica classes corretas para cada modo de leitura', () => {
+	it('applies correct classes for each reading mode', () => {
 		const cases = [
 			{ mode: 'horizontal', containerClass: 'w-max', sectionClass: 'w-screen' },
 			{ mode: 'vertical', containerClass: 'max-w-6xl', sectionClass: 'snap-center' },
@@ -136,7 +136,7 @@ describe('ReaderPages', () => {
 		}
 	});
 
-	it('marca imagens proximas como eager e distantes como lazy', () => {
+	it('marks nearby images as eager and distant as lazy', () => {
 		render(ReaderPages, {
 			props: props({
 				data: {
@@ -152,7 +152,47 @@ describe('ReaderPages', () => {
 		expect(screen.getByRole('img', { name: 'Página 4' })).toHaveAttribute('loading', 'lazy');
 	});
 
-	it('usa placeholder de webtoon para paginas ausentes', () => {
+	it('renders failure state with retry when chapter opening fails', async () => {
+		const onRetry = vi.fn();
+
+		render(ReaderPages, {
+			props: {
+				...props({
+					data: {
+						...props().data,
+						pageCount: 0,
+						openFailed: true,
+						chapterAvailable: true
+					}
+				}),
+				events: { onRetry }
+			}
+		});
+
+		expect(screen.getByText('Não foi possível abrir este capítulo')).toBeInTheDocument();
+		expect(screen.queryByText('Capítulo indisponível')).not.toBeInTheDocument();
+
+		await fireEvent.click(screen.getByText('Tentar novamente'));
+		expect(onRetry).toHaveBeenCalledOnce();
+	});
+
+	it('prioritizes unavailable chapter fallback over open failure', () => {
+		render(ReaderPages, {
+			props: props({
+				data: {
+					...props().data,
+					pageCount: 0,
+					openFailed: true,
+					chapterAvailable: false
+				}
+			})
+		});
+
+		expect(screen.getByText('Capítulo indisponível')).toBeInTheDocument();
+		expect(screen.queryByText('Não foi possível abrir este capítulo')).not.toBeInTheDocument();
+	});
+
+	it('uses webtoon placeholder for missing pages', () => {
 		const { container } = render(ReaderPages, {
 			props: props({
 				data: {

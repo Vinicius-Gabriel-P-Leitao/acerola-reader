@@ -8,13 +8,14 @@ use tauri::Manager;
 
 use crate::{
     cmd::features::{
+        archive::archive_template_cmd,
         category::category_cmd,
         comic as comic_cmd, history as history_cmd,
         library::{comic_scanner_cmd, select_folder_cmd},
         metadata as metadata_cmd, network as network_cmd, reader as reader_cmd,
         summary as comic_summary_cmd,
     },
-    core::services::reader::ReaderService,
+    core::services::{reader::ReaderService, summary::ChapterCacheService},
     infra::error::ComicError,
     system_cmd,
 };
@@ -41,6 +42,18 @@ pub fn build() -> tauri::Builder<tauri::Wry> {
         network_cmd::switch_to_relay,
         network_cmd::connect_to_peer,
         network_cmd::get_local_id,
+        network_cmd::get_local_addr,
+        network_cmd::get_local_device_info,
+        network_cmd::get_paired_peers,
+        network_cmd::get_relay_info,
+        network_cmd::sync_history,
+        network_cmd::sync_files,
+        network_cmd::sync_all,
+        network_cmd::sync_comic,
+        network_cmd::query_remote_library,
+        network_cmd::query_remote_cover,
+        network_cmd::get_sync_history_log,
+        network_cmd::get_security_status,
         reader_cmd::reader_open_chapter,
         reader_cmd::reader_load_page,
         reader_cmd::reader_set_current_page,
@@ -81,6 +94,9 @@ pub fn build() -> tauri::Builder<tauri::Wry> {
         metadata_cmd::sync_metadata_comic_info,
         metadata_cmd::clear_comic_metadata,
         metadata_cmd::clear_comics_metadata_batch,
+        archive_template_cmd::get_archive_templates,
+        archive_template_cmd::create_archive_template,
+        archive_template_cmd::delete_archive_template,
     ])
 }
 
@@ -132,6 +148,7 @@ fn setup_runtime(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     )?;
 
     app_handle.manage(ReaderService::new());
+    app_handle.manage(ChapterCacheService::new());
 
     tauri::async_runtime::block_on(async move {
         db::setup_database(&app_handle, database_path).await.map_err(|db_error| {

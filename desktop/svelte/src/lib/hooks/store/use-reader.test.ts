@@ -106,7 +106,7 @@ describe('useReader', () => {
 		});
 	});
 
-	it('inicia sem sessao aberta e sem estado de carregamento', async () => {
+	it('starts with no open session and not loading', async () => {
 		const { reader } = await renderHook();
 
 		expect(reader.session).toBeUndefined();
@@ -116,7 +116,7 @@ describe('useReader', () => {
 		expect(reader.error).toBeNull();
 	});
 
-	it('abre capitulo, limita pagina inicial e carrega a pagina atual', async () => {
+	it('opens chapter, clamps initial page and loads current page', async () => {
 		const { reader } = await renderHook();
 
 		const chapterPayload = chapter();
@@ -141,7 +141,7 @@ describe('useReader', () => {
 		});
 	});
 
-	it('reutiliza pagina em cache sem pedir bytes novamente ao backend', async () => {
+	it('reuses cached page without requesting bytes from backend again', async () => {
 		const { reader } = await renderHook();
 
 		await reader.open(chapter(), 0);
@@ -155,7 +155,7 @@ describe('useReader', () => {
 		expect(invokeMock).toHaveBeenCalledWith(READER_COMMANDS.setCurrentPage, { index: 0 });
 	});
 
-	it('ignora pagina invalida sem chamar backend', async () => {
+	it('ignores invalid page without calling backend', async () => {
 		const { reader } = await renderHook();
 
 		await reader.open(chapter(), 0);
@@ -168,7 +168,7 @@ describe('useReader', () => {
 		expect(invokeMock).not.toHaveBeenCalled();
 	});
 
-	it('registra erro quando abertura falha', async () => {
+	it('records error when opening fails', async () => {
 		const { reader } = await renderHook();
 		const error = new Error('file not found');
 
@@ -180,7 +180,7 @@ describe('useReader', () => {
 		expect(reader.loading).toBe(false);
 	});
 
-	it('registra erro quando carregamento de página falha', async () => {
+	it('records error when page loading fails', async () => {
 		const { reader } = await renderHook();
 		const error = new Error('decode failed');
 
@@ -199,7 +199,7 @@ describe('useReader', () => {
 		});
 	});
 
-	it('ignora página stale de sessão anterior', async () => {
+	it('ignores stale page from previous session', async () => {
 		const { reader } = await renderHook();
 		let activeChapterId = 'chapter-1';
 		let resolveStalePage: (payload: ReaderPagePayload) => void = () => {};
@@ -243,7 +243,7 @@ describe('useReader', () => {
 		expect(reader.pageAt(1)).toBeUndefined();
 	});
 
-	it('fecha capitulo, limpa cache e revoga urls', async () => {
+	it('closes chapter, clears cache and revokes object urls', async () => {
 		const { reader } = await renderHook();
 
 		await reader.open(chapter(), 0);
@@ -260,7 +260,7 @@ describe('useReader', () => {
 		expect(URL.revokeObjectURL).toHaveBeenCalled();
 	});
 
-	it('limpa recursos ao desmontar o componente', async () => {
+	it('cleans up resources when component unmounts', async () => {
 		const { reader, unmount } = await renderHook();
 
 		await reader.open(chapter(), 0);

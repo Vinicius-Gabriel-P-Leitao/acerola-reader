@@ -12,7 +12,11 @@
 	const localeOptions = locales.map((locale) => ({
 		value: locale,
 		label:
-			locale === 'pt-br' ? 'Português (BR)' : locale === 'en' ? 'English' : (locale as string).toUpperCase()
+			locale === 'pt-br'
+				? 'Português (BR)'
+				: locale === 'en'
+					? 'English'
+					: (locale as string).toUpperCase()
 	}));
 
 	function handleLocaleChange(locale: string) {

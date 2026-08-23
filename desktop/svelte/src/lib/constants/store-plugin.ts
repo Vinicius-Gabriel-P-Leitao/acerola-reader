@@ -5,10 +5,9 @@ export const STORE_KEYS = {
 	theme: 'theme',
 	libraryPath: 'library_path',
 	comicInfoPreference: 'comic_info_preference',
-	chaptersPerPage: 'chapters_per_page',
 	volumeViewMode: 'volume_view_mode',
 	readerMode: 'reader_mode',
 	onboardingCompleted: 'onboarding_completed',
 	metadataLanguage: 'metadata_language',
-	navDockMode: 'nav_dock_mode'
+	relayUrl: 'relay_url'
 } as const;

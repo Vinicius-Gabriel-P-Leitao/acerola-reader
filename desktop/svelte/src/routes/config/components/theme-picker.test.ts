@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import ThemePicker from './theme-picker.svelte';
 
 describe('ThemePicker', () => {
-	it('renderiza os temas disponíveis', () => {
+	it('renders available themes', () => {
 		render(ThemePicker, {
 			props: {
 				data: { theme: 'catppuccin', mode: 'dark' },
@@ -18,7 +18,7 @@ describe('ThemePicker', () => {
 		expect(screen.getByText('Tokyo Night')).toBeInTheDocument();
 	});
 
-	it('chama onselect com o id correto ao clicar num tema', async () => {
+	it('calls onselect with correct id when clicking a theme', async () => {
 		const user = userEvent.setup();
 		const onselect = vi.fn();
 
@@ -34,7 +34,7 @@ describe('ThemePicker', () => {
 		expect(onselect).toHaveBeenCalledWith('nord');
 	});
 
-	it('aplica estilo de selecionado no tema ativo', () => {
+	it('applies selected style to active theme', () => {
 		const { container } = render(ThemePicker, {
 			props: {
 				data: { theme: 'nord', mode: 'dark' },
@@ -48,7 +48,7 @@ describe('ThemePicker', () => {
 		expect(nordBtn?.className).toContain('border-primary');
 	});
 
-	it('não aplica estilo de selecionado nos temas inativos', () => {
+	it('does not apply selected style to inactive themes', () => {
 		const { container } = render(ThemePicker, {
 			props: {
 				data: { theme: 'nord', mode: 'dark' },
@@ -62,7 +62,7 @@ describe('ThemePicker', () => {
 		expect(catppuccinBtn?.className).not.toContain('border-primary');
 	});
 
-	it('renderiza as cores corretas no modo light', () => {
+	it('renders correct colors in light mode', () => {
 		const { container } = render(ThemePicker, {
 			props: {
 				data: { theme: 'catppuccin', mode: 'light' },

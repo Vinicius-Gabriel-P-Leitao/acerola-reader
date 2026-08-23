@@ -18,6 +18,9 @@
 			loadPage?: (index: number, setCurrent?: boolean) => Promise<unknown>;
 			trackPage: ReaderPageTracker;
 		};
+		events?: {
+			onRetry?: () => void;
+		};
 	};
 </script>
 
@@ -25,14 +28,24 @@
 	import { m } from '$lib/paraglide/messages';
 	import { cn } from '$lib/utils/cn.utils';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
 	import { fade } from 'svelte/transition';
+	import { PREFETCH_RADIUS } from '$lib/hooks/store/use-reader.svelte';
+	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
 
-	let { data, services }: ReaderPagesProps = $props();
+	let { data, services, events }: ReaderPagesProps = $props();
 
 	const trackPage = $derived(services.trackPage);
 
+	/**
+	 * Todas as `pageCount` seções montam de uma vez (sem virtualização), então
+	 * sem esse raio essa action dispararia loadPage para o capítulo inteiro
+	 * assim que o leitor abre. O IntersectionObserver em +page.svelte já cobre
+	 * o carregamento conforme o usuário rola — isso aqui é só o fallback pro
+	 * primeiro paint ao redor da página atual.
+	 */
 	function loadIfMissing(node: HTMLElement, pageIndex: number) {
-		if (!services.pageAt(pageIndex)) {
+		if (!services.pageAt(pageIndex) && Math.abs(pageIndex - data.currentPage) <= PREFETCH_RADIUS) {
 			void services.loadPage?.(pageIndex, false);
 		}
 		return {
@@ -41,9 +54,30 @@
 	}
 </script>
 
-{#if data.openFailed || !data.chapterAvailable}
+{#if !data.chapterAvailable}
 	<div class="text-overlay flex h-full items-center justify-center text-sm font-black uppercase">
 		{m['pages.reader.fallback.chapter_unavailable']()}
+	</div>
+{:else if data.openFailed}
+	<div class="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
+		<AlertTriangle size={40} class="text-destructive" />
+		<div class="space-y-1.5">
+			<p class="text-sm font-black tracking-widest text-foreground uppercase">
+				{m['pages.reader.fallback.open_failed.title']()}
+			</p>
+			<p class="text-overlay max-w-sm text-xs">
+				{m['pages.reader.fallback.open_failed.desc']()}
+			</p>
+		</div>
+		{#if events?.onRetry}
+			<AcerolaButton
+				ui={{ variant: 'secondary', class: 'rounded-xl gap-2' }}
+				events={{ onClick: events.onRetry }}
+			>
+				<RefreshCw size={16} />
+				{m['pages.reader.fallback.retry']()}
+			</AcerolaButton>
+		{/if}
 	</div>
 {:else if data.pageCount === 0}
 	<div class="flex h-full items-center justify-center">

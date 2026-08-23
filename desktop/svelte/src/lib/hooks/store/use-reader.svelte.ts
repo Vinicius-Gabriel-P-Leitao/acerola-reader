@@ -9,8 +9,12 @@ import type {
 } from '$lib/contracts/reader/reader.payloads';
 import { LRUService } from '$lib/services/lru.service';
 
-const DEFAULT_READER_CACHE_SIZE = 100;
-const PREFETCH_RADIUS = 2;
+// INFO: Espelha DEFAULT_CACHE_CAPACITY do backend (core/services/reader/mod.rs) —
+// janela deslizante, não o capítulo inteiro. É só o valor usado antes do
+// session.cacheCapacity chegar do backend; resetCache(session.cacheCapacity)
+// sobrescreve isso assim que a sessão abre.
+const DEFAULT_READER_CACHE_SIZE = 20;
+export const PREFETCH_RADIUS = 2;
 
 export function useReader() {
 	let pageCache = createPageCache(DEFAULT_READER_CACHE_SIZE);

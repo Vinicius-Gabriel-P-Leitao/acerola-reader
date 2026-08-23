@@ -94,7 +94,7 @@ describe('useBookmarks', () => {
 		invokeMock.mockResolvedValueOnce([]);
 
 		const hook = await renderBookmarksHook();
-		await hook.loadBookmarks(); // Populates list
+		await hook.loadBookmarks(); // Preenche a lista
 		expect(hook.bookmarks).toHaveLength(1);
 
 		invokeMock.mockResolvedValueOnce(undefined); // delete_category

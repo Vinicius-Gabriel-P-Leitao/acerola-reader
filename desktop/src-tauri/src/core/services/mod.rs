@@ -6,5 +6,6 @@ pub mod metadata;
 pub mod network;
 pub mod reader;
 pub mod summary;
+pub mod sync;
 
 pub use comic::ComicService;

@@ -29,4 +29,18 @@ sealed interface SyncAction {
     data class RemovePeer(
         val peerId: String,
     ) : SyncAction
+
+    /** Pede a lista de quadrinhos do peer (nome + contagem de capítulos), sem sincronizar
+     *  nada — abre o [br.acerola.comic.module.main.sync.RemoteLibrarySheet]. */
+    data class BrowseLibrary(
+        val peerId: String,
+    ) : SyncAction
+
+    data object DismissLibraryBrowse : SyncAction
+
+    /** Sincroniza um único quadrinho (descoberto via [BrowseLibrary]) com o peer. */
+    data class SyncComic(
+        val peerId: String,
+        val comicName: String,
+    ) : SyncAction
 }

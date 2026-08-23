@@ -21,7 +21,7 @@ function comic(): ComicSummaryItemPayload {
 }
 
 describe('ActiveComicState', () => {
-	it('armazena quadrinho ativo e capa', () => {
+	it('stores active comic and cover', () => {
 		const state = new ActiveComicState();
 		const item = comic();
 
@@ -31,7 +31,7 @@ describe('ActiveComicState', () => {
 		expect(state.coverUrl).toBe('asset://cover.jpg');
 	});
 
-	it('limpa quadrinho ativo', () => {
+	it('clears active comic', () => {
 		const state = new ActiveComicState();
 		state.set(comic(), 'asset://cover.jpg');
 
@@ -43,7 +43,7 @@ describe('ActiveComicState', () => {
 });
 
 describe('useComicContext', () => {
-	it('retorna contexto criado pelo provider', async () => {
+	it('returns context created by the provider', async () => {
 		let context: ActiveComicState | undefined;
 		const item = comic();
 
@@ -63,7 +63,7 @@ describe('useComicContext', () => {
 		expect(context?.coverUrl).toBe('asset://cover.jpg');
 	});
 
-	it('lança erro quando usado fora do provider', () => {
+	it('throws error when used outside provider', () => {
 		expect(() => render(MissingHarness)).toThrow(
 			'useComicContext must be used within a layout that calls setComicContext'
 		);

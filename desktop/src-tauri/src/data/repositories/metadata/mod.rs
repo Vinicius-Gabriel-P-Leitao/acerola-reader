@@ -140,7 +140,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn deve_inserir_e_buscar_comic_metadata() {
+    async fn should_insert_and_fetch_comic_metadata() {
         let repo = setup().await;
 
         let metadata = fake_comic_metadata();
@@ -154,7 +154,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn deve_buscar_comic_metadata_pelo_id() {
+    async fn should_fetch_comic_metadata_by_id() {
         let repo = setup_with_comic().await;
 
         let mut metadata = fake_comic_metadata();

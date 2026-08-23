@@ -49,7 +49,7 @@ function props(mode: ReaderMode = 'vertical', zoomController = zoom()) {
 }
 
 describe('ReaderViewport', () => {
-	it('renderiza conteudo e registra viewport no mount e destroy', () => {
+	it('renders content and registers viewport on mount and destroy', () => {
 		const zoomController = zoom();
 		const { unmount } = render(ReaderViewport, { props: props('vertical', zoomController) });
 
@@ -60,7 +60,7 @@ describe('ReaderViewport', () => {
 		expect(zoomController.setViewport).toHaveBeenCalledWith(null);
 	});
 
-	it('aplica classes dos modos de leitura sem zoom', () => {
+	it('applies classes for reading modes without zoom', () => {
 		const cases = [
 			{ mode: 'horizontal', mainClass: 'overflow-x-auto', layerClass: 'w-max' },
 			{ mode: 'vertical', mainClass: 'overflow-y-auto', layerClass: 'w-full' },
@@ -78,7 +78,7 @@ describe('ReaderViewport', () => {
 		}
 	});
 
-	it('aplica classes de zoom, pan e modo de zoom', () => {
+	it('applies classes for zoom, pan and zoom mode', () => {
 		const cases = [
 			{ className: 'cursor-grab', zoom: zoom({ isZoomed: true }) },
 			{ className: 'cursor-grabbing', zoom: zoom({ isZoomed: true, isPanning: true }) },
@@ -95,7 +95,7 @@ describe('ReaderViewport', () => {
 		}
 	});
 
-	it('aplica estilo de zoom no layer interno', () => {
+	it('applies zoom style on inner layer', () => {
 		const zoomController = zoom({
 			zoomLayerStyle: 'transform: translate3d(10px, 20px, 0) scale(1.5);'
 		});
@@ -107,7 +107,7 @@ describe('ReaderViewport', () => {
 		);
 	});
 
-	it('encaminha eventos de ponteiro, wheel e duplo clique para o zoom', async () => {
+	it('forwards pointer, wheel and double click events to zoom', async () => {
 		const zoomController = zoom();
 
 		render(ReaderViewport, { props: props('vertical', zoomController) });

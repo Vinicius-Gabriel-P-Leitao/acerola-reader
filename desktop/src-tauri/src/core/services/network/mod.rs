@@ -5,6 +5,7 @@ use acerola_p2p::api::{
     identity::DeviceInfo,
     network::NetworkMode,
     peer::{PeerAddr, PeerIdentity},
+    storage::P2PStorage,
     AcerolaP2p,
 };
 use async_trait::async_trait;
@@ -14,7 +15,19 @@ pub type ConnectedPeerInfo = (PeerIdentity, HashSet<Vec<u8>>, Option<DeviceInfo>
 #[async_trait]
 pub trait NetworkServiceApi: Send + Sync + 'static {
     fn local_id(&self) -> Result<String, String>;
+    fn local_addr(&self) -> Result<PeerAddr, String>;
+    fn local_device_info(&self) -> Result<DeviceInfo, String>;
     async fn connected_peers_with_info(&self) -> Result<Vec<ConnectedPeerInfo>, String>;
+    /// Todo peer já pareado (TOFU) alguma vez, com o último endereço conhecido — persiste
+    /// entre reinícios e independe de conexão ativa agora, diferente de
+    /// [`NetworkServiceApi::connected_peers_with_info`] (sessão de protocolo, dura só
+    /// segundos). É essa lista que deve alimentar "disparar sync com X" na UI, já que o peer
+    /// quase nunca está conectado no exato instante em que o usuário clica o botão.
+    ///
+    /// `DeviceInfo` vem de `AcerolaP2p::known_peers()` (mesmo mecanismo persistente,
+    /// sobrevive ao handshake fechar) — não de `connected_peers_with_info`, que só tem dado
+    /// nos poucos segundos em que a sessão de handshake está de fato aberta.
+    async fn paired_peers(&self) -> Result<Vec<(PeerAddr, Option<DeviceInfo>)>, String>;
     async fn switch_to_local(&self) -> Result<(), String>;
     async fn switch_to_relay(&self) -> Result<(), String>;
     async fn mode(&self) -> Result<NetworkMode, String>;
@@ -24,11 +37,15 @@ pub trait NetworkServiceApi: Send + Sync + 'static {
 
 pub struct NetworkService {
     node: Arc<AcerolaP2p>,
+    /// Mesmo storage passado ao builder (`.storage(...)`) — clonado antes por
+    /// `bios::network::setup_network` pra sobreviver aqui como fonte de "peers pareados"
+    /// persistidos, já que a lib não devolve o storage de volta depois do `build()`.
+    storage: Arc<dyn P2PStorage>,
 }
 
 impl NetworkService {
-    pub fn new(node: Arc<AcerolaP2p>) -> Self {
-        Self { node }
+    pub fn new(node: Arc<AcerolaP2p>, storage: Arc<dyn P2PStorage>) -> Self {
+        Self { node, storage }
     }
 }
 
@@ -38,8 +55,42 @@ impl NetworkServiceApi for NetworkService {
         Ok(self.node.local_id().to_string())
     }
 
+    /// Endereço completo (id + bytes de endereçamento) usado pra gerar o código/QR de
+    /// pareamento — é o que o outro dispositivo precisa pra nos alcançar via `connect()`.
+    fn local_addr(&self) -> Result<PeerAddr, String> {
+        Ok(self.node.local_addr().clone())
+    }
+
+    /// Nome/OS/versão deste dispositivo — usado na tela de Rede pra exibir algo mais
+    /// legível que o peer id cru (ex: "Notebook do Vinicius" em vez de um hex de 64 chars).
+    fn local_device_info(&self) -> Result<DeviceInfo, String> {
+        Ok(self.node.local_device_info().clone())
+    }
+
     async fn connected_peers_with_info(&self) -> Result<Vec<ConnectedPeerInfo>, String> {
         Ok(self.node.connected_peers_with_info().await)
+    }
+
+    async fn paired_peers(&self) -> Result<Vec<(PeerAddr, Option<DeviceInfo>)>, String> {
+        use std::collections::HashMap;
+
+        let peers = self.storage.load_peers().await.map_err(|err| err.to_string())?;
+
+        let device_info_by_peer: HashMap<String, DeviceInfo> = self
+            .node
+            .known_peers()
+            .await
+            .into_iter()
+            .filter_map(|(peer, _, info)| info.map(|device| (peer.id, device)))
+            .collect();
+
+        Ok(peers
+            .into_iter()
+            .map(|addr| {
+                let device = device_info_by_peer.get(&addr.id.id).cloned();
+                (addr, device)
+            })
+            .collect())
     }
 
     async fn switch_to_local(&self) -> Result<(), String> {

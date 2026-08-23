@@ -19,7 +19,7 @@ describe('ComicMetadataPanel', () => {
 		}
 	};
 
-	it('renderiza o título, autor, categoria e contagem de capítulos', () => {
+	it('renders title, author, category and chapter count', () => {
 		render(ComicMetadataPanel, { props: defaultProps });
 		expect(screen.getByRole('heading', { name: 'Test Manga', level: 1 })).toBeInTheDocument();
 		expect(screen.getByText('Test Author')).toBeInTheDocument();
@@ -29,7 +29,7 @@ describe('ComicMetadataPanel', () => {
 		expect(screen.getByText('Test description')).toBeInTheDocument();
 	});
 
-	it('chama onBack quando o botão de voltar é clicado', async () => {
+	it('calls onBack when back button is clicked', async () => {
 		const user = userEvent.setup();
 		const onBack = vi.fn();
 		const { container } = render(ComicMetadataPanel, {

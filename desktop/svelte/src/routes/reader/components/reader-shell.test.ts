@@ -19,7 +19,7 @@ function props(overrides = {}) {
 }
 
 describe('ReaderShell', () => {
-	it('renderiza toolbar, viewport e footer obrigatorios', () => {
+	it('renders mandatory toolbar, viewport and footer', () => {
 		const { container } = render(ReaderShell, { props: props() });
 
 		expect(screen.getByTestId('toolbar')).toHaveTextContent('Toolbar');
@@ -29,7 +29,7 @@ describe('ReaderShell', () => {
 		expect(container.firstElementChild?.className).toContain('flex-col');
 	});
 
-	it('renderiza command opcional quando informado', () => {
+	it('renders optional command when provided', () => {
 		render(ReaderShell, {
 			props: props({
 				command: snippet('command', 'Command')
@@ -39,7 +39,7 @@ describe('ReaderShell', () => {
 		expect(screen.getByTestId('command')).toHaveTextContent('Command');
 	});
 
-	it('nao renderiza command quando nao informado', () => {
+	it('does not render command when not provided', () => {
 		render(ReaderShell, { props: props() });
 
 		expect(screen.queryByTestId('command')).not.toBeInTheDocument();

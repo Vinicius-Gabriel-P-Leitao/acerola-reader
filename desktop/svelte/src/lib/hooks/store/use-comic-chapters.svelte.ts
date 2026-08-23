@@ -17,68 +17,70 @@ import { m } from '$lib/paraglide/messages';
 
 const { notify } = notificationStore;
 
-/**
- * Tamanho fixo do sliding window em páginas.
- * O LRU mantém no máximo 6 páginas em RAM a qualquer momento.
- */
-const LRU_WINDOW_SIZE = 6;
+// INFO: A lista de capítulos é buscada inteira de uma vez — nem RAM (metadados
+// são leves) nem DOM (a renderização é virtualizada por posição de scroll)
+// dependem mais de paginação. Um comic com milhares de capítulos ainda fica
+// muito abaixo desse teto; ele só existe pra dar um limite explícito à query.
+const FETCH_ALL_PAGE_SIZE = 1_000_000;
 
-/**
- * Distância máxima (em páginas) entre a página recebida e o target atual
- * antes de descartar a resposta como stale.
- */
-const STALE_RESPONSE_THRESHOLD = 5;
+// INFO: Espelha o cache do backend (ChapterCacheService, chapter_cache.rs) —
+// mesma chave (comic + volume + ordenação + busca), mesma capacidade. Reabrir
+// um volume/ordenação já visto nesta sessão não depende nem de round-trip de
+// IPC: aplica na hora, sem o período em branco que causava o "clica duas
+// vezes" — bem diferente do LRU antigo daqui, que cacheava blocos de
+// paginação de uma única busca (removido junto com a paginação client-side).
+const CHAPTER_CACHE_CAPACITY = 32;
+
+type SortBy = 'number_asc' | 'number_desc' | 'modified_asc' | 'modified_desc';
+
+function buildCacheKey(
+	comicDirectoryId: string,
+	sortBy: SortBy,
+	volumeId: string | null,
+	searchQuery: string | null
+) {
+	return `${comicDirectoryId}|${volumeId ?? ''}|${sortBy}|${searchQuery ?? ''}`;
+}
 
 export function useComicChapters() {
-	const lruCache = new LRUService<number, ChapterFilePayload[]>({
-		max: LRU_WINDOW_SIZE
-	});
+	const chapterCache = new LRUService<string, ChapterPayload>({ max: CHAPTER_CACHE_CAPACITY });
 
+	let items = $state<ChapterFilePayload[] | undefined>(undefined);
 	let loading = $state(false);
-	let cacheVersion = $state(0);
-	let failedPages = new Set<number>();
-	let currentRequestPage = $state<number | null>(null);
+	let failed = false;
+	let currentKey: string | null = null;
 
 	let metadata = $state<
 		(Omit<ChapterPayload, 'archive'> & { archive: Omit<ChapterPagePayload, 'items'> }) | undefined
 	>(undefined);
 
-	function clear(keepMetadata = false) {
-		lruCache.clear();
-		failedPages.clear();
-		if (!keepMetadata) {
-			metadata = undefined;
-		}
-		currentRequestPage = null;
-		cacheVersion++;
+	function applyPayload(payload: ChapterPayload) {
+		items = payload.archive.items;
+		failed = false;
+
+		metadata = {
+			showVolumeHeaders: payload.showVolumeHeaders,
+			hasVolumeStructure: payload.hasVolumeStructure,
+			effectiveViewMode: payload.effectiveViewMode,
+			archive: {
+				page: payload.archive.page,
+				pageSize: payload.archive.pageSize,
+				total: payload.archive.total,
+				volumes: payload.archive.volumes,
+				volumeSections: payload.archive.volumeSections
+			}
+		};
+
 		loading = false;
 	}
 
-	/**
-	 * Promove a recência de uma página no cache, impedindo que ela seja evictada
-	 * se ela ainda estiver sendo visualizada no Viewport.
-	 */
-	function touch(pageIndex: number) {
-		if (lruCache.has(pageIndex)) {
-			lruCache.get(pageIndex);
+	function clear(keepMetadata = false) {
+		items = undefined;
+		failed = false;
+		if (!keepMetadata) {
+			metadata = undefined;
 		}
-	}
-
-	/**
-	 * Verifica se uma página recebida cria um gap no window contíguo atual.
-	 * Gaps geralmente ocorrem quando a pessoa salta bruscamente usando o scroll.
-	 */
-	function hasWindowGap(incomingPage: number): boolean {
-		const cachedKeys = lruCache.keys;
-		if (cachedKeys.length === 0) return false;
-
-		const currentMin = Math.min(...cachedKeys);
-		const currentMax = Math.max(...cachedKeys);
-
-		const gapAbove = incomingPage - (currentMax + 1);
-		const gapBelow = currentMin - (incomingPage + 1);
-
-		return gapAbove > 0 || gapBelow > 0;
+		loading = false;
 	}
 
 	onMount(() => {
@@ -89,37 +91,11 @@ export function useComicChapters() {
 			unlistenChapters = await listen<ChapterPayload>(LIBRARY_EVENTS.comicChapters, (event) => {
 				const payload = event.payload;
 
-				if (currentRequestPage !== null) {
-					const dist = Math.abs(payload.archive.page - currentRequestPage);
+				applyPayload(payload);
 
-					if (dist > STALE_RESPONSE_THRESHOLD) {
-						loading = false;
-						return;
-					}
+				if (currentKey) {
+					chapterCache.set(currentKey, payload);
 				}
-
-				if (hasWindowGap(payload.archive.page)) {
-					lruCache.clear();
-				}
-
-				lruCache.set(payload.archive.page, payload.archive.items);
-				failedPages.delete(payload.archive.page);
-
-				metadata = {
-					showVolumeHeaders: payload.showVolumeHeaders,
-					hasVolumeStructure: payload.hasVolumeStructure,
-					effectiveViewMode: payload.effectiveViewMode,
-					archive: {
-						page: payload.archive.page,
-						pageSize: payload.archive.pageSize,
-						total: payload.archive.total,
-						volumes: payload.archive.volumes,
-						volumeSections: payload.archive.volumeSections
-					}
-				};
-
-				cacheVersion++;
-				loading = false;
 			});
 
 			unlistenError = await listen<ErrorPayload>(LIBRARY_EVENTS.comicChaptersError, (event) => {
@@ -144,28 +120,31 @@ export function useComicChapters() {
 
 	async function fetch(
 		comicDirectoryId: string,
-		pageIndex: number,
-		pageSize: number,
-		sortBy: 'number_asc' | 'number_desc' | 'modified_asc' | 'modified_desc',
+		sortBy: SortBy,
 		volumeId: string | null = null,
 		searchQuery: string | null = null
 	) {
-		if (failedPages.has(pageIndex)) return;
-		if (lruCache.has(pageIndex)) return;
+		if (failed) return;
+		if (items !== undefined) return;
 		if (loading) return;
 
-		const totalItems = metadata?.archive.total ?? 0;
-		if (totalItems > 0 && pageIndex * pageSize >= totalItems) return;
+		const key = buildCacheKey(comicDirectoryId, sortBy, volumeId, searchQuery);
+		const cached = chapterCache.get(key);
+
+		if (cached) {
+			applyPayload(cached);
+			return;
+		}
 
 		loading = true;
-		currentRequestPage = pageIndex;
+		currentKey = key;
 
 		try {
 			await invoke(LIBRARY_COMMANDS.getComicChapters, {
 				comicDirectoryFk: comicDirectoryId,
 				volumeId,
-				page: pageIndex,
-				pageSize,
+				page: 0,
+				pageSize: FETCH_ALL_PAGE_SIZE,
 				sortBy,
 				searchQuery: searchQuery || null
 			});
@@ -177,27 +156,25 @@ export function useComicChapters() {
 			});
 			toast.error(errorMessage);
 
-			failedPages.add(pageIndex);
+			failed = true;
 			loading = false;
 		}
 	}
 
 	const chapters = $derived.by(() => {
-		cacheVersion;
 		if (!metadata) return undefined;
 
-		const sortedKeys = lruCache.keys.sort((a, b) => a - b);
-		const pages = sortedKeys.map((key) => ({
-			page: key,
-			items: lruCache.peek(key) || []
-		}));
-
+		// INFO: `items` fica undefined enquanto uma nova busca está em voo
+		// (clear(true) sempre limpa items, mesmo preservando metadata) — cair
+		// pra [] aqui em vez de retornar undefined evita que archive.volumes
+		// suma nesse meio-tempo. Sem isso, expandir um volume fazia a lista de
+		// volumes inteira desmontar e remontar a cada clique (nada estava
+		// realmente quebrado, só piscava e engolia o primeiro clique).
 		return {
 			...metadata,
-			pages,
 			archive: {
 				...metadata.archive,
-				items: pages.flatMap((page) => page.items)
+				items: items ?? []
 			}
 		};
 	});
@@ -205,15 +182,11 @@ export function useComicChapters() {
 	return {
 		fetch,
 		clear,
-		touch,
 		get chapters() {
 			return chapters;
 		},
 		get loading() {
 			return loading;
-		},
-		get lruKeys() {
-			return lruCache.keys;
 		}
 	};
 }

@@ -121,7 +121,7 @@
 							class="flex h-64 w-48 items-center justify-center rounded-xl bg-surface text-muted-foreground transition-transform hover:scale-105"
 							onclick={() => openComic(heroItem)}
 						>
-							<PlaceholderManga class="h-24 w-24" />
+							<PlaceholderManga class="h-full w-full" preserveAspectRatio="none" />
 						</button>
 					{/if}
 
@@ -160,17 +160,16 @@
 					<h3 class="mb-6 text-xl font-bold tracking-tight opacity-80">
 						{m['pages.history.older']()}
 					</h3>
-					<div class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-6">
+					<div class="grid grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] gap-6">
 						{#each history.items.slice(1) as item (item.comicDirectoryId)}
 							{@const cover = resolveArtworkPath(item.comicCover) || undefined}
-							{@const bookmarkColor = bookmarkStore.getBookmarkForComic(
-								item.comicDirectoryId
-							)?.color}
+							{@const comicBookmark = bookmarkStore.getBookmarkForComic(item.comicDirectoryId)}
 							<AcerolaCardImage
 								data={{
 									title: item.comicName,
 									cover
 								}}
+								ui={{ class: 'w-full' }}
 								events={{ onClick: () => openComic(item) }}
 							>
 								{#snippet footer()}
@@ -191,8 +190,8 @@
 								{/snippet}
 
 								{#snippet floatingBadge()}
-									{#if bookmarkColor != null}
-										<AcerolaBookmarkRibbon color={bookmarkColor} />
+									{#if comicBookmark != null}
+										<AcerolaBookmarkRibbon color={comicBookmark.color} name={comicBookmark.name} />
 									{/if}
 								{/snippet}
 

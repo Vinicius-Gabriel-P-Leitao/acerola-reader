@@ -6,7 +6,7 @@ use crate::{
         shared::ErrorPayload,
         summary::{ComicSummaryItem, ComicSummaryPayload},
     },
-    core::services::summary::{ChapterService, HomeService},
+    core::services::summary::{ChapterCacheKey, ChapterCacheService, ChapterService, HomeService},
     data::repositories::archive::chapter_archive_repo::ChapterSortCriteria,
 };
 
@@ -67,6 +67,7 @@ pub async fn get_comic_chapter_ids(
 pub async fn get_comic_chapters<R: Runtime>(
     comic_directory_fk: String, volume_id: Option<String>, page: i32, page_size: i32,
     sort_by: String, search_query: Option<String>, app: AppHandle<R>, pool: State<'_, SqlitePool>,
+    cache: State<'_, ChapterCacheService>,
 ) -> Result<(), String> {
     let pool = pool.inner().clone();
     tracing::info!(
@@ -94,6 +95,27 @@ pub async fn get_comic_chapters<R: Runtime>(
         _ => ChapterSortCriteria::NumberAsc,
     };
 
+    let cache_key = ChapterCacheKey {
+        comic_directory_fk: comic_directory_id,
+        volume_id: volume_id_filter,
+        sort_by: sort_by.clone(),
+        search_query: search_query.clone(),
+        page,
+        page_size,
+    };
+
+    if let Some(cached) = cache.get(&cache_key) {
+        tracing::info!(
+            "[get_comic_chapters] Cache hit for comic_directory_fk={}, volume_id={:?}",
+            comic_directory_id,
+            volume_id_filter
+        );
+        app.emit("comic:chapters", cached).unwrap();
+        return Ok(());
+    }
+
+    let cache = cache.inner().clone();
+
     tokio::spawn(async move {
         let service = ChapterService::new(pool);
 
@@ -115,6 +137,7 @@ pub async fn get_comic_chapters<R: Runtime>(
                     "[get_comic_chapters] Success, emitting comic:chapters with {} items",
                     data.archive.items.len()
                 );
+                cache.put(cache_key, data.clone());
                 app.emit("comic:chapters", data).unwrap();
             },
             Err(err) => {

@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import AcerolaHeroButton from './acerola-hero-button.svelte';
 
 describe('AcerolaHeroButton', () => {
-	it('renderiza o titulo e descricao corretamente', () => {
+	it('renders title and description correctly', () => {
 		render(AcerolaHeroButton, {
 			props: {
 				data: {
@@ -18,7 +18,7 @@ describe('AcerolaHeroButton', () => {
 		expect(screen.getByText('Minha descrição de teste')).toBeInTheDocument();
 	});
 
-	it('aplica a classe cursor-pointer e hover state se onclick for passado', async () => {
+	it('applies cursor-pointer class and hover state if onclick is provided', async () => {
 		const handleClick = vi.fn();
 		render(AcerolaHeroButton, {
 			props: {
@@ -41,7 +41,7 @@ describe('AcerolaHeroButton', () => {
 		expect(handleClick).toHaveBeenCalledTimes(1);
 	});
 
-	it('não aplica cursor-pointer se não for clicável', () => {
+	it('does not apply cursor-pointer if not clickable', () => {
 		render(AcerolaHeroButton, {
 			props: {
 				data: {

@@ -29,22 +29,18 @@ export function useLibraryScanner(
 
 		const unlistenProgress = await listen(LIBRARY_EVENTS.scanProgress, () => {
 			if (progressId === undefined) {
-				const msg = m['hooks.comic_scanner.in_progress']();
-				toast.info(msg);
-				progressId = notify.info(msg, { duration: 0 });
+				progressId = notify.info(m['hooks.comic_scanner.in_progress'](), { duration: 0 });
 			}
 		});
 
 		const unlistenConverting = await listen<string>(LIBRARY_EVENTS.scanConverting, (event) => {
-			if (progressId === undefined) {
-				const msg = event.payload || m['hooks.comic_scanner.converting']();
-				toast.info(msg);
-				progressId = notify.info(msg, { duration: 0 });
-			} else {
+			const msg = event.payload || m['hooks.comic_scanner.converting']();
+
+			if (progressId !== undefined) {
 				pop(progressId);
-				const msg = event.payload || m['hooks.comic_scanner.converting']();
-				progressId = notify.info(msg, { duration: 0 });
 			}
+
+			progressId = notify.info(msg, { duration: 0 });
 		});
 
 		const unlisten = await listen(LIBRARY_EVENTS.scanComplete, () => {
@@ -53,9 +49,7 @@ export function useLibraryScanner(
 				progressId = undefined;
 			}
 
-			const msg = m['hooks.comic_scanner.success']();
-			notify.success(msg, { duration: 0 });
-			toast.success(msg);
+			notify.success(m['hooks.comic_scanner.success'](), { duration: 0 });
 
 			scanning = false;
 
@@ -76,8 +70,6 @@ export function useLibraryScanner(
 				description,
 				duration: 0
 			});
-
-			toast.error(description);
 
 			scanning = false;
 

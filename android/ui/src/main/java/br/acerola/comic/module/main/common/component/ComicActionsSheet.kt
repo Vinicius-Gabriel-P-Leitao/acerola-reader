@@ -16,6 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.BookmarkBorder
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.LayersClear
+import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.HorizontalDivider
@@ -50,6 +52,7 @@ import br.acerola.comic.common.ux.tokens.SpacingTokens
 import br.acerola.comic.dto.ComicDto
 import br.acerola.comic.dto.metadata.category.CategoryDto
 import br.acerola.comic.module.main.Main
+import br.acerola.comic.module.main.sync.state.PairedPeer
 import br.acerola.comic.ui.R
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -64,12 +67,18 @@ fun Main.Common.Component.ComicActionsSheet(
     categories: List<CategoryDto>,
     onHide: () -> Unit,
     onDelete: () -> Unit,
+    onClearMetadata: () -> Unit,
     onBookmark: (categoryId: Long?) -> Unit,
     onDismiss: () -> Unit,
+    pairedPeers: List<PairedPeer> = emptyList(),
+    onLoadPairedPeers: () -> Unit = {},
+    onSyncWithPeer: (peerId: String) -> Unit = {},
 ) {
     var showCategorySheet by remember { mutableStateOf(false) }
     var showHideDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showClearMetadataDialog by remember { mutableStateOf(false) }
+    var showPeerPicker by remember { mutableStateOf(false) }
 
     val title = comic.remoteInfo?.title ?: comic.directory.name
     val currentCategoryName = comic.category?.name
@@ -163,6 +172,28 @@ fun Main.Common.Component.ComicActionsSheet(
                 )
             },
             modifier = Modifier.clickable { showHideDialog = true },
+        )
+
+        ListItem(
+            leadingContent = {
+                Icon(imageVector = Icons.Rounded.PhoneAndroid, contentDescription = null)
+            },
+            headlineContent = { Text(text = stringResource(id = R.string.action_sync_comic_with_peer)) },
+            supportingContent = { Text(text = stringResource(id = R.string.description_sync_comic_with_peer)) },
+            modifier =
+                Modifier.clickable {
+                    onLoadPairedPeers()
+                    showPeerPicker = true
+                },
+        )
+
+        ListItem(
+            leadingContent = {
+                Icon(imageVector = Icons.Rounded.LayersClear, contentDescription = null)
+            },
+            headlineContent = { Text(text = stringResource(id = R.string.action_clear_metadata)) },
+            supportingContent = { Text(text = stringResource(id = R.string.description_clear_metadata)) },
+            modifier = Modifier.clickable { showClearMetadataDialog = true },
         )
 
         ListItem(
@@ -272,6 +303,47 @@ fun Main.Common.Component.ComicActionsSheet(
                 )
             },
             content = { Text(text = stringResource(id = R.string.dialog_delete_message)) },
+        )
+    }
+
+    if (showClearMetadataDialog) {
+        Acerola.Component.Dialog(
+            show = true,
+            onDismiss = { showClearMetadataDialog = false },
+            title = stringResource(id = R.string.dialog_clear_metadata_title),
+            confirmButtonContent = {
+                Acerola.Component.DialogButton(
+                    text = stringResource(id = R.string.action_clear_metadata),
+                    onClick = {
+                        onClearMetadata()
+                        showClearMetadataDialog = false
+                        onDismiss()
+                    },
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            dismissButtonContent = {
+                Acerola.Component.DialogButton(
+                    text = stringResource(id = R.string.action_cancel),
+                    onClick = { showClearMetadataDialog = false },
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            },
+            content = { Text(text = stringResource(id = R.string.dialog_clear_metadata_message)) },
+        )
+    }
+
+    if (showPeerPicker) {
+        Main.Common.Component.PeerPickerSheet(
+            peers = pairedPeers,
+            onSelect = { peerId ->
+                showPeerPicker = false
+                onSyncWithPeer(peerId)
+                onDismiss()
+            },
+            onDismiss = { showPeerPicker = false },
         )
     }
 }
@@ -453,6 +525,7 @@ private fun ComicActionsSheetPreview() {
             categories = emptyList(),
             onHide = {},
             onDelete = {},
+            onClearMetadata = {},
             onBookmark = {},
             onDismiss = {},
         )

@@ -31,6 +31,9 @@ interface ComicMetadataDao : BaseDao<ComicMetadata> {
     @Query(value = "SELECT * FROM comic_metadata WHERE comic_directory_fk = :directoryId")
     fun observeComicByDirectoryId(directoryId: Long): Flow<ComicMetadata?>
 
+    @Query(value = "DELETE FROM comic_metadata WHERE comic_directory_fk = :directoryId")
+    suspend fun deleteByDirectoryId(directoryId: Long): Int
+
     @Transaction
     @Query(value = "SELECT * FROM comic_metadata WHERE id = :comicId")
     fun observeComicWithRelationsById(comicId: Long): Flow<MetadataRelations?>

@@ -6,7 +6,9 @@
 	import AcerolaCardImage from '$lib/components/acerola-card/acerola-card-image.svelte';
 	import AcerolaBookmarkRibbon from '$lib/components/acerola-bookmark-ribbon/acerola-bookmark-ribbon.svelte';
 	import AcerolaComicActionDialog from './components/acerola-comic-action-dialog.svelte';
-	import AcerolaFilterPanel, { type BookmarkFilter } from './components/acerola-filter-panel.svelte';
+	import AcerolaFilterPanel, {
+		type BookmarkFilter
+	} from './components/acerola-filter-panel.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { useComicSelection } from '$lib/hooks/store/use-comic-selection.svelte';
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
@@ -16,6 +18,7 @@
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import FolderPlus from '@lucide/svelte/icons/folder-plus';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import SearchX from '@lucide/svelte/icons/search-x';
 	import { LIBRARY_EVENTS } from '$lib/contracts/library/library.events';
 	import { DIRECTORY_SCAN_COMMANDS } from '$lib/contracts/library/library.commands';
 	import { useLibraryScanner } from '$lib/hooks/store/use-comic-scanner.svelte';
@@ -26,7 +29,12 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { m } from '$lib/paraglide/messages';
 	import { toast } from 'svelte-sonner';
-	import type { ComicSummaryItemPayload, MetadataSource, SortBy, SortOrder } from '$lib/contracts/home/home.payloads';
+	import type {
+		ComicSummaryItemPayload,
+		MetadataSource,
+		SortBy,
+		SortOrder
+	} from '$lib/contracts/home/home.payloads';
 
 	const summary = useComicSummary();
 	const activeComic = useComicContext();
@@ -227,7 +235,7 @@
 							<line x1="8" y1="10" x2="8" y2="14"></line>
 							<line x1="16" y1="18" x2="16" y2="22"></line>
 						</svg>
-						Filtrar e Ordenar
+						{m['pages.home.filter_button']()}
 						{#if activeFiltersCount > 0}
 							<span
 								class="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground"
@@ -243,10 +251,10 @@
 							class="rounded-lg bg-primary/15 px-2.5 py-1 text-[11px] font-semibold text-primary"
 						>
 							{summary.sortBy === 'title'
-								? 'Título'
+								? m['pages.home.sort.indicator.title']()
 								: summary.sortBy === 'chapterCount'
-									? 'Capítulos'
-									: 'Atualização'}
+									? m['pages.home.sort.indicator.chapter_count']()
+									: m['pages.home.sort.indicator.last_updated']()}
 							{summary.sortOrder === 'asc' ? '↑' : '↓'}
 						</span>
 					{/if}
@@ -255,28 +263,46 @@
 		</div>
 
 		{#if visibleComics.length === 0}
-			<div class="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
-				<p class="text-sm">Nenhum quadrinho encontrado para o filtro selecionado.</p>
+			<div
+				class="flex min-h-[40vh] animate-in flex-col items-center justify-center p-12 text-center duration-300 fade-in-50"
+			>
+				<div
+					class="mb-4 flex size-16 items-center justify-center rounded-2xl bg-surface/60 text-primary shadow-inner"
+				>
+					<SearchX size={32} />
+				</div>
+				<h3 class="text-xl font-bold tracking-tight text-foreground">
+					{m['pages.home.no_results_filtered_title']()}
+				</h3>
+				<p class="mt-1.5 max-w-md text-sm text-muted-foreground">
+					{m['pages.home.no_results_filtered']()}
+				</p>
 			</div>
 		{/if}
 
-		<div class="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-6">
+		<div class="grid grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] gap-6">
 			{#each visibleComics as comic (comic.relations.directoryId)}
 				{@const cover = resolveCover(comic.artwork)}
 				{@const bookmarkColor = comic.bookmark?.color}
+				{@const bookmarkName = comic.bookmark?.name}
 				{@const isSelected = selection.isSelected(comic.relations.directoryId)}
 				<AcerolaCardImage
 					data={{
 						title: comic.metadata.title ?? comic.filesystem.folderName,
 						cover
 					}}
+					ui={{ class: 'w-full' }}
 					events={{
 						onClick: () => handleCardClick(comic, cover)
 					}}
 				>
 					{#snippet floatingBadge()}
 						{#if bookmarkColor != null}
-							<AcerolaBookmarkRibbon color={bookmarkColor} class="-top-1.5 left-5 h-7 w-4" />
+							<AcerolaBookmarkRibbon
+								color={bookmarkColor}
+								name={bookmarkName}
+								class="-top-1.5 left-5 h-7 w-4"
+							/>
 						{/if}
 					{/snippet}
 
@@ -294,7 +320,8 @@
 					{#snippet action()}
 						<AcerolaButtonIcon
 							ui={{
-								class: 'text-overlay bg-transparent transition-colors hover:text-primary translate-x-1.5 -mr-1.5'
+								class:
+									'text-overlay bg-transparent transition-colors hover:text-primary translate-x-1.5 -mr-1.5'
 							}}
 							events={{
 								onClick: (event) => handleActionClick(event, comic.relations.directoryId)
@@ -347,8 +374,12 @@
 		onClose={() => (showActionDialog = false)}
 	/>
 {:else}
-	<div class="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center animate-in fade-in-50 duration-300">
-		<div class="mb-4 flex size-16 items-center justify-center rounded-2xl bg-surface/60 text-primary shadow-inner">
+	<div
+		class="flex min-h-[60vh] animate-in flex-col items-center justify-center p-8 text-center duration-300 fade-in-50"
+	>
+		<div
+			class="mb-4 flex size-16 items-center justify-center rounded-2xl bg-surface/60 text-primary shadow-inner"
+		>
 			<FolderPlus size={32} />
 		</div>
 		<h3 class="text-xl font-bold tracking-tight text-foreground">
@@ -359,7 +390,10 @@
 		</p>
 		<div class="mt-6 flex flex-wrap items-center justify-center gap-3">
 			<AcerolaButton
-				ui={{ variant: 'default', class: 'rounded-xl font-semibold gap-2 shadow-md hover:shadow-lg transition-all' }}
+				ui={{
+					variant: 'default',
+					class: 'rounded-xl font-semibold gap-2 shadow-md hover:shadow-lg transition-all'
+				}}
 				events={{ onClick: () => refreshScanner.start() }}
 			>
 				<RefreshCw size={18} class={refreshScanner.scanning ? 'animate-spin' : ''} />

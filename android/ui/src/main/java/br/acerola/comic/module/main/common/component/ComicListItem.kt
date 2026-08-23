@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.rounded.AutoStories
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.VisibilityOff
@@ -65,6 +66,7 @@ fun Main.Common.Component.ComicListItem(
     subtitle: String? = null,
     chapterCount: Int = 0,
     isCompleted: Boolean = false,
+    conflictCount: Int = 0,
     isSelected: Boolean = false,
     isSelectionMode: Boolean = false,
     onLongClick: (() -> Unit)? = null,
@@ -342,6 +344,26 @@ fun Main.Common.Component.ComicListItem(
                         )
                     }
                 }
+
+                // Pending sync conflicts — mesma receita do Rating/Chapter Count (ícone +
+                // texto sem chip preenchido): `error` sozinho sobre o fundo da linha já passa
+                // em todos os temas (verificado), um fundo atrás do ícone não passava no
+                // Catppuccin Light.
+                if (conflictCount > 0) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(SpacingTokens.MediumLarge),
+                        )
+                        Text(
+                            text = stringResource(id = R.string.label_comic_status_conflict),
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
         }
 
@@ -391,6 +413,20 @@ private fun ComicListItemPreview() {
     AcerolaTheme {
         Main.Common.Component.ComicListItem(
             comic = ComicDto(directory = ComicDirectoryDto(id = 1L, name = "Sample Comic", path = "/path", coverUri = null, bannerUri = null, lastModified = 0L, archiveTemplateFk = null), category = null, remoteInfo = null),
+            onClick = {},
+        )
+    }
+}
+
+@Preview(name = "Conflict - Light", showBackground = true)
+@Preview(name = "Conflict - Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ComicListItemConflictPreview() {
+    AcerolaTheme {
+        Main.Common.Component.ComicListItem(
+            comic = ComicDto(directory = ComicDirectoryDto(id = 1L, name = "Sample Comic", path = "/path", coverUri = null, bannerUri = null, lastModified = 0L, archiveTemplateFk = null), category = null, remoteInfo = null),
+            chapterCount = 170,
+            conflictCount = 2,
             onClick = {},
         )
     }

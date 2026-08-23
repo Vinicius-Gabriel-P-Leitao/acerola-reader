@@ -24,14 +24,18 @@ async function openReaderWithFixture(title = 'Acerola WDIO Reader') {
 	return fixture;
 }
 
-describe('reader nativo', () => {
-	it('exibe fallback seguro quando não há capítulo no estado da navegação', async () => {
+describe('native reader', () => {
+	it('displays safe fallback when there is no chapter in navigation state', async () => {
 		await waitForAppReady();
 		await navigateTo('/reader');
 
 		await waitForText('Capítulo indisponível');
 		await waitForText('0% lido');
 		await waitForText('Capítulos restantes indisponíveis');
+
+		// Os títulos desses botões têm o atalho de teclado embutido (ex.:
+		// "Página anterior (←)") — [title^=] casa só o prefixo, sem depender
+		// do texto exato do atalho.
 
 		const progress = await firstDisplayed('[role="progressbar"]');
 		expect(await progress.getAttribute('aria-valuenow')).toBe('0');
@@ -43,17 +47,17 @@ describe('reader nativo', () => {
 			}
 		} catch (e) {}
 
-		const previous = await firstDisplayed('[title="Página anterior"]');
-		const next = await firstDisplayed('[title="Próxima página"]');
+		const previous = await firstDisplayed('[title^="Página anterior"]');
+		const next = await firstDisplayed('[title^="Próxima página"]');
 		expect(await previous.isEnabled()).toBe(false);
 		expect(await next.isEnabled()).toBe(false);
 	});
 
-	it('abre command palette, alterna modos e aplica zoom sem capítulo aberto', async () => {
+	it('opens command palette, toggles modes and applies zoom without open chapter', async () => {
 		await waitForAppReady();
 		await navigateTo('/reader');
 
-		await (await firstDisplayed('[title="Comandos"]')).click();
+		await (await firstDisplayed('[title^="Comandos"]')).click();
 		await waitForText('Aumentar zoom');
 		await waitForText('Reduzir zoom');
 		await waitForText('Paginado horizontal');
@@ -65,16 +69,16 @@ describe('reader nativo', () => {
 		await (await firstDisplayed('[title="Webtoon"]')).click();
 		await waitForTextContaining('Webtoon - Zoom 100%');
 
-		await (await firstDisplayed('[title="Aplicar zoom"]')).click();
+		await (await firstDisplayed('[title^="Aplicar zoom"]')).click();
 		await waitForTextContaining('Zoom 165%');
-		await (await firstDisplayed('[title="Resetar zoom"]')).click();
+		await (await firstDisplayed('[title^="Resetar zoom"]')).click();
 		await waitForTextContaining('Zoom 100%');
 	});
 
-	it('abre capítulo fixture, navega páginas e bloqueia paginação enquanto zoom está ativo', async () => {
+	it('opens fixture chapter, navigates pages and locks pagination while zoom is active', async () => {
 		const fixture = await openReaderWithFixture();
 
-		// Ensure we are in Paginated mode (in case a previous test left it in Webtoon)
+		// Garante que estamos no modo Paginado (caso um teste anterior o tenha deixado em Webtoon)
 		try {
 			const paginadoBtn = await firstDisplayed('[title="Paginado horizontal"]', 2000);
 			if ((await paginadoBtn.getAttribute('data-state')) !== 'on') {
@@ -88,16 +92,14 @@ describe('reader nativo', () => {
 
 		const firstPage = await firstDisplayed('img[alt="Página 1"], img[alt="Page 1"]', 20_000);
 
-
-
-		await (await firstDisplayed('[title="Próxima página"]')).click();
+		await (await firstDisplayed('[title^="Próxima página"]')).click();
 		await waitForTextContaining(`${fixture.comicTitle} - 2 / 3 páginas`, 10_000);
 		await waitForTextContaining('67%', 10_000);
 
-		await (await firstDisplayed('[title="Página anterior"]')).click();
+		await (await firstDisplayed('[title^="Página anterior"]')).click();
 		await waitForTextContaining(`${fixture.comicTitle} - 1 / 3 páginas`, 10_000);
 
-		await (await firstDisplayed('[title="Aplicar zoom"]')).click();
+		await (await firstDisplayed('[title^="Aplicar zoom"]')).click();
 		await waitForTextContaining('Zoom 165%');
 
 		const lockedNavigation = await firstDisplayed(
@@ -105,7 +107,7 @@ describe('reader nativo', () => {
 		);
 		expect(await lockedNavigation.isEnabled()).toBe(false);
 
-		await (await firstDisplayed('[title="Resetar zoom"]')).click();
+		await (await firstDisplayed('[title^="Resetar zoom"]')).click();
 		await waitForTextContaining('Zoom 100%');
 
 		await (await firstDisplayed('[title="Voltar"]')).click();

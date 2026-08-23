@@ -22,7 +22,11 @@ use crate::{
     },
 };
 
-const DEFAULT_CACHE_CAPACITY: usize = 100;
+// INFO: Janela deslizante — não "o capítulo inteiro". Cobre o raio de prefetch
+// (radius 2 = 5 páginas) com folga pra scroll rápido sem acumular capítulos
+// grandes (webtoon) inteiros em RAM (cada página decodificada pode passar de
+// 40MB em bitmap).
+const DEFAULT_CACHE_CAPACITY: usize = 20;
 const DEFAULT_PREFETCH_RADIUS: usize = 2;
 
 #[derive(Clone)]
@@ -532,7 +536,7 @@ mod tests {
     }
 
     #[test]
-    fn teste_ordena_paginas_numeradas_por_ordem_natural() {
+    fn test_sorts_numbered_pages_in_natural_order() {
         let mut pages = vec!["page10.jpg", "page2.jpg", "page001.jpg"];
         pages.sort_by_key(|page| natural_key(page));
 
@@ -540,18 +544,18 @@ mod tests {
     }
 
     #[test]
-    fn teste_intervalo_de_paginas_respeita_limites() {
+    fn test_page_range_respects_bounds() {
         assert_eq!(window_indices(0, 5, 2), vec![0, 1, 2]);
         assert_eq!(window_indices(4, 5, 2), vec![2, 3, 4]);
     }
 
     #[test]
-    fn teste_intervalo_de_paginas_com_total_zero_retorna_vazio() {
+    fn test_page_range_with_zero_total_returns_empty() {
         assert_eq!(window_indices(0, 0, 2), Vec::<usize>::new());
     }
 
     #[tokio::test]
-    async fn teste_abre_cbz_e_carrega_paginas_em_ordem_natural() {
+    async fn test_opens_cbz_and_loads_pages_in_natural_order() {
         let temp_dir = TempDir::new().unwrap();
         let cbz_path = create_cbz(
             &temp_dir,
@@ -565,7 +569,7 @@ mod tests {
         assert_eq!(session.chapter.id, "chapter-1");
         assert_eq!(session.page_count, 3);
         assert_eq!(session.current_page, 0);
-        assert_eq!(session.cache_capacity, 100);
+        assert_eq!(session.cache_capacity, 20);
 
         let first_page = reader.load_page(0, true).await.unwrap();
         assert_eq!(first_page.chapter_id, "chapter-1");
@@ -585,7 +589,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_reutiliza_cache_ao_carregar_mesma_pagina() {
+    async fn test_reuses_cache_when_loading_same_page() {
         let temp_dir = TempDir::new().unwrap();
         let cbz_path = create_cbz(&temp_dir, "chapter.cbz", &[("001.jpg", &[1])]);
         let reader = ReaderService::new();
@@ -601,7 +605,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_altera_pagina_atual_sem_carregar_cache() {
+    async fn test_changes_current_page_without_loading_cache() {
         let temp_dir = TempDir::new().unwrap();
         let cbz_path = create_cbz(
             &temp_dir,
@@ -618,7 +622,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_pre_carregamento_carrega_paginas_vizinhas() {
+    async fn test_prefetch_loads_neighboring_pages() {
         let temp_dir = TempDir::new().unwrap();
         let cbz_path = create_cbz(
             &temp_dir,
@@ -642,7 +646,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_fecha_capitulo_e_limpa_status() {
+    async fn test_closes_chapter_and_clears_status() {
         let temp_dir = TempDir::new().unwrap();
         let cbz_path = create_cbz(&temp_dir, "chapter.cbz", &[("001.jpg", &[1])]);
         let reader = ReaderService::new();
@@ -659,7 +663,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_carregar_pagina_sem_capitulo_aberto_retorna_erro() {
+    async fn test_load_page_without_open_chapter_returns_error() {
         let reader = ReaderService::new();
         let error = reader.load_page(0, true).await.unwrap_err();
 
@@ -667,7 +671,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_carregar_pagina_fora_do_limite_retorna_erro() {
+    async fn test_load_page_out_of_bounds_returns_error() {
         let temp_dir = TempDir::new().unwrap();
         let cbz_path = create_cbz(&temp_dir, "chapter.cbz", &[("001.jpg", &[1])]);
         let reader = ReaderService::new();
@@ -679,7 +683,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_abrir_capitulo_rejeita_formato_nao_suportado() {
+    async fn test_open_chapter_rejects_unsupported_format() {
         let temp_dir = TempDir::new().unwrap();
         let path = temp_dir.path().join("chapter.txt");
         std::fs::write(&path, "content").unwrap();
@@ -691,7 +695,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_abrir_capitulo_rejeita_cbz_sem_imagens() {
+    async fn test_open_chapter_rejects_cbz_without_images() {
         let temp_dir = TempDir::new().unwrap();
         let cbz_path = create_cbz(&temp_dir, "chapter.cbz", &[("notes.txt", b"without image")]);
         let reader = ReaderService::new();

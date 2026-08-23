@@ -10,7 +10,7 @@ use super::support::{
 };
 use crate::{
     cmd::features::{library::comic_scanner_cmd, summary as summary_cmd},
-    core::services::archive::comic_scanner_engine::ComicScannerService,
+    core::services::{archive::comic_scanner_engine::ComicScannerService, summary::ChapterCacheService},
     tests::utils::setup_test_db::setup_test_db,
 };
 
@@ -26,16 +26,18 @@ fn build_library_app(
     pool: SqlitePool,
 ) -> Result<(tauri::App<tauri::test::MockRuntime>, tauri::WebviewWindow<tauri::test::MockRuntime>)>
 {
-    build_webview(tauri::test::mock_builder().manage(pool).invoke_handler(
-        tauri::generate_handler![
-            comic_scanner_cmd::refresh_library,
-            comic_scanner_cmd::incremental_scan,
-            comic_scanner_cmd::rebuild_library,
-            summary_cmd::get_comic_summary,
-            summary_cmd::get_comic_by_folder_name,
-            summary_cmd::get_comic_chapters,
-        ],
-    ))
+    build_webview(
+        tauri::test::mock_builder().manage(pool).manage(ChapterCacheService::new()).invoke_handler(
+            tauri::generate_handler![
+                comic_scanner_cmd::refresh_library,
+                comic_scanner_cmd::incremental_scan,
+                comic_scanner_cmd::rebuild_library,
+                summary_cmd::get_comic_summary,
+                summary_cmd::get_comic_by_folder_name,
+                summary_cmd::get_comic_chapters,
+            ],
+        ),
+    )
 }
 
 fn create_comic_dir(root: &TempDir, name: &str, chapters: &[&str]) -> Result<PathBuf> {
@@ -140,7 +142,7 @@ async fn wait_scan_complete(complete_rx: mpsc::Receiver<String>) -> Result<Value
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn refresh_library_emite_progress_e_complete() -> Result<()> {
+async fn test_refresh_library_emits_progress_and_complete() -> Result<()> {
     let pool = in_memory_db().await;
     let (app, webview) = build_library_app(pool.clone())?;
     let root = TempDir::new()?;
@@ -166,7 +168,7 @@ async fn refresh_library_emite_progress_e_complete() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn refresh_library_emite_scan_error_para_path_inexistente() -> Result<()> {
+async fn test_refresh_library_emits_scan_error_for_nonexistent_path() -> Result<()> {
     let pool = in_memory_db().await;
     let (app, webview) = build_library_app(pool)?;
     let root = TempDir::new()?;
@@ -187,7 +189,7 @@ async fn refresh_library_emite_scan_error_para_path_inexistente() -> Result<()> 
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn incremental_scan_ignora_comic_sem_mudanca_e_emite_complete() -> Result<()> {
+async fn test_incremental_scan_ignores_unchanged_comic_and_emits_complete() -> Result<()> {
     let pool = in_memory_db().await;
     let (app, webview) = build_library_app(pool.clone())?;
     let root = TempDir::new()?;
@@ -212,7 +214,7 @@ async fn incremental_scan_ignora_comic_sem_mudanca_e_emite_complete() -> Result<
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn incremental_scan_adiciona_novos_remove_deletados_e_emite_progress() -> Result<()> {
+async fn test_incremental_scan_adds_new_removes_deleted_and_emits_progress() -> Result<()> {
     let pool = in_memory_db().await;
     let (app, webview) = build_library_app(pool.clone())?;
     let root = TempDir::new()?;
@@ -239,7 +241,7 @@ async fn incremental_scan_adiciona_novos_remove_deletados_e_emite_progress() -> 
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn incremental_scan_emite_scan_error_para_path_inexistente() -> Result<()> {
+async fn test_incremental_scan_emits_scan_error_for_nonexistent_path() -> Result<()> {
     let pool = in_memory_db().await;
     let (app, webview) = build_library_app(pool)?;
     let root = TempDir::new()?;
@@ -260,7 +262,7 @@ async fn incremental_scan_emite_scan_error_para_path_inexistente() -> Result<()>
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn rebuild_library_reprocessa_sem_duplicar_capitulos_e_emite_complete() -> Result<()> {
+async fn test_rebuild_library_reprocesses_without_duplicating_chapters_and_emits_complete() -> Result<()> {
     let pool = in_memory_db().await;
     let (app, webview) = build_library_app(pool.clone())?;
     let root = TempDir::new()?;
@@ -284,7 +286,7 @@ async fn rebuild_library_reprocessa_sem_duplicar_capitulos_e_emite_complete() ->
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn rebuild_library_emite_scan_error_para_path_inexistente() -> Result<()> {
+async fn test_rebuild_library_emits_scan_error_for_nonexistent_path() -> Result<()> {
     let pool = in_memory_db().await;
     let (app, webview) = build_library_app(pool)?;
     let root = TempDir::new()?;
@@ -305,7 +307,7 @@ async fn rebuild_library_emite_scan_error_para_path_inexistente() -> Result<()> 
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn get_comic_summary_emite_home_data() -> Result<()> {
+async fn test_get_comic_summary_emits_home_data() -> Result<()> {
     let pool = in_memory_db().await;
     seed_comic(&pool, "Berserk").await?;
     let (app, webview) = build_library_app(pool)?;
@@ -323,7 +325,7 @@ async fn get_comic_summary_emite_home_data() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn get_comic_summary_emite_home_error() -> Result<()> {
+async fn test_get_comic_summary_emits_home_error() -> Result<()> {
     let pool = empty_in_memory_db().await?;
     let (app, webview) = build_library_app(pool)?;
     let error_rx = listen_event(&app, "home:error");
@@ -342,7 +344,7 @@ async fn get_comic_summary_emite_home_error() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn get_comic_by_folder_name_retorna_some() -> Result<()> {
+async fn test_get_comic_by_folder_name_returns_some() -> Result<()> {
     let pool = in_memory_db().await;
     let comic_id = seed_comic(&pool, "Berserk").await?;
     let (_app, webview) = build_library_app(pool)?;
@@ -358,7 +360,7 @@ async fn get_comic_by_folder_name_retorna_some() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn get_comic_by_folder_name_retorna_none() -> Result<()> {
+async fn test_get_comic_by_folder_name_returns_none() -> Result<()> {
     let pool = in_memory_db().await;
     seed_comic(&pool, "Berserk").await?;
     let (_app, webview) = build_library_app(pool)?;
@@ -375,7 +377,7 @@ async fn get_comic_by_folder_name_retorna_none() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn get_comic_by_folder_name_serializa_erro() -> Result<()> {
+async fn test_get_comic_by_folder_name_serializes_error() -> Result<()> {
     let pool = empty_in_memory_db().await?;
     let (_app, webview) = build_library_app(pool)?;
 
@@ -391,7 +393,7 @@ async fn get_comic_by_folder_name_serializa_erro() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn get_comic_chapters_emite_pagina_paginada() -> Result<()> {
+async fn test_get_comic_chapters_emits_paginated_page() -> Result<()> {
     let pool = in_memory_db().await;
     let comic_id = seed_comic(&pool, "Berserk").await?;
     let (app, webview) = build_library_app(pool)?;
@@ -421,7 +423,7 @@ async fn get_comic_chapters_emite_pagina_paginada() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn get_comic_chapters_filtra_por_volume() -> Result<()> {
+async fn test_get_comic_chapters_filters_by_volume() -> Result<()> {
     let pool = in_memory_db().await;
     let (comic_id, volume_id) = seed_comic_with_volume(&pool, "Berserk").await?;
     let (app, webview) = build_library_app(pool)?;
@@ -451,7 +453,7 @@ async fn get_comic_chapters_filtra_por_volume() -> Result<()> {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn get_comic_chapters_retorna_erro_de_parse_para_comic_id() -> Result<()> {
+async fn test_get_comic_chapters_returns_parse_error_for_comic_id() -> Result<()> {
     let pool = in_memory_db().await;
     let (_app, webview) = build_library_app(pool)?;
 
@@ -474,7 +476,7 @@ async fn get_comic_chapters_retorna_erro_de_parse_para_comic_id() -> Result<()> 
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn get_comic_chapters_retorna_erro_de_parse_para_volume_id() -> Result<()> {
+async fn test_get_comic_chapters_returns_parse_error_for_volume_id() -> Result<()> {
     let pool = in_memory_db().await;
     let comic_id = seed_comic(&pool, "Berserk").await?;
     let (_app, webview) = build_library_app(pool)?;
@@ -498,7 +500,7 @@ async fn get_comic_chapters_retorna_erro_de_parse_para_volume_id() -> Result<()>
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn get_comic_chapters_filtra_por_search_query() -> Result<()> {
+async fn test_get_comic_chapters_filters_by_search_query() -> Result<()> {
     let pool = in_memory_db().await;
     let comic_id = seed_comic(&pool, "Berserk").await?;
     let (app, webview) = build_library_app(pool)?;

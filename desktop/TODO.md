@@ -79,16 +79,16 @@
 - [x] **Criar categoria** - Envio dos params (Label, HexColor) do modal do frontend para insert no SQLite via Tauri.
 - [x] **Deletar categoria** - Deleção propagada em cascata pelo Rust com as devidas confirmações no Svelte.
 - [x] **Selecionar tema do app** - Comportamento nativo SvelteKit pra injetar class CSS da cor (Ex: Catppuccin/Dracula).
-- [ ] **Navegar para configuração de templates** - Rota isolada listando as macros e regras.
+- [x] **Navegar para configuração de templates** - Rota isolada (`/config/templates`) listando as macros e regras.
 
 ---
 
 ## Templates de Nomenclatura
 
-- [ ] **Criar template** - Frontend expõe os macros (ex: `{chapter}`, `{decimal}`) e grava numa entidade Rust de Parsing.
+- [x] **Criar template** - Frontend expõe os macros (ex: `{chapter}`, `{decimal}`) e grava numa entidade Rust de Parsing.
 - [ ] **Editar template** - Update das tabelas locais relacionadas via Tauri Invoke.
-- [ ] **Deletar template** - Delete row.
-- [ ] **Listar templates** - O backend lista os templates ordenados que o usuário fez pra parser.
+- [x] **Deletar template** - Delete row, bloqueado para templates padrão (`is_default`).
+- [x] **Listar templates** - O backend lista os templates ordenados que o usuário fez pra parser.
 - [x] **Detecção automática de template no scan** - O parser de texto nativo no Rust intercepta arquivos de nome que não possuem um padrão pré-descrito, associando as strings corretas.
 
 ---
@@ -97,6 +97,7 @@
 
 - [x] **Exibir leituras recentes** - Rota renderizada agrupando items a partir de uma call SQL (Tauri) listando as leituras e capas ativas.
 - [x] **Continuar pelo histórico** - Payload de clique empacota state via router Svelte abrindo direto a page do `reader`.
+- [ ] **[Alta] Corrigir bug no histórico** - Quando um capítulo é marcado como concluído o app não atualiza o histórico para otimizar o histórico.
 
 ---
 
@@ -114,8 +115,34 @@
 
 ---
 
+## P2P / Sincronização
+
+- [ ] **[Alta] `browse-library` — causa raiz encontrada, aguardando confirmação ao vivo** - O timeout de 15s/30s era o outbound do Android nunca escrevendo nada no stream QUIC antes de esperar resposta (regra do quinn: quem chama `open_bi()` precisa escrever antes do lado que aceita conseguir `accept_bi()`) — o inbound deste repo (Desktop) já estava correto (não lê nenhum marcador antes de responder, pra não travar em NAT traversal lento). Corrigido no Android (`LibraryBrowseOutbound`/`run_outbound` passou a escrever um marcador `{}` antes de esperar a resposta); commit local no Android, ainda não buildado/instalado no celular. **Pendente:** confirmar ao vivo depois do rebuild+reinstall.
+- [ ] **[Alta] `BlobNotFound` esporádico em transferências (capítulos/capas)** - Causa raiz em duas camadas, ambas no `acerola-p2p` compartilhado: (1) `fetch()` não criava nenhuma tag protegendo o blob baixado do GC periódico do store — corrigido criando a tag permanente ANTES do fetch começar (não só depois), eliminando a janela onde uma varredura podia reciclar o blob no meio do download; (2) uma versão intermediária do fix (`temp_tag` antes + tag permanente depois + solta o `temp_tag`) ainda falhava sob concorrência real (~20 fetches simultâneos, como o burst de `browse-cover` ao navegar uma biblioteca remota) porque o `gc_mark_task` do `iroh-blobs` lê tags permanentes e temporárias em duas chamadas não-atômicas — se a proteção migra de temp pra permanente bem no meio dessas duas leituras, nenhuma pega. Reproduzido em teste com 24 fetches concorrentes (mesmo padrão do burst ao vivo), 10/10 execuções limpas depois do fix; suite inteira do `acerola-p2p` (177 testes) passando. Publicado (`acerola-p2p` main) e `cargo update -p acerola-p2p` já rodado nos dois apps. **Pendente:** confirmar ao vivo.
+- [ ] **[Crítica] `FsStore` do `iroh-blobs` trava indefinidamente ao abrir store em disco (mitigado, não corrigido)** - Descoberto em 22/08/2026, depois de habilitar `.blobs(IrohBlobsConfig::fs(...))`: `AcerolaP2p::builder(...).build()` passou a travar 100% das vezes, estourando o timeout de 10s em `setup_network` (`[Bios::Network] Timeout waiting for AcerolaP2p::build(): Elapsed(())`) — como resultado, `network_service` nunca era `.manage()`do, e TODO comando Tauri que depende dele (`get_local_id`, QR code de pareamento, tudo) quebrava com `state not managed`. Confirmado isolado, fora do app: um teste mínimo em `acerola-p2p` (`core/blobs/iroh/mod.rs::tests::fs_store_load_does_not_hang`) chamando só `IrohBlobStore::new` com config `Fs` num diretório limpo trava e estoura 15s sozinho. **Mitigação aplicada:** trocado `.blobs(IrohBlobsConfig::fs(app_data_directory.join("blobs")))` por `.blobs(IrohBlobsConfig::mem())` em `bios/network.rs` — destrava o app, mas blobs deixam de persistir entre reinícios do app. **Pendente:** achar a causa raiz do hang no `FsStore::load_with_opts` (`iroh-blobs`) e voltar pra `.fs(...)` depois.
+- [ ] **[Média] Callback visual de quando um sync ocorre ou alguém pede dados** - O comando Tauri `sync_comic` resolve assim que a CONEXÃO é estabelecida (fire-and-forget) — a tela do quadrinho mostra "Sucesso!" nesse instante, não quando o sync de fato termina. O resultado real (`sync:comic:started/progress/complete/error`) só é visível no log da tela `/network`, nunca onde a ação foi disparada. Parar de mostrar sucesso prematuro e refletir o resultado real (sucesso/erro/progresso) onde o usuário disparou a ação.
+- [ ] **[Média] Tela de rede: remover dispositivo pareado** - Adicionar a mesma ação que o Android já tem (desparear um peer da lista).
+- [ ] **[Baixa] Otimizar tela de busca/navegação de biblioteca remota** - É webview, dá pra fazer melhor que o atual (paginação/virtualização, layout mais claro do que o outro dispositivo tem).
+- [ ] **[Baixa] Tirar mensagem "Metadados sincronizados!" ao dar sync num capítulo** - Sync de capítulo não mexe em metadados, só em arquivo — a mensagem não faz sentido nesse contexto.
+- [ ] **[Média] Lista de capítulos não atualiza depois de um sync** - Depois de um `sync_comic` completar, a tela do quadrinho não reflete os capítulos novos — precisa dar F5 ou sair/voltar pra tela. A lista/LRU de capítulos tem que reagir ao evento `sync:comic:complete` e se reconstruir.
+- [ ] **[Baixa] Botão de sync de histórico na tela de histórico** *(talvez)*
+- [ ] **[Alta] Conflito (quadrinho existente nos dois lados): callbacks de erro e sucesso quebrados** - Testado ao vivo com um quadrinho que deveria dar conflito e trazer capítulos novos: os capítulos novos chegaram, mas nenhum conflito real foi detectado/reportado (um lado provavelmente ignorou ou sobrescreveu) — e mesmo assim o Android mostrou "Erro ao sincronizar quadrinho: stream failed: stream error: timeout waiting for frame", um falso negativo (não houve erro nenhum na sessão). Investigar por que o timeout aparece mesmo numa sessão que completou, e implementar a lógica de conflito de verdade (ver item combinado nos dois apps).
+- [ ] **[Média] Sync individual por quadrinho: push/pull explícito** - Hoje não existe uma forma clara de, dentro da tela de um quadrinho específico, escolher "puxar dele" ou "mandar pra ele" pra um peer — precisa ficar explícito, não só implícito pela direção que o manifest calcula.
+- [ ] **[Média] "Reescanear quadrinho completo": unificar entre os dois apps** - Desktop tem essa função, Android não. Preferência: remover do Desktop em vez de adicionar no Android.
+- [ ] **[Alta] Protocolo de sync de arquivos não leva o quadrinho 100%** - Hoje não inclui `ComicInfo.xml` + cover + banner junto com os capítulos (sem metadados de fontes externas tipo MangaDex/AniList, só os arquivos locais) — corrigir pra levar o quadrinho completo numa sincronização.
+- [ ] **[Alta] Validar encerramento correto de conexões/blobs — sessões que só voltam ao fechar o app** - Log real do Android (só volta a funcionar fechando e reabrindo o app):
+  ```
+  browse:library:error -> "stream failed: timed out reading library summary"
+  outbound handler failed error=StreamFailed("timed out reading library summary")
+  outbound connection closed
+  ```
+  Suspeita: o Desktop inicia uma sessão `acerola/browse-cover/1` e não a finaliza corretamente do lado dele, deixando o Android preso esperando. Investigar mais fundo como o `iroh` notifica o encerramento internamente (parece só notar quando finaliza normalmente, não quando trava).
+
+---
+
 ## Arquitetura & Infraestrutura (Rust)
 
 - [x] **Gerar seed dinâmico para nó P2P** - (validar se é a melhor forma) Substituir o seed hardcoded por geração de 32 bytes aleatórios persistidos em arquivo local (.key) ou SQLite para cada instalação ter sua identidade P2P isolada.
 - [x] **Tratamento gracioso de erro na inicialização assíncrona do Rust** - Substituir o uso de `panic!` na inicialização de serviços assíncronos (banco de dados SQLite, nó de rede P2P) por retornos de `Result` e exibição de alerta gráfico ao usuário.
 - [x] **Otimizar e dinamizar o gerenciamento de escopos do File System (fs_scope)** - Substituir a leitura crua do settings.json via std::fs pelo plugin tauri-plugin-store e atualizar dinamicamente as permissões do fs_scope quando o usuário alterar a pasta da biblioteca em runtime.
+- [ ] **[Média] Fazer o app conseguir ficar em segundo plano com ícone escondido** - Fazer o app poder ficar colapsado em segundo plano e na barra de tarefas do sistema para quando o usuário executar algo demorado ele poder deixar fechado enquanto roda.

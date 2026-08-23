@@ -10,11 +10,11 @@ describe('AcerolaAlertDialog', () => {
 			}
 		});
 
-		// Trigger is rendered, but without children it's empty.
-		// Testing functionality usually involves a wrapper to pass snippets in Svelte 5.
+		// O gatilho é renderizado, mas sem filhos ele fica vazio.
+		// Testar a funcionalidade geralmente envolve um wrapper para passar snippets no Svelte 5.
 	});
 
-	// A basic test since testing snippets with Svelte 5 testing-library requires specific setup.
+	// Um teste básico já que testar snippets com o testing-library do Svelte 5 requer uma configuração específica.
 	it('should handle open state', () => {
 		const { component } = render(AcerolaAlertDialog, {
 			props: {

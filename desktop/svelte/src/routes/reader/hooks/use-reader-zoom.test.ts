@@ -42,7 +42,7 @@ function createViewport(width = 400, height = 300) {
 }
 
 describe('useReaderZoom', () => {
-	it('inicia com zoom padrao e sem modo de zoom ativo', async () => {
+	it('starts with default zoom and no active zoom mode', async () => {
 		const zoom = await renderHook();
 
 		expect(zoom.zoomLevel).toBe(1);
@@ -52,7 +52,7 @@ describe('useReaderZoom', () => {
 		expect(zoom.zoomLayerStyle).toContain('scale(1)');
 	});
 
-	it('aplica zoom rapido usando o ponto do ponteiro como origem', async () => {
+	it('applies quick zoom using pointer point as origin', async () => {
 		const zoom = await renderHook();
 		const viewport = createViewport();
 
@@ -64,7 +64,7 @@ describe('useReaderZoom', () => {
 		expect(zoom.zoomLayerStyle).toContain('transform-origin: 110px 70px');
 	});
 
-	it('limita zoom entre minimo e maximo', async () => {
+	it('clamps zoom between minimum and maximum', async () => {
 		const zoom = await renderHook();
 
 		for (let index = 0; index < 30; index++) {
@@ -81,7 +81,7 @@ describe('useReaderZoom', () => {
 		expect(zoom.isZoomed).toBe(false);
 	});
 
-	it('usa roda do mouse apenas quando modo de zoom esta ativo', async () => {
+	it('uses mouse wheel only when zoom mode is active', async () => {
 		const zoom = await renderHook();
 		const inactiveEvent = new WheelEvent('wheel', { deltaY: -100, cancelable: true });
 		const inactivePrevent = vi.spyOn(inactiveEvent, 'preventDefault');
@@ -101,7 +101,7 @@ describe('useReaderZoom', () => {
 		expect(zoom.zoomLevel).toBe(1.15);
 	});
 
-	it('limita deslocamento durante pan para dentro do viewport', async () => {
+	it('clamps offset during pan within viewport', async () => {
 		const zoom = await renderHook();
 		const viewport = createViewport(200, 100);
 
@@ -142,7 +142,7 @@ describe('useReaderZoom', () => {
 		expect(pointerTarget.releasePointerCapture).toHaveBeenCalledWith(1);
 	});
 
-	it('detecta alvos editaveis do leitor', () => {
+	it('detects editable targets of the reader', () => {
 		const input = document.createElement('input');
 		const textarea = document.createElement('textarea');
 		const select = document.createElement('select');

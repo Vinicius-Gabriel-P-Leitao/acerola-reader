@@ -101,6 +101,24 @@ impl ChapterReadRepository {
         Ok(rows_affected as usize)
     }
 
+    /// Retorna todos os marcadores de "lido" já traduzidos pra chave natural (nome do
+    /// quadrinho + `chapter_sort` do capítulo), usado pelo sync P2P pra montar o manifesto
+    /// local — os IDs autoincrement não são comparáveis entre bases SQLite de devices
+    /// diferentes. Usa `chapter_sort`, não o rótulo (`chapter`): o rótulo não é comparável
+    /// entre devices (cada um nomeia o arquivo como quiser), `chapter_sort` sim.
+    pub async fn find_all_with_natural_keys(&self) -> Result<Vec<(String, String, i64)>, DbError> {
+        let rows = sqlx::query_as::<_, (String, String, i64)>(
+            "SELECT c.name, ca.chapter_sort, cr.created_at
+             FROM chapter_read cr
+             JOIN comic_directory c  ON cr.comic_directory_id = c.id
+             JOIN chapter_archive ca ON cr.chapter_archive_id = ca.id",
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(rows)
+    }
+
     /// Remove o registro de leitura de múltiplos capítulos em batch.
     pub async fn delete_batch(
         &self, comic_directory_id: i64, chapter_ids: &[i64],
@@ -146,7 +164,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_insert_or_ignore_registra_leitura() {
+    async fn test_insert_or_ignore_records_read() {
         let (pool, repo) = setup().await;
 
         sqlx::query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (1, '1', 'path', '1', 0, 1, 0)")
@@ -162,7 +180,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_insert_or_ignore_nao_duplica() {
+    async fn test_insert_or_ignore_does_not_duplicate() {
         let (pool, repo) = setup().await;
 
         sqlx::query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (1, '1', 'path', '1', 0, 1, 0)")
@@ -178,7 +196,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_find_ids_by_comic_vazio() {
+    async fn test_find_ids_by_comic_empty() {
         let (_, repo) = setup().await;
         let ids = repo.find_ids_by_comic(1).await.unwrap();
         assert!(ids.is_empty());
@@ -198,7 +216,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_delete_remove_capitulo_lido() {
+    async fn test_delete_removes_read_chapter() {
         let (pool, repo) = setup().await;
         inserir_capitulos(&pool, &[1]).await;
 
@@ -210,13 +228,13 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_delete_capitulo_inexistente_nao_falha() {
+    async fn test_delete_nonexistent_chapter_does_not_fail() {
         let (_, repo) = setup().await;
         repo.delete(1, 999).await.unwrap();
     }
 
     #[tokio::test]
-    async fn teste_insert_batch_registra_varios() {
+    async fn test_insert_batch_records_multiple() {
         let (pool, repo) = setup().await;
         inserir_capitulos(&pool, &[1, 2, 3]).await;
 
@@ -228,7 +246,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_insert_batch_ignora_duplicados() {
+    async fn test_insert_batch_ignores_duplicates() {
         let (pool, repo) = setup().await;
         inserir_capitulos(&pool, &[1, 2]).await;
 
@@ -240,14 +258,14 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_insert_batch_vazio_retorna_zero() {
+    async fn test_insert_batch_empty_returns_zero() {
         let (_, repo) = setup().await;
         let count = repo.insert_batch(1, &[], 1000).await.unwrap();
         assert_eq!(count, 0);
     }
 
     #[tokio::test]
-    async fn teste_delete_batch_remove_varios() {
+    async fn test_delete_batch_removes_multiple() {
         let (pool, repo) = setup().await;
         inserir_capitulos(&pool, &[1, 2, 3]).await;
         repo.insert_batch(1, &[1, 2, 3], 1000).await.unwrap();
@@ -260,7 +278,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_delete_batch_vazio_retorna_zero() {
+    async fn test_delete_batch_empty_returns_zero() {
         let (_, repo) = setup().await;
         let count = repo.delete_batch(1, &[]).await.unwrap();
         assert_eq!(count, 0);

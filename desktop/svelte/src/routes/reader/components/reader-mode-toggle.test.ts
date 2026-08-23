@@ -16,7 +16,7 @@ function props(overrides = {}) {
 }
 
 describe('ReaderModeToggle', () => {
-	it('renderiza todos os modos no variante desktop padrao', () => {
+	it('renders all modes in default desktop variant', () => {
 		const { container } = render(ReaderModeToggle, { props: props() });
 
 		expect(screen.getByTitle('Paginado vertical')).toBeInTheDocument();
@@ -25,7 +25,7 @@ describe('ReaderModeToggle', () => {
 		expect(container.querySelector('[role="group"]')?.className).toContain('md:flex');
 	});
 
-	it('renderiza variante mobile e classe customizada', () => {
+	it('renders mobile variant and custom class', () => {
 		const { container } = render(ReaderModeToggle, {
 			props: props({
 				ui: {
@@ -41,7 +41,7 @@ describe('ReaderModeToggle', () => {
 		expect(group?.className).toContain('reader-toggle-test');
 	});
 
-	it('marca o modo ativo recebido por estado', () => {
+	it('marks active mode received from state', () => {
 		render(ReaderModeToggle, {
 			props: props({
 				state: {
@@ -54,7 +54,7 @@ describe('ReaderModeToggle', () => {
 		expect(screen.getByTitle('Paginado vertical')).toHaveAttribute('data-state', 'off');
 	});
 
-	it('emite mudanca para todos os modos validos', async () => {
+	it('emits change for all valid modes', async () => {
 		const user = userEvent.setup();
 		const cases = [
 			{ initial: 'horizontal', title: 'Paginado vertical', value: 'vertical' },

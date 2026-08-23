@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -34,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -58,6 +60,7 @@ fun Comic.Component.ChapterItem(
     modifier: Modifier = Modifier,
     onToggleRead: () -> Unit = {},
     isRead: Boolean = false,
+    hasConflict: Boolean = false,
     isSelected: Boolean = false,
     isSelectionMode: Boolean = false,
     onLongClick: () -> Unit = {},
@@ -69,10 +72,10 @@ fun Comic.Component.ChapterItem(
     val subtitle = chapterFileDto.name
 
     val surfaceColor =
-        if (isRead) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-        } else {
-            Color.Transparent
+        when {
+            hasConflict -> MaterialTheme.colorScheme.error.copy(alpha = 0.08f)
+            isRead -> MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+            else -> Color.Transparent
         }
 
     Surface(
@@ -89,26 +92,14 @@ fun Comic.Component.ChapterItem(
             modifier = Modifier.padding(horizontal = SpacingTokens.ExtraLarge, vertical = SpacingTokens.Medium),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (isSelectionMode) {
-                if (isSelected) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .size(SizeTokens.ClickTargetSmall)
-                                .background(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    shape = CircleShape,
-                                ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(SizeTokens.IconSmall),
-                        )
-                    }
-                } else {
+            when {
+                isSelectionMode && isSelected ->
+                    ChapterLeadingIcon(
+                        icon = Icons.Default.Check,
+                        iconTint = MaterialTheme.colorScheme.onPrimary,
+                        circleColor = MaterialTheme.colorScheme.primary,
+                    )
+                isSelectionMode ->
                     Box(
                         modifier =
                             Modifier
@@ -122,37 +113,29 @@ fun Comic.Component.ChapterItem(
                                     shape = CircleShape,
                                 ),
                     )
-                }
-            } else if (isRead) {
-                Box(
-                    modifier =
-                        Modifier
-                            .size(SizeTokens.ClickTargetSmall)
-                            .background(
-                                color = MaterialTheme.colorScheme.primary,
-                                shape = CircleShape,
-                            ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(SizeTokens.IconSmall),
+                // Mesma ideia do círculo de "lido" (ícone principal + cor diferente), mas com
+                // preenchimento tintado (alpha) em vez de sólido: testei `onError` sobre `error`
+                // sólido (o par que seria o equivalente direto de onPrimary/primary) e ele falha
+                // contraste em dois temas — Dracula (2.95:1) e Alucard (1.01:1, praticamente sem
+                // distinção). Tintado, o ícone continua na cor `error` pura (não `onError`), que
+                // já passa em todos os temas contra o fundo por trás.
+                hasConflict ->
+                    ChapterLeadingIcon(
+                        icon = Icons.Default.Warning,
+                        iconTint = MaterialTheme.colorScheme.error,
+                        circleColor = MaterialTheme.colorScheme.error.copy(alpha = 0.15f),
                     )
-                }
-            } else {
-                Box(
-                    modifier = Modifier.size(SizeTokens.ClickTargetSmall),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MenuBook,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(SizeTokens.IconSmall),
+                isRead ->
+                    ChapterLeadingIcon(
+                        icon = Icons.Default.Check,
+                        iconTint = MaterialTheme.colorScheme.onPrimary,
+                        circleColor = MaterialTheme.colorScheme.primary,
                     )
-                }
+                else ->
+                    ChapterLeadingIcon(
+                        icon = Icons.Default.MenuBook,
+                        iconTint = MaterialTheme.colorScheme.primary,
+                    )
             }
 
             Spacer(modifier = Modifier.width(SpacingTokens.Large))
@@ -173,6 +156,30 @@ fun Comic.Component.ChapterItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+            }
+
+            // Mesma estrutura do pill de "Lido" (só texto, sem ícone repetido — o ícone já
+            // aparece no círculo principal à esquerda). `error` como texto falha 4.5:1 em
+            // Nord (3.03~3.55:1), por isso o texto usa `onSurfaceVariant` (par já confiável
+            // em todo o app) — só o círculo à esquerda carrega a cor de alerta.
+            if (hasConflict) {
+                Surface(
+                    shape = ShapeTokens.Full,
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.label_comic_status_conflict),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier =
+                            Modifier.padding(
+                                horizontal = SpacingTokens.Medium,
+                                vertical = SpacingTokens.ExtraSmall,
+                            ),
+                    )
+                }
+                Spacer(modifier = Modifier.width(SpacingTokens.Small))
             }
 
             if (isRead) {
@@ -251,6 +258,28 @@ fun Comic.Component.ChapterItem(
 }
 
 @Composable
+private fun ChapterLeadingIcon(
+    icon: ImageVector,
+    iconTint: Color,
+    circleColor: Color = Color.Transparent,
+) {
+    Box(
+        modifier =
+            Modifier
+                .size(SizeTokens.ClickTargetSmall)
+                .background(color = circleColor, shape = CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconTint,
+            modifier = Modifier.size(SizeTokens.IconSmall),
+        )
+    }
+}
+
+@Composable
 private fun DetailRow(
     label: String,
     value: String,
@@ -278,6 +307,32 @@ private fun ChapterItemPreview() {
     AcerolaTheme {
         Comic.Component.ChapterItem(
             chapterFileDto = ChapterFileDto(id = 1L, name = "Capítulo 1", path = "/path/1", chapterSort = "0001"),
+            onClick = {},
+        )
+    }
+}
+
+@Preview(name = "Read - Light", showBackground = true)
+@Preview(name = "Read - Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ChapterItemReadPreview() {
+    AcerolaTheme {
+        Comic.Component.ChapterItem(
+            chapterFileDto = ChapterFileDto(id = 1L, name = "Capítulo 1", path = "/path/1", chapterSort = "0001"),
+            isRead = true,
+            onClick = {},
+        )
+    }
+}
+
+@Preview(name = "Conflict - Light", showBackground = true)
+@Preview(name = "Conflict - Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ChapterItemConflictPreview() {
+    AcerolaTheme {
+        Comic.Component.ChapterItem(
+            chapterFileDto = ChapterFileDto(id = 1L, name = "Capítulo 5 (conflito-peer1)", path = "/path/5", chapterSort = "0005"),
+            hasConflict = true,
             onClick = {},
         )
     }

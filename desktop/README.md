@@ -149,4 +149,4 @@ O acerola-desktop funciona sozinho, sem dependência do translator ou do relay. 
 | acerola-translator | Go + Python | Serviço de tradução com IA |
 | acerola-relay | Rust + Svelte | Coordenação P2P (tier pago) |
 
-Licença GPL3 — mesma licença de todo o ecossistema.
+Licença MPL-2.0 — mesma licença de todo o ecossistema.

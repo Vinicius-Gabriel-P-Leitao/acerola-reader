@@ -39,10 +39,11 @@
 		"@tauri-apps/api": "^2.11.1",
 		"@tauri-apps/plugin-dialog": "^2.6.0",
 		"@tauri-apps/plugin-fs": "^2.5.0",
-		"@tauri-apps/plugin-log": "^2.8.0",
+		"@tauri-apps/plugin-log": "^2.9.0",
 		"@tauri-apps/plugin-opener": "^2",
 		"@tauri-apps/plugin-sql": "^2.4.0",
-		"@tauri-apps/plugin-store": "^2.4.2"
+		"@tauri-apps/plugin-store": "^2.4.2",
+		"qrcode": "^1.5.4"
 	},
 	"devDependencies": {
 		"@chromatic-com/storybook": "^5.2.1",
@@ -51,7 +52,7 @@
 		"@inlang/paraglide-js": "^2.10.0",
 		"@internationalized/date": "^3.12.0",
 		"@lucide/svelte": "^1.7.0",
-		"@poppanator/sveltekit-svg": "^6.0.1",
+		"@poppanator/sveltekit-svg": "^7.0.1",
 		"@storybook/addon-a11y": "^10.4.4",
 		"@storybook/addon-docs": "^10.4.4",
 		"@storybook/addon-svelte-csf": "^5.1.2",
@@ -62,11 +63,12 @@
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"@tailwindcss/vite": "^4.1.18",
 		"@tauri-apps/cli": "^2",
-		"@testing-library/jest-dom": "^6.9.1",
+		"@testing-library/jest-dom": "^7.0.1",
 		"@testing-library/svelte": "^5.3.1",
 		"@types/jest": "^30.0.0",
 		"@types/mocha": "^10.0.10",
-		"@types/node": "^24.13.2",
+		"@types/node": "^26.2.0",
+		"@types/qrcode": "^1.5.6",
 		"@vitest/browser-playwright": "^4.1.0",
 		"@vitest/coverage-v8": "^4.1.0",
 		"@wdio/cli": "^9.27.2",
@@ -80,8 +82,8 @@
 		"mode-watcher": "^1.1.0",
 		"playwright": "^1.58.2",
 		"prettier": "^3.8.1",
-		"prettier-plugin-svelte": "^3.5.1",
-		"prettier-plugin-tailwindcss": "^0.7.2",
+		"prettier-plugin-svelte": "^4.1.1",
+		"prettier-plugin-tailwindcss": "^0.8.1",
 		"shadcn-svelte": "^1.2.6",
 		"storybook": "^10.4.4",
 		"svelte": "^5.0.0",
@@ -94,7 +96,7 @@
 		"typescript": "~5.6.2",
 		"vite": "^8.0.16",
 		"vitest": "^4.1.0",
-		"vitest-browser-svelte": "^2.0.2",
+		"vitest-browser-svelte": "^3.0.0",
 		"webdriverio": "^9.27.2"
 	}
 }

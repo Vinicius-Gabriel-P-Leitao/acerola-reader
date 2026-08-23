@@ -32,7 +32,7 @@ describe('Onboarding Component', () => {
 		useOnboarding().setStep(0);
 	});
 
-	it('renderiza o primeiro passo (Boas-vindas) por padrão', () => {
+	it('renders the first step (Welcome) by default', () => {
 		render(Onboarding);
 
 		expect(screen.getByText('Acerola')).toBeInTheDocument();
@@ -40,7 +40,7 @@ describe('Onboarding Component', () => {
 		expect(screen.getByText('Começar')).toBeInTheDocument();
 	});
 
-	it('avança para o passo de Idioma ao clicar em Começar', async () => {
+	it('advances to Language step when clicking Start', async () => {
 		const user = userEvent.setup();
 		render(Onboarding);
 
@@ -50,7 +50,7 @@ describe('Onboarding Component', () => {
 		expect(screen.getByText('Escolha o idioma preferido para a aplicação.')).toBeInTheDocument();
 	});
 
-	it('avança pelos passos de Idioma até Formatos ao clicar em Próximo', async () => {
+	it('advances through Language steps to Formats when clicking Next', async () => {
 		const user = userEvent.setup();
 		render(Onboarding);
 

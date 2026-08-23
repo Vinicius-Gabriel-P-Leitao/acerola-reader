@@ -154,7 +154,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_inserir_e_buscar_todos() {
+    async fn test_insert_and_find_all() {
         let pool = setup_test_db_with_comic().await;
         let repo = VolumeRepository::new(pool);
         let inserted = repo.base.insert(&vol1()).await.unwrap();
@@ -166,7 +166,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_atualizar() {
+    async fn test_update() {
         let pool = setup_test_db_with_comic().await;
         let repo = VolumeRepository::new(pool);
         repo.base.insert(&vol1()).await.unwrap();
@@ -176,7 +176,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_deletar() {
+    async fn test_delete() {
         let pool = setup_test_db_with_comic().await;
         let repo = VolumeRepository::new(pool);
         repo.base.insert(&vol1()).await.unwrap();
@@ -185,7 +185,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_delete_by_comic_remove_apenas_volumes_do_comic() {
+    async fn test_delete_by_comic_removes_only_volumes_from_that_comic() {
         let pool = setup_test_db_with_comic().await;
         sqlx::query(
             "INSERT INTO comic_directory (id, name, path, last_modified, external_sync_enabled, hidden)
@@ -220,7 +220,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_buscar_por_comic() {
+    async fn test_find_by_comic() {
         let pool = setup_test_db_with_comic().await;
         let repo = VolumeRepository::new(pool);
         repo.base.insert(&vol1()).await.unwrap();
@@ -241,7 +241,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_erro_unique_volume_sort_por_comic() {
+    async fn test_error_unique_volume_sort_per_comic() {
         let pool = setup_test_db_with_comic().await;
         let repo = VolumeRepository::new(pool);
         repo.base.insert(&vol1()).await.unwrap();
@@ -251,7 +251,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_erro_ao_atualizar_inexistente() {
+    async fn test_error_on_updating_nonexistent() {
         let pool = setup_test_db_with_comic().await;
         let repo = VolumeRepository::new(pool);
         let result = repo.base.update(&vol1()).await;

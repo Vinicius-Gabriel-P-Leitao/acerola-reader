@@ -103,8 +103,32 @@ export async function setStoreValues(entries: Record<string, unknown>) {
 		await navigateTo('/home');
 	}
 
-	await browser.execute(
-		async (items) => {
+	await browser.execute(async (items) => {
+		const tauriWindow = window as typeof window & {
+			__TAURI_INTERNALS__?: {
+				invoke: (cmd: string, payload?: unknown) => Promise<unknown>;
+			};
+		};
+		if (tauriWindow.__TAURI_INTERNALS__) {
+			const rid = await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|load', {
+				path: 'settings.json',
+				options: {}
+			});
+			for (const [k, v] of Object.entries(items)) {
+				await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|set', { rid, key: k, value: v });
+			}
+			await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|save', { rid });
+		}
+	}, entries);
+}
+
+export async function setStoreValue(key: string, value: unknown) {
+	return setStoreValues({ [key]: value });
+}
+
+export async function getStoreValue(key: string) {
+	return browser.execute(async (k) => {
+		try {
 			const tauriWindow = window as typeof window & {
 				__TAURI_INTERNALS__?: {
 					invoke: (cmd: string, payload?: unknown) => Promise<unknown>;
@@ -115,49 +139,33 @@ export async function setStoreValues(entries: Record<string, unknown>) {
 					path: 'settings.json',
 					options: {}
 				});
-				for (const [k, v] of Object.entries(items)) {
-					await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|set', { rid, key: k, value: v });
-				}
-				await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|save', { rid });
+				const res = await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|get', {
+					rid,
+					key: k
+				});
+				return Array.isArray(res) ? res[0] : res;
 			}
-		},
-		entries
-	);
-}
-
-export async function setStoreValue(key: string, value: unknown) {
-	return setStoreValues({ [key]: value });
-}
-
-export async function getStoreValue(key: string) {
-	return browser.execute(
-		async (k) => {
-			try {
-				const tauriWindow = window as typeof window & {
-					__TAURI_INTERNALS__?: {
-						invoke: (cmd: string, payload?: unknown) => Promise<unknown>;
-					};
-				};
-				if (tauriWindow.__TAURI_INTERNALS__) {
-					const rid = await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|load', {
-						path: 'settings.json',
-						options: {}
-					});
-					const res = await tauriWindow.__TAURI_INTERNALS__.invoke('plugin:store|get', { rid, key: k });
-					return Array.isArray(res) ? res[0] : res;
-				}
-				return null;
-			} catch (err: any) {
-				return null;
-			}
-		},
-		key
-	);
+			return null;
+		} catch (err: any) {
+			return null;
+		}
+	}, key);
 }
 
 export async function ensureOnboardingCompleted() {
 	await waitForTauriReady();
+
+	const alreadyCompleted = await getStoreValue('onboarding_completed');
+	if (alreadyCompleted) return;
+
 	await setStoreValue('onboarding_completed', true);
+	// Ver o comentário equivalente em waitForAppReady: sem recarregar de
+	// verdade, o $state em memória de use-onboarding.svelte.ts não pega o
+	// valor novo. navigateTo('/home') não serve aqui porque, se a webview já
+	// estiver em /home, navegar pra a mesma URL é um no-op — refresh() força
+	// o reload de fato.
+	await browser.refresh();
+	await waitForTauriReady();
 }
 
 export async function waitForAppReady(skipOnboardingComplete = false) {
@@ -170,7 +178,21 @@ export async function waitForAppReady(skipOnboardingComplete = false) {
 	}
 
 	if (!skipOnboardingComplete) {
-		await setStoreValue('onboarding_completed', true);
+		const alreadyCompleted = await getStoreValue('onboarding_completed');
+
+		if (!alreadyCompleted) {
+			await setStoreValue('onboarding_completed', true);
+
+			// INFO: use-onboarding.svelte.ts só lê o store uma vez, no boot do
+			// módulo (checkStatus() roda uma única vez ao importar o módulo) —
+			// escrever o valor no store depois que o app já carregou não muda
+			// o $state que já está em memória. navigateTo('/home') não serve
+			// aqui porque a webview já está em /home nesse ponto (linha acima)
+			// — navegar pra a mesma URL é tratado como no-op pelo WebView2, o
+			// módulo nunca reavalia. refresh() força o reload de fato.
+			await browser.refresh();
+			await waitForTauriReady();
+		}
 	}
 
 	try {
@@ -251,6 +273,29 @@ export async function clickText(text: string, timeout = 5_000) {
 	const element = await waitForText(text, timeout);
 	await element.click();
 	return element;
+}
+
+/**
+ * O dock de navegação (AcerolaDock) abre em modo `hover`: fica colapsado
+ * numa pilulazinha até o mouse passar por cima — os links `<a href>` só
+ * existem no DOM depois disso (ver acerola-dock.svelte:33-48). Precisa
+ * chamar isso antes de qualquer seletor que dependa dos itens do dock.
+ */
+export async function expandDock(timeout = 5_000) {
+	const dockArea = await firstDisplayed('[role="navigation"]', timeout);
+	await dockArea.moveTo();
+
+	await browser.waitUntil(
+		async () => {
+			const links = await browser.$$('[role="navigation"] a[href]');
+			return (await links.length) > 0;
+		},
+		{
+			timeout,
+			interval: 100,
+			timeoutMsg: 'Dock de navegação não expandiu após hover.'
+		}
+	);
 }
 
 export async function firstDisplayed(selector: string, timeout = 5_000) {

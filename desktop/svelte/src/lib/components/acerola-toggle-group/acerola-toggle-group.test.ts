@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import AcerolaToggleGroup from './acerola-toggle-group.svelte';
 
 describe('AcerolaToggleGroup', () => {
-	it('renderiza o grupo de toggles', () => {
+	it('renders the toggle group', () => {
 		let value = 'bold';
 		const children = createRawSnippet(() => ({
 			render: () =>

@@ -708,7 +708,7 @@ mod tests {
     use crate::tests::utils::setup_test_db::setup_test_db_with_comic;
 
     #[test]
-    fn teste_find_xml_file_on_disk_case_insensitive() {
+    fn test_find_xml_file_on_disk_case_insensitive() {
         let temp_directory = tempdir().expect("Failed to create temp directory");
         let target_xml_path = temp_directory.path().join("comicinfo.xml");
         let xml_payload = "<ComicInfo><Title>Case Insensitive Test</Title></ComicInfo>";
@@ -719,7 +719,7 @@ mod tests {
     }
 
     #[test]
-    fn teste_find_xml_inside_cbz_archive() {
+    fn test_find_xml_inside_cbz_archive() {
         let temp_directory = tempdir().expect("Failed to create temp directory");
         let cbz_file_path = temp_directory.path().join("chapter1.cbz");
         let archive_file =
@@ -739,7 +739,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_sync_comic_info_sucesso() {
+    async fn test_sync_comic_info_success() {
         let pool = setup_test_db_with_comic().await;
         let service = MetadataService::new(pool.clone());
 
@@ -769,7 +769,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_sync_comic_info_quando_arquivo_ausente_retorna_erro() {
+    async fn test_sync_comic_info_when_file_missing_returns_error() {
         let pool = setup_test_db_with_comic().await;
         let service = MetadataService::new(pool.clone());
 
@@ -788,7 +788,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_upsert_anilist_source_insere_nota_na_primeira_sincronizacao() {
+    async fn test_upsert_anilist_source_inserts_score_on_first_sync() {
         let pool = setup_test_db_with_comic().await;
         let service = MetadataService::new(pool.clone());
 
@@ -823,7 +823,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_upsert_anilist_source_atualiza_nota_existente_sem_duplicar() {
+    async fn test_upsert_anilist_source_updates_existing_score_without_duplicating() {
         let pool = setup_test_db_with_comic().await;
         let service = MetadataService::new(pool.clone());
 

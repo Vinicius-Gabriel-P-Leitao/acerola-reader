@@ -97,7 +97,7 @@ mod tests {
     // NOTE: TemplateMacro
 
     #[test]
-    fn macro_tag_retorna_string_correta() {
+    fn test_macro_tag_returns_correct_string() {
         assert_eq!(TemplateMacro::Chapter.tag(), "chapter");
         assert_eq!(TemplateMacro::Volume.tag(), "volume");
         assert_eq!(TemplateMacro::Decimal.tag(), "decimal");
@@ -105,7 +105,7 @@ mod tests {
     }
 
     #[test]
-    fn macro_from_tag_valido() {
+    fn test_macro_from_tag_valid() {
         assert!(matches!(TemplateMacro::from_tag("chapter"), Ok(TemplateMacro::Chapter)));
         assert!(matches!(TemplateMacro::from_tag("volume"), Ok(TemplateMacro::Volume)));
         assert!(matches!(TemplateMacro::from_tag("decimal"), Ok(TemplateMacro::Decimal)));
@@ -113,7 +113,7 @@ mod tests {
     }
 
     #[test]
-    fn macro_from_tag_desconhecido() {
+    fn test_macro_from_tag_unknown() {
         assert!(matches!(
             TemplateMacro::from_tag("titulo"),
             Err(PatternError::UnknownMacro(tag)) if tag == "titulo"
@@ -123,17 +123,17 @@ mod tests {
     // NOTE: template_to_regex
 
     #[test]
-    fn regex_template_valido_compila() {
+    fn test_regex_valid_template_compiles() {
         assert!(template_to_regex("Ch. {chapter}{decimal}.*.{extension}", no_validate).is_ok());
     }
 
     #[test]
-    fn regex_volume_compila() {
+    fn test_regex_volume_compiles() {
         assert!(template_to_regex("Vol. {volume}{decimal}", no_validate).is_ok());
     }
 
     #[test]
-    fn regex_volume_bate_especial() {
+    fn test_regex_volume_matches_special() {
         let re = template_to_regex("Vol. {volume}{decimal}", no_validate).unwrap();
         assert!(re.is_match("Vol. 1"));
         assert!(re.is_match("Vol. special"));
@@ -144,14 +144,14 @@ mod tests {
     }
 
     #[test]
-    fn regex_validator_rejeitado_propaga_erro() {
+    fn test_regex_rejected_validator_propagates_error() {
         let result =
             template_to_regex("{chapter}.*.{extension}", |_| Err(PatternError::ChapterRequired));
         assert!(matches!(result, Err(PatternError::ChapterRequired)));
     }
 
     #[test]
-    fn regex_bate_arquivo_ch() {
+    fn test_regex_matches_ch_file() {
         let re = template_to_regex("Ch. {chapter}{decimal}.*.{extension}", no_validate).unwrap();
         assert!(re.is_match("Ch. 1.cbz"));
         assert!(re.is_match("Ch. 10.5.cbz"));
@@ -168,29 +168,29 @@ mod tests {
     ];
 
     #[test]
-    fn detecta_preset_ch() {
+    fn test_detects_ch_preset() {
         let result = detect_template("Ch. 1.cbz", SEED_PATTERNS, no_validate);
         assert_eq!(result, Some("Ch. {chapter}{decimal}.*.{extension}"));
     }
 
     #[test]
-    fn detecta_preset_numerico() {
+    fn test_detects_numeric_preset() {
         let result = detect_template("001.cbz", SEED_PATTERNS, no_validate);
         assert_eq!(result, Some("{chapter}{decimal}.*.{extension}"));
     }
 
     #[test]
-    fn nao_detecta_oneshot() {
+    fn test_does_not_detect_oneshot() {
         assert!(detect_template("Oneshot.cbz", SEED_PATTERNS, no_validate).is_none());
     }
 
     #[test]
-    fn lista_vazia_retorna_none() {
+    fn test_empty_list_returns_none() {
         assert!(detect_template("Ch. 1.cbz", &[], no_validate).is_none());
     }
 
     #[test]
-    fn template_invalido_na_lista_e_ignorado() {
+    fn test_invalid_template_in_list_is_ignored() {
         let templates = &["invalido", "Ch. {chapter}{decimal}.*.{extension}"];
         let result = detect_template("Ch. 1.cbz", templates, |template| {
             if *template == *"invalido" {
@@ -205,13 +205,13 @@ mod tests {
     // NOTE: extract_chapter_parts
 
     #[test]
-    fn extrai_chapter_inteiro() {
+    fn test_extracts_integer_chapter() {
         let template = "Ch. {chapter}{decimal}.*.{extension}";
         assert_eq!(extract_chapter_parts("Ch. 5.cbz", template, no_validate), Some((5, None)));
     }
 
     #[test]
-    fn extrai_chapter_com_decimal() {
+    fn test_extracts_chapter_with_decimal() {
         let template = "Ch. {chapter}{decimal}.*.{extension}";
         assert_eq!(
             extract_chapter_parts("Ch. 1.5.cbz", template, no_validate),
@@ -220,25 +220,25 @@ mod tests {
     }
 
     #[test]
-    fn extrai_chapter_numerico() {
+    fn test_extracts_numeric_chapter() {
         let template = "{chapter}{decimal}.*.{extension}";
         assert_eq!(extract_chapter_parts("001.cbz", template, no_validate), Some((1, None)));
     }
 
     #[test]
-    fn extrai_volume_inteiro() {
+    fn test_extracts_integer_volume() {
         let template = "Vol. {volume}{decimal}";
         assert_eq!(extract_chapter_parts("Vol. 3", template, no_validate), Some((3, None)));
     }
 
     #[test]
-    fn nao_extrai_oneshot() {
+    fn test_does_not_extract_oneshot() {
         let template = "Ch. {chapter}{decimal}.*.{extension}";
         assert!(extract_chapter_parts("Oneshot.cbz", template, no_validate).is_none());
     }
 
     #[test]
-    fn nao_extrai_com_validator_rejeitando() {
+    fn test_does_not_extract_when_validator_rejects() {
         let template = "Ch. {chapter}{decimal}.*.{extension}";
         assert!(extract_chapter_parts("Ch. 1.cbz", template, |_| {
             Err(PatternError::ChapterRequired)

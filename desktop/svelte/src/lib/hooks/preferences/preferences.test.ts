@@ -6,7 +6,6 @@ import { load } from '@tauri-apps/plugin-store';
 import { STORE_KEYS } from '$lib/constants/store-plugin';
 import { LIBRARY_COMMANDS } from '$lib/contracts/library/library.commands';
 import HookHarness from '../../../../tests/harness/hooks/rune-wrapper.svelte';
-import { useChaptersPerPage } from './use-chapters-per-page.svelte';
 import { useComicInfoPreference } from './use-comic-info.svelte';
 import { useVolumeViewMode } from './use-volume-view-mode.svelte';
 
@@ -61,47 +60,12 @@ function mockStore(values: Record<string, unknown> = {}) {
 	return store;
 }
 
-describe('useChaptersPerPage', () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
-
-	it('carrega valor salvo de capítulos por página', async () => {
-		mockStore({ [STORE_KEYS.chaptersPerPage]: '100' });
-		const hook = await renderHook(useChaptersPerPage);
-
-		await hook.loadChaptersPerPage();
-
-		expect(hook.chaptersPerPage).toBe('100');
-	});
-
-	it('usa valor padrão quando não há capítulos por página salvos', async () => {
-		mockStore();
-		const hook = await renderHook(useChaptersPerPage);
-
-		await hook.loadChaptersPerPage();
-
-		expect(hook.chaptersPerPage).toBe('25');
-	});
-
-	it('salva capítulos por página e atualiza estado visível', async () => {
-		const store = mockStore();
-		const hook = await renderHook(useChaptersPerPage);
-
-		await hook.saveChaptersPerPage('50');
-
-		expect(hook.chaptersPerPage).toBe('50');
-		expect(store.set).toHaveBeenCalledWith(STORE_KEYS.chaptersPerPage, '50');
-		expect(store.save).toHaveBeenCalledOnce();
-	});
-});
-
 describe('useVolumeViewMode', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it('carrega modo de volume salvo', async () => {
+	it('loads saved volume view mode', async () => {
 		mockStore({ [STORE_KEYS.volumeViewMode]: 'banner' });
 		const hook = await renderHook(useVolumeViewMode);
 
@@ -110,7 +74,7 @@ describe('useVolumeViewMode', () => {
 		expect(hook.volumeViewMode).toBe('banner');
 	});
 
-	it('usa capa como modo padrão quando não há valor salvo', async () => {
+	it('uses cover as default mode when there is no saved value', async () => {
 		mockStore();
 		const hook = await renderHook(useVolumeViewMode);
 
@@ -119,7 +83,7 @@ describe('useVolumeViewMode', () => {
 		expect(hook.volumeViewMode).toBe('cover');
 	});
 
-	it('salva modo de volume e atualiza estado visível', async () => {
+	it('saves volume view mode and updates visible state', async () => {
 		const store = mockStore();
 		const hook = await renderHook(useVolumeViewMode);
 
@@ -136,7 +100,7 @@ describe('useComicInfoPreference', () => {
 		vi.clearAllMocks();
 	});
 
-	it('salva preferência com valor explícito', async () => {
+	it('saves preference with explicit value', async () => {
 		const store = mockStore();
 		const hook = await renderHook(useComicInfoPreference);
 
@@ -147,7 +111,7 @@ describe('useComicInfoPreference', () => {
 		expect(store.save).toHaveBeenCalledOnce();
 	});
 
-	it('alterna preferência quando valor não é passado', async () => {
+	it('toggles preference when value is not passed', async () => {
 		const store = mockStore();
 		const hook = await renderHook(useComicInfoPreference);
 
@@ -158,7 +122,7 @@ describe('useComicInfoPreference', () => {
 		expect(store.save).toHaveBeenCalledOnce();
 	});
 
-	it('carrega preferência salva de comic info', async () => {
+	it('loads saved comic info preference', async () => {
 		mockStore({ [STORE_KEYS.comicInfoPreference]: true });
 		const hook = await renderHook(useComicInfoPreference);
 

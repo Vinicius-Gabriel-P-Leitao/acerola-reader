@@ -21,7 +21,7 @@ describe('LRUService', () => {
 			cacheInstance.set(itemIndex, { id: itemIndex });
 		});
 
-		// Capacity is 3, so item 1 should be evicted after adding item 4
+		// A capacidade é 3, portanto o item 1 deve ser removido após adicionar o item 4
 		expect(cacheInstance.size).toBe(3);
 		expect(cacheInstance.has(1)).toBe(false);
 		expect(cacheInstance.has(2)).toBe(true);
@@ -34,10 +34,10 @@ describe('LRUService', () => {
 		cacheInstance.set(2, { id: 2 });
 		cacheInstance.set(3, { id: 3 });
 
-		// Access item 1 to move it to the most recently used position
+		// Acessa o item 1 para movê-lo para a posição de mais recentemente utilizado
 		cacheInstance.get(1);
 
-		// Adding item 4 should now evict item 2 (least recently used) instead of item 1
+		// Adicionar o item 4 deve agora remover o item 2 (menos recentemente utilizado) em vez do item 1
 		cacheInstance.set(4, { id: 4 });
 
 		expect(cacheInstance.has(2)).toBe(false);
@@ -49,10 +49,10 @@ describe('LRUService', () => {
 		cacheInstance.set(2, { id: 2 });
 		cacheInstance.set(3, { id: 3 });
 
-		// Peek at item 1 (read-only, no priority update)
+		// Inspeciona o item 1 (somente leitura, sem atualização de prioridade)
 		cacheInstance.peek(1);
 
-		// Adding item 4 should still evict item 1 as it is the oldest
+		// Adicionar o item 4 ainda deve remover o item 1 por ser o mais antigo
 		cacheInstance.set(4, { id: 4 });
 
 		expect(cacheInstance.has(1)).toBe(false);
@@ -70,7 +70,7 @@ describe('LRUService', () => {
 		const insertionSequence = [1, 2, 3];
 		insertionSequence.forEach((key) => cacheInstance.set(key, { id: key }));
 
-		// Most recent is first
+		// O mais recente vem primeiro
 		expect(cacheInstance.keys).toEqual([3, 2, 1]);
 	});
 });

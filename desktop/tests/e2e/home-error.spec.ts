@@ -8,7 +8,7 @@ import {
 	tauriCommandCalls
 } from '../../svelte/tests/mocks/tauri-playwright';
 
-test.describe('erro IPC na home', () => {
+test.describe('IPC error on home', () => {
 	let consoleErrors: string[];
 
 	test.beforeEach(async ({ page }) => {
@@ -26,7 +26,7 @@ test.describe('erro IPC na home', () => {
 		});
 	});
 
-	test('exibe erro de biblioteca sem loop infinito de retry', async ({ page }) => {
+	test('displays library error without infinite retry loop', async ({ page }) => {
 		test.setTimeout(10_000);
 
 		await page.goto('/home');

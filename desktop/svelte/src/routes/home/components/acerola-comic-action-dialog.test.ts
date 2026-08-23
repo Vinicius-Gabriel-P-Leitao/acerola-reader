@@ -48,7 +48,7 @@ describe('AcerolaComicActionDialog', () => {
 		vi.clearAllMocks();
 	});
 
-	it('renderiza nada quando open é false', () => {
+	it('renders nothing when open is false', () => {
 		render(AcerolaComicActionDialog, {
 			props: {
 				open: false,
@@ -65,7 +65,7 @@ describe('AcerolaComicActionDialog', () => {
 		expect(screen.queryByText(/Comic Actions|Ações do Quadrinho/i)).not.toBeInTheDocument();
 	});
 
-	it('renderiza o dialog quando open é true', () => {
+	it('renders the dialog when open is true', () => {
 		render(AcerolaComicActionDialog, {
 			props: {
 				open: true,
@@ -95,7 +95,7 @@ describe('AcerolaComicActionDialog', () => {
 		).toBeInTheDocument();
 	});
 
-	it('chama onSelectAll ao clicar no botão selecionar todos dentro do dialog', async () => {
+	it('calls onSelectAll when clicking select all button inside dialog', async () => {
 		render(AcerolaComicActionDialog, {
 			props: {
 				open: true,
@@ -117,7 +117,7 @@ describe('AcerolaComicActionDialog', () => {
 		expect(mockOnSelectAll).toHaveBeenCalled();
 	});
 
-	it('abre dialog de confirmação e chama onHide quando confirmado', async () => {
+	it('opens confirmation dialog and calls onHide when confirmed', async () => {
 		mockOnHide.mockResolvedValueOnce(undefined);
 
 		render(AcerolaComicActionDialog, {
@@ -144,7 +144,7 @@ describe('AcerolaComicActionDialog', () => {
 		expect(mockOnHide).toHaveBeenCalledWith([1, 2]);
 	});
 
-	it('cancela dialog de hide quando Cancel é clicado', async () => {
+	it('cancels hide dialog when Cancel is clicked', async () => {
 		render(AcerolaComicActionDialog, {
 			props: {
 				open: true,
@@ -167,7 +167,7 @@ describe('AcerolaComicActionDialog', () => {
 		expect(mockOnHide).not.toHaveBeenCalled();
 	});
 
-	it('abre dialog de confirmação quando Delete é clicado', async () => {
+	it('opens confirmation dialog when Delete is clicked', async () => {
 		render(AcerolaComicActionDialog, {
 			props: {
 				open: true,
@@ -187,7 +187,7 @@ describe('AcerolaComicActionDialog', () => {
 		expect(screen.getByText(/Delete Comics|Excluir Quadrinhos/i)).toBeInTheDocument();
 	});
 
-	it('chama onDelete quando confirmado no dialog', async () => {
+	it('calls onDelete when confirmed in dialog', async () => {
 		mockOnDelete.mockResolvedValueOnce(undefined);
 
 		render(AcerolaComicActionDialog, {
@@ -212,7 +212,7 @@ describe('AcerolaComicActionDialog', () => {
 		expect(mockOnDelete).toHaveBeenCalledWith([1, 2]);
 	});
 
-	it('exibe menu de bookmarks quando o botão Bookmark é clicado', async () => {
+	it('displays bookmarks menu when Bookmark button is clicked', async () => {
 		render(AcerolaComicActionDialog, {
 			props: {
 				open: true,
@@ -233,7 +233,7 @@ describe('AcerolaComicActionDialog', () => {
 		expect(screen.getByText('Lendo')).toBeInTheDocument();
 	});
 
-	it('chama onBookmark com o categoryId correto', async () => {
+	it('calls onBookmark with the correct categoryId', async () => {
 		mockOnBookmark.mockResolvedValueOnce(undefined);
 
 		render(AcerolaComicActionDialog, {
@@ -258,7 +258,7 @@ describe('AcerolaComicActionDialog', () => {
 		expect(mockOnBookmark).toHaveBeenCalledWith([1, 2], 1);
 	});
 
-	it('cancela dialog de delete quando Cancel é clicado', async () => {
+	it('cancels delete dialog when Cancel is clicked', async () => {
 		render(AcerolaComicActionDialog, {
 			props: {
 				open: true,

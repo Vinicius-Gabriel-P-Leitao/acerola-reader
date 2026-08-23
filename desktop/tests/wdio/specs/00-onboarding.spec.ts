@@ -11,8 +11,8 @@ import {
 	waitForText
 } from '../helpers/app';
 
-describe('onboarding e tutorial inicial', () => {
-	it('renderiza o tutorial de primeira abertura ao abrir o app sem dados salvos', async () => {
+describe('onboarding and initial tutorial', () => {
+	it('renders first open tutorial when opening app without saved data', async () => {
 		await waitForTauriReady();
 		await navigateTo('/home');
 		await setStoreValue('onboarding_completed', false);
@@ -26,7 +26,7 @@ describe('onboarding e tutorial inicial', () => {
 		await waitForText('Começar');
 	});
 
-	it('bloqueia o avanço no passo de configurações se nenhuma pasta estiver configurada', async () => {
+	it('blocks advance in settings step if no folder is configured', async () => {
 		await waitForTauriReady();
 		await navigateTo('/home');
 		await setStoreValue('onboarding_completed', false);
@@ -51,8 +51,7 @@ describe('onboarding e tutorial inicial', () => {
 		expect(await nextBtn.isEnabled()).toBe(false);
 	});
 
-
-	it('permite navegar para trás usando o botão Voltar', async () => {
+	it('allows navigating back using the Back button', async () => {
 		await waitForTauriReady();
 		await navigateTo('/home');
 		await setStoreValue('onboarding_completed', false);

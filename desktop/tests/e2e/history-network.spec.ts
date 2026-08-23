@@ -11,7 +11,7 @@ function networkStatus(mode: NetworkMode) {
 	return { mode, peers: [] };
 }
 
-test.describe('history rede', () => {
+test.describe('history network', () => {
 	let consoleErrors: string[];
 	let mode: NetworkMode;
 
@@ -36,7 +36,7 @@ test.describe('history rede', () => {
 		});
 	});
 
-	test('mostra modo local e troca para relay no WebView', async ({ page }) => {
+	test('shows local mode and switches to relay in WebView', async ({ page }) => {
 		test.setTimeout(10_000);
 
 		await page.goto('/history');

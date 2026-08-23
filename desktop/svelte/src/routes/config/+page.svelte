@@ -6,7 +6,6 @@
 	import AcerolaSwitch from '$lib/components/acerola-switch/acerola-switch.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import ThemePicker from './components/theme-picker.svelte';
-	import DockModePicker from './components/dock-mode-picker.svelte';
 
 	import * as Command from '$lib/components/ui/command';
 	import { LANGUAGES, type LanguageCode } from '$lib/constants/languages';
@@ -14,7 +13,6 @@
 
 	import { useComicInfoPreference } from '$lib/hooks/preferences/use-comic-info.svelte';
 	import { useMetadataLanguage } from '$lib/hooks/preferences/use-metadata-language.svelte';
-	import { useNavDockMode } from '$lib/hooks/preferences/use-nav-dock-mode.svelte';
 	import { useLibraryScanner } from '$lib/hooks/store/use-comic-scanner.svelte';
 	import { DIRECTORY_SCAN_COMMANDS } from '$lib/contracts/library/library.commands';
 	import { METADATA_COMMANDS } from '$lib/contracts/metadata/metadata.commands';
@@ -22,10 +20,10 @@
 	import { useTheme } from '$lib/hooks/theme/use-theme.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { Input } from '$lib/components/ui/input';
 	import { invoke } from '@tauri-apps/api/core';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { toast } from 'svelte-sonner';
 	import { notificationStore } from '$lib/components/acerola-notification/acerola-notification.svelte';
 	import { extractErrorMessage } from '$lib/utils/error.utils';
 
@@ -44,12 +42,13 @@
 	import BookmarkIcon from '@lucide/svelte/icons/bookmark';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 	import PlusIcon from '@lucide/svelte/icons/plus';
+	import FileCode2 from '@lucide/svelte/icons/file-code-2';
+	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 
 	const ctx = useTheme();
 	const folder = useSelectFolder();
 	const comicInfoPreference = useComicInfoPreference();
 	const bookmarkStore = useBookmarks();
-	const dockMode = useNavDockMode();
 
 	const CATEGORY_COLORS = [
 		0xfff44336, 0xffe91e63, 0xff9c27b0, 0xff673ab7, 0xff3f51b5, 0xff2196f3, 0xff03a9f4, 0xff00bcd4,
@@ -85,35 +84,27 @@
 
 	async function handleSyncAllMangadex() {
 		try {
-			const startMsg = m['pages.config.toast.sync.mangadex.start']();
-			notify.info(startMsg, { duration: 5000 });
-			toast.info(startMsg);
-			await invoke(METADATA_COMMANDS.syncAllMangadex, { 
+			notify.info(m['pages.config.toast.sync.mangadex.start'](), { duration: 0 });
+			await invoke(METADATA_COMMANDS.syncAllMangadex, {
 				language: metadataLanguageStore.metadataLanguage,
 				generateComicInfo: comicInfoPreference.comicInfoPreference ?? false
 			});
 		} catch (error: unknown) {
 			const msg = extractErrorMessage(error);
-			const errorMsg = m['pages.config.toast.sync.mangadex.error']({ msg });
-			notify.error(errorMsg, { duration: 5000 });
-			toast.error(errorMsg);
+			notify.error(m['pages.config.toast.sync.mangadex.error']({ msg }), { duration: 0 });
 		}
 	}
 
 	async function handleSyncAllAnilist() {
 		try {
-			const startMsg = m['pages.config.toast.sync.anilist.start']();
-			notify.info(startMsg, { duration: 5000 });
-			toast.info(startMsg);
-			await invoke(METADATA_COMMANDS.syncAllAnilist, { 
+			notify.info(m['pages.config.toast.sync.anilist.start'](), { duration: 0 });
+			await invoke(METADATA_COMMANDS.syncAllAnilist, {
 				language: metadataLanguageStore.metadataLanguage,
 				generateComicInfo: comicInfoPreference.comicInfoPreference ?? false
 			});
 		} catch (error: unknown) {
 			const msg = extractErrorMessage(error);
-			const errorMsg = m['pages.config.toast.sync.anilist.error']({ msg });
-			notify.error(errorMsg, { duration: 5000 });
-			toast.error(errorMsg);
+			notify.error(m['pages.config.toast.sync.anilist.error']({ msg }), { duration: 0 });
 		}
 	}
 
@@ -127,22 +118,18 @@
 			await bookmarkStore.loadBookmarks();
 
 			unlistenProgress = await listen<string>('metadata:sync_all:progress', (event) => {
-				const progressMsg = m['pages.config.toast.sync.progress']({ name: event.payload });
-				notify.info(progressMsg, { duration: 5000 });
-				toast.info(progressMsg);
+				notify.info(m['pages.config.toast.sync.progress']({ name: event.payload }), {
+					duration: 0
+				});
 			});
-			
+
 			unlistenComplete = await listen('metadata:sync_all:complete', () => {
-				const completeMsg = m['pages.config.toast.sync.complete']();
-				notify.success(completeMsg, { duration: 5000 });
-				toast.success(completeMsg);
+				notify.success(m['pages.config.toast.sync.complete'](), { duration: 0 });
 			});
 
 			unlistenError = await listen<any>('metadata:sync_all:error', (event) => {
 				const msg = event.payload?.message || event.payload;
-				const errorMsg = m['pages.config.toast.sync.error']({ msg });
-				notify.error(errorMsg, { duration: 5000 });
-				toast.error(errorMsg);
+				notify.error(m['pages.config.toast.sync.error']({ msg }), { duration: 0 });
 			});
 		})();
 
@@ -296,6 +283,30 @@
 					</AcerolaButtonIcon>
 				{/snippet}
 			</AcerolaHeroButton>
+
+			<!-- Item: Navega para a tela de templates de nomenclatura -->
+			<AcerolaHeroButton
+				data={{
+					title: m['pages.config.templates.nav.title'](),
+					description: m['pages.config.templates.nav.desc']()
+				}}
+				events={{ onClick: () => goto('/config/templates') }}
+			>
+				{#snippet icon()}
+					<FileCode2 class="text-chart-2" size={24} />
+				{/snippet}
+
+				{#snippet action()}
+					<AcerolaButtonIcon
+						ui={{
+							class:
+								'rounded-full transition-all group-hover:bg-primary group-hover:text-primary-foreground'
+						}}
+					>
+						<ChevronRightIcon />
+					</AcerolaButtonIcon>
+				{/snippet}
+			</AcerolaHeroButton>
 		</div>
 	</section>
 
@@ -304,9 +315,6 @@
 		data={{ theme: ctx.theme, mode: ctx.resolved }}
 		events={{ onSelect: ctx.setTheme }}
 	/>
-
-	<!-- Navegação (Dock) -->
-	<DockModePicker data={{ mode: dockMode.mode }} events={{ onSelect: dockMode.setMode }} />
 
 	<!-- Metadados -->
 
@@ -502,12 +510,14 @@
 						<span class="block text-xs font-semibold">{m['pages.config.bookmarks.color']()}</span>
 						<div class="flex flex-wrap gap-2">
 							{#each CATEGORY_COLORS as hexColor}
+								{@const hexLabel = '#' + (hexColor & 0xffffff).toString(16).padStart(6, '0')}
 								<button
 									type="button"
 									class="relative h-8 w-8 cursor-pointer rounded-full transition-transform hover:scale-110"
-									style="background-color: #{(hexColor & 0xffffff).toString(16).padStart(6, '0')}"
+									style="background-color: {hexLabel}"
 									onclick={() => (newBookmarkColor = hexColor)}
-									aria-label="Color"
+									aria-label={m['pages.config.bookmarks.color_option']({ hex: hexLabel })}
+									aria-pressed={newBookmarkColor === hexColor}
 								>
 									{#if newBookmarkColor === hexColor}
 										<div

@@ -116,6 +116,46 @@ class P2pEventBus
                             )
                         }
 
+                    "browse:library:result" ->
+                        JSONObject(data).let { json ->
+                            val comicsArray = json.getJSONArray("comics")
+                            val comics =
+                                (0 until comicsArray.length()).map { index ->
+                                    val entry = comicsArray.getJSONObject(index)
+                                    ComicSummary(
+                                        comicName = entry.getString("comicName"),
+                                        chapterCount = entry.getInt("chapterCount"),
+                                        coverVersion = entry.optLong("coverVersion", 0L),
+                                    )
+                                }
+                            P2pEvent.LibraryBrowseResult(peerId = json.getString("peerId"), comics = comics)
+                        }
+
+                    "browse:library:error" ->
+                        JSONObject(data).let {
+                            P2pEvent.LibraryBrowseError(peerId = it.getString("peerId"), message = it.getString("message"))
+                        }
+
+                    "browse:cover:result" ->
+                        JSONObject(data).let {
+                            P2pEvent.CoverBrowseResult(
+                                peerId = it.getString("peerId"),
+                                comicName = it.getString("comicName"),
+                                status = it.getString("status"),
+                                coverVersion = if (it.has("coverVersion")) it.getLong("coverVersion") else null,
+                                path = if (it.has("path")) it.getString("path") else null,
+                            )
+                        }
+
+                    "browse:cover:error" ->
+                        JSONObject(data).let {
+                            P2pEvent.CoverBrowseError(
+                                peerId = it.getString("peerId"),
+                                comicName = it.optString("comicName", ""),
+                                message = it.getString("message"),
+                            )
+                        }
+
                     else -> P2pEvent.Unknown(event, data)
                 }
             }.getOrElse { error ->

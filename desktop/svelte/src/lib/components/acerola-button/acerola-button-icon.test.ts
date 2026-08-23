@@ -4,18 +4,18 @@ import { describe, expect, it, vi } from 'vitest';
 import AcerolaButtonIcon from './acerola-button-icon.svelte';
 
 describe('AcerolaButtonIcon', () => {
-	it('renderiza como botão', () => {
+	it('renders as a button', () => {
 		render(AcerolaButtonIcon);
 		expect(screen.getByRole('button')).toBeInTheDocument();
 	});
 
-	it('tem dimensões quadradas via classe', () => {
+	it('has square dimensions via class', () => {
 		render(AcerolaButtonIcon);
 		const button = screen.getByRole('button');
 		expect(button.className).toContain('size-10');
 	});
 
-	it('chama onclick ao ser clicado', async () => {
+	it('calls onclick when clicked', async () => {
 		const user = userEvent.setup();
 		const onclick = vi.fn();
 
@@ -25,7 +25,7 @@ describe('AcerolaButtonIcon', () => {
 		expect(onclick).toHaveBeenCalledOnce();
 	});
 
-	it('não chama onclick quando disabled', async () => {
+	it('does not call onclick when disabled', async () => {
 		const user = userEvent.setup();
 		const onclick = vi.fn();
 

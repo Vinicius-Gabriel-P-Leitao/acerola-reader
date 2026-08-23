@@ -47,7 +47,7 @@ describe('useMetadataSync', () => {
 		vi.clearAllMocks();
 	});
 
-	it('sincroniza metadados com MangaDex com sucesso', async () => {
+	it('syncs metadata with MangaDex successfully', async () => {
 		const mockResponse = { id: '1', title: 'Test', hasComicInfo: false };
 		invokeMock.mockResolvedValueOnce(mockResponse);
 
@@ -66,7 +66,7 @@ describe('useMetadataSync', () => {
 		expect(hook.isSyncing).toBe(false);
 	});
 
-	it('lida com erro ao sincronizar metadados com MangaDex', async () => {
+	it('handles error when syncing metadata with MangaDex', async () => {
 		invokeMock.mockRejectedValueOnce('Network error');
 
 		const hook = await renderMetadataSyncHook();
@@ -83,7 +83,7 @@ describe('useMetadataSync', () => {
 		expect(hook.isSyncing).toBe(false);
 	});
 
-	it('sincroniza metadados com AniList com sucesso', async () => {
+	it('syncs metadata with AniList successfully', async () => {
 		const mockResponse = { id: '2', title: 'Test 2', hasComicInfo: false };
 		invokeMock.mockResolvedValueOnce(mockResponse);
 
@@ -102,7 +102,7 @@ describe('useMetadataSync', () => {
 		expect(hook.isSyncing).toBe(false);
 	});
 
-	it('lida com erro ao sincronizar metadados com AniList', async () => {
+	it('handles error when syncing metadata with AniList', async () => {
 		invokeMock.mockRejectedValueOnce('API error');
 
 		const hook = await renderMetadataSyncHook();

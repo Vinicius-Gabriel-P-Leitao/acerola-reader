@@ -3,15 +3,17 @@
 	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaToggleGroup from '$lib/components/acerola-toggle-group/acerola-toggle-group.svelte';
+	import AcerolaPopover from '$lib/components/acerola-popover/acerola-popover.svelte';
 
 	import { ToggleGroupItem } from '$lib/components/ui/toggle-group/index.js';
 
-	import { useChaptersPerPage } from '$lib/hooks/preferences/use-chapters-per-page.svelte';
 	import { useVolumeViewMode } from '$lib/hooks/preferences/use-volume-view-mode.svelte';
 	import { useComicChapters } from '$lib/hooks/store/use-comic-chapters.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { useChapterSelection } from '$lib/hooks/store/use-chapter-selection.svelte';
 	import { useHistory } from '$lib/hooks/store/use-history.svelte';
+	import { usePeerConnection } from '$lib/hooks/store/use-peer-connection.svelte';
+	import { useNetworkSync } from '$lib/hooks/store/use-network-sync.svelte';
 
 	import { useComicContext } from '$lib/state/comic-context.svelte';
 	import { useMetadataSync } from '$lib/hooks/store/use-metadata-sync.svelte';
@@ -32,10 +34,7 @@
 	import { fade } from 'svelte/transition';
 	import { m } from '$lib/paraglide/messages';
 	import { toast } from 'svelte-sonner';
-	import { notificationStore } from '$lib/components/acerola-notification/acerola-notification.svelte';
 	import { extractErrorMessage } from '$lib/utils/error.utils';
-
-	const { notify } = notificationStore;
 
 	import ComicChapterList, { type Chapter } from './components/comic-chapter-list.svelte';
 	import ComicHeroBanner from './components/comic-hero-banner.svelte';
@@ -48,12 +47,18 @@
 	const activeComic = useComicContext();
 	const chapterStore = useComicChapters();
 
-	const chaptersPreference = useChaptersPerPage();
+	// INFO: Tamanho do bloco só pra virtualização de renderização — não tem
+	// mais relação com quantos capítulos são buscados do backend (isso agora
+	// vem tudo de uma vez, ver use-comic-chapters.svelte.ts).
+	const RENDER_CHUNK_SIZE = 25;
+
 	const volumeViewPreference = useVolumeViewMode();
 	const bookmarkStore = useBookmarks();
 	const metadataSync = useMetadataSync();
 	const chapterSelection = useChapterSelection();
 	const historyActions = useHistory();
+	const peers = usePeerConnection();
+	const p2pSync = useNetworkSync();
 
 	let expandedVolumeId = $state<string | null>(null);
 	let currentBookmarkId = $state<number | null>(null);
@@ -64,8 +69,6 @@
 	);
 	let searchQuery = $state('');
 	let showSortMenu = $state(false);
-
-	let visiblePages = $state<number[]>([]);
 
 	// Sobrescrever cover.* mantém o mesmo path no disco, então o back-end não muda a URL
 	// resolvida — sem isso o <img> nunca re-renderiza e o cache do protocolo asset:// serve
@@ -191,19 +194,13 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (!id || !manga?.title) return;
 		try {
-			const startMsg = m['pages.comic.toast.sync.start_mangadex']();
-			notify.info(startMsg, { duration: 5000 });
-			toast.info(startMsg);
+			toast.info(m['pages.comic.toast.sync.start_mangadex']());
 			await metadataSync.syncMangadex(manga.title, id.toString());
-			const successMsg = m['pages.comic.toast.sync.success']();
-			notify.success(successMsg, { duration: 5000 });
-			toast.success(successMsg);
+			toast.success(m['pages.comic.toast.sync.success']());
 			await invalidateAll();
 		} catch (error: unknown) {
 			const msg = extractErrorMessage(error);
-			const errorMsg = m['pages.comic.toast.mangadex_error']({ msg });
-			notify.error(errorMsg, { duration: 5000 });
-			toast.error(errorMsg);
+			toast.error(m['pages.comic.toast.mangadex_error']({ msg }));
 		}
 	}
 
@@ -211,19 +208,13 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (!id || !manga?.title) return;
 		try {
-			const startMsg = m['pages.comic.toast.sync.start_anilist']();
-			notify.info(startMsg, { duration: 5000 });
-			toast.info(startMsg);
+			toast.info(m['pages.comic.toast.sync.start_anilist']());
 			await metadataSync.syncAnilist(manga.title, id.toString());
-			const successMsg = m['pages.comic.toast.sync.success']();
-			notify.success(successMsg, { duration: 5000 });
-			toast.success(successMsg);
+			toast.success(m['pages.comic.toast.sync.success']());
 			await invalidateAll();
 		} catch (error: unknown) {
 			const msg = extractErrorMessage(error);
-			const errorMsg = m['pages.comic.toast.anilist_error']({ msg });
-			notify.error(errorMsg, { duration: 5000 });
-			toast.error(errorMsg);
+			toast.error(m['pages.comic.toast.anilist_error']({ msg }));
 		}
 	}
 
@@ -231,19 +222,13 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (!id) return;
 		try {
-			const startMsg = m['pages.comic.toast.sync.start_comic_info']();
-			notify.info(startMsg, { duration: 5000 });
-			toast.info(startMsg);
+			toast.info(m['pages.comic.toast.sync.start_comic_info']());
 			await metadataSync.syncComicInfo(id.toString());
-			const successMsg = m['pages.comic.toast.sync.success']();
-			notify.success(successMsg, { duration: 5000 });
-			toast.success(successMsg);
+			toast.success(m['pages.comic.toast.sync.success']());
 			await invalidateAll();
 		} catch (error: unknown) {
 			const msg = extractErrorMessage(error);
-			const errorMsg = m['pages.comic.toast.comic_info.error']({ msg });
-			notify.error(errorMsg, { duration: 5000 });
-			toast.error(errorMsg);
+			toast.error(m['pages.comic.toast.comic_info.error']({ msg }));
 		}
 	}
 
@@ -251,19 +236,13 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (!id) return;
 		try {
-			const startMsg = m['pages.comic.toast.sync.start_rescan']();
-			notify.info(startMsg, { duration: 5000 });
-			toast.info(startMsg);
+			toast.info(m['pages.comic.toast.sync.start_rescan']());
 			await invoke(HOME_COMMANDS.rescanComic, { id: id.toString() });
-			const successMsg = m['pages.comic.toast.sync.success']();
-			notify.success(successMsg, { duration: 5000 });
-			toast.success(successMsg);
+			toast.success(m['pages.comic.toast.sync.success']());
 			await invalidateAll();
 		} catch (error: unknown) {
 			const msg = extractErrorMessage(error);
-			const errorMsg = m['pages.comic.toast.rescan_error']({ msg });
-			notify.error(errorMsg, { duration: 5000 });
-			toast.error(errorMsg);
+			toast.error(m['pages.comic.toast.rescan_error']({ msg }));
 		}
 	}
 
@@ -272,15 +251,11 @@
 		if (!id) return;
 		try {
 			await metadataSync.clearMetadata(id.toString());
-			const successMsg = m['pages.comic.toast.sync.clear_metadata_success']();
-			notify.success(successMsg, { duration: 5000 });
-			toast.success(successMsg);
+			toast.success(m['pages.comic.toast.sync.clear_metadata_success']());
 			await invalidateAll();
 		} catch (error: unknown) {
 			const msg = extractErrorMessage(error);
-			const errorMsg = m['pages.comic.toast.clear_metadata_error']({ msg });
-			notify.error(errorMsg, { duration: 5000 });
-			toast.error(errorMsg);
+			toast.error(m['pages.comic.toast.clear_metadata_error']({ msg }));
 		}
 	}
 
@@ -288,20 +263,14 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (!id) return;
 		try {
-			const startMsg = m['pages.comic.toast.sync.start_regenerate_cover']();
-			notify.info(startMsg, { duration: 5000 });
-			toast.info(startMsg);
+			toast.info(m['pages.comic.toast.sync.start_regenerate_cover']());
 			await invoke(HOME_COMMANDS.regenerateComicCover, { id: id.toString() });
 			coverCacheBust = Date.now();
-			const successMsg = m['pages.comic.toast.sync.regenerate_cover_success']();
-			notify.success(successMsg, { duration: 5000 });
-			toast.success(successMsg);
+			toast.success(m['pages.comic.toast.sync.regenerate_cover_success']());
 			await invalidateAll();
 		} catch (error: unknown) {
 			const msg = extractErrorMessage(error);
-			const errorMsg = m['pages.comic.toast.regenerate_cover_error']({ msg });
-			notify.error(errorMsg, { duration: 5000 });
-			toast.error(errorMsg);
+			toast.error(m['pages.comic.toast.regenerate_cover_error']({ msg }));
 		}
 	}
 
@@ -309,20 +278,14 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (!id) return;
 		try {
-			const startMsg = m['pages.comic.toast.sync.start_regenerate_volume_covers']();
-			notify.info(startMsg, { duration: 5000 });
-			toast.info(startMsg);
+			toast.info(m['pages.comic.toast.sync.start_regenerate_volume_covers']());
 			await invoke(HOME_COMMANDS.regenerateVolumeCovers, { id: id.toString() });
 			volumeCoverCacheBust = Date.now();
-			const successMsg = m['pages.comic.toast.sync.regenerate_volume_covers_success']();
-			notify.success(successMsg, { duration: 5000 });
-			toast.success(successMsg);
+			toast.success(m['pages.comic.toast.sync.regenerate_volume_covers_success']());
 			await invalidateAll();
 		} catch (error: unknown) {
 			const msg = extractErrorMessage(error);
-			const errorMsg = m['pages.comic.toast.regenerate_volume_covers_error']({ msg });
-			notify.error(errorMsg, { duration: 5000 });
-			toast.error(errorMsg);
+			toast.error(m['pages.comic.toast.regenerate_volume_covers_error']({ msg }));
 		}
 	}
 
@@ -330,19 +293,13 @@
 		const id = activeComic.item?.relations.directoryId ?? data.comic?.relations.directoryId;
 		if (!id) return;
 		try {
-			const startMsg = m['pages.comic.toast.sync.start_deep_rescan']();
-			notify.info(startMsg, { duration: 5000 });
-			toast.info(startMsg);
+			toast.info(m['pages.comic.toast.sync.start_deep_rescan']());
 			await invoke(HOME_COMMANDS.deepRescanComic, { id: id.toString() });
-			const successMsg = m['pages.comic.toast.sync.success']();
-			notify.success(successMsg, { duration: 5000 });
-			toast.success(successMsg);
+			toast.success(m['pages.comic.toast.sync.success']());
 			await invalidateAll();
 		} catch (error: unknown) {
 			const msg = extractErrorMessage(error);
-			const errorMsg = m['pages.comic.toast.deep_rescan_error']({ msg });
-			notify.error(errorMsg, { duration: 5000 });
-			toast.error(errorMsg);
+			toast.error(m['pages.comic.toast.deep_rescan_error']({ msg }));
 		}
 	}
 
@@ -354,26 +311,54 @@
 			if (manga) {
 				manga.metadata.externalSync = value;
 			}
-			const successMsg = value
-				? m['pages.comic.toast.sync.enabled']()
-				: m['pages.comic.toast.sync.disabled']();
-			notify.success(successMsg, { duration: 5000 });
-			toast.success(successMsg);
+			toast.success(
+				value ? m['pages.comic.toast.sync.enabled']() : m['pages.comic.toast.sync.disabled']()
+			);
 			await invalidateAll();
 		} catch (error: unknown) {
 			const msg = extractErrorMessage(error);
-			const errorMsg = m['pages.comic.toast.sync.toggle_error']({ msg });
-			notify.error(errorMsg, { duration: 5000 });
-			toast.error(errorMsg);
+			toast.error(m['pages.comic.toast.sync.toggle_error']({ msg }));
 		}
 	}
 
-	onMount(async () => {
-		await Promise.all([
-			chaptersPreference.loadChaptersPerPage(),
-			volumeViewPreference.loadVolumeViewMode(),
-			bookmarkStore.loadBookmarks()
-		]);
+	const pairedPeersForUi = $derived(
+		peers.pairedPeers.map((peer) => ({
+			peerId: peer.peerId,
+			label: peers.peerLabel(peer.peerId),
+			addrs: peer.addrs
+		}))
+	);
+	const syncingPeerIds = $derived(
+		peers.pairedPeers
+			.filter((peer) => p2pSync.isSyncing(peer.peerId, 'comic'))
+			.map((peer) => peer.peerId)
+	);
+
+	async function handleSyncToDevice(peerId: string, addrs: number[]) {
+		if (!manga?.title) return;
+		try {
+			await p2pSync.syncComic(peerId, addrs, manga.title);
+			toast.success(m['pages.comic.preferences.p2p_sync.toast.success']());
+		} catch (error: unknown) {
+			const msg = extractErrorMessage(error);
+			toast.error(m['pages.comic.preferences.p2p_sync.toast.error']({ msg }));
+		}
+	}
+
+	onMount(() => {
+		(async () => {
+			await Promise.all([
+				volumeViewPreference.loadVolumeViewMode(),
+				bookmarkStore.loadBookmarks(),
+				peers.startListening(),
+				p2pSync.startListening()
+			]);
+		})();
+
+		return () => {
+			peers.stopListening();
+			p2pSync.stopListening();
+		};
 	});
 
 	const comicId = $derived(
@@ -431,14 +416,6 @@
 	}
 
 	$effect(() => {
-		const value = chaptersPreference.chaptersPerPage;
-
-		untrack(() => {
-			chaptersPreference.saveChaptersPerPage(value);
-		});
-	});
-
-	$effect(() => {
 		if (data.comic) {
 			const comic = data.comic;
 			untrack(() => {
@@ -463,47 +440,9 @@
 		const comic = activeComic.item ?? data.comic;
 		if (!comic) return;
 
-		const pageSize = parseInt(chaptersPreference.chaptersPerPage);
-
 		untrack(() => {
-			visiblePages = [];
 			chapterStore.clear(true);
-			chapterStore.fetch(
-				comic.relations.directoryId,
-				0,
-				pageSize,
-				currentSortBy,
-				volumeId,
-				query || null
-			);
-		});
-	});
-
-	$effect(() => {
-		if (chapterStore.loading || visiblePages.length === 0) return;
-
-		const comic = activeComic.item ?? data.comic;
-		if (!comic) return;
-
-		for (const page of visiblePages) {
-			if (chapterStore.lruKeys.includes(page)) {
-				chapterStore.touch(page);
-			}
-		}
-
-		const missingPages = visiblePages.filter((page) => !chapterStore.lruKeys.includes(page));
-
-		if (missingPages.length === 0) return;
-
-		untrack(() => {
-			chapterStore.fetch(
-				comic.relations.directoryId,
-				missingPages[0],
-				parseInt(chaptersPreference.chaptersPerPage),
-				sortBy,
-				expandedVolumeId,
-				searchQuery || null
-			);
+			chapterStore.fetch(comic.relations.directoryId, currentSortBy, volumeId, query || null);
 		});
 	});
 
@@ -512,31 +451,35 @@
 		if (!item) return null;
 
 		const chaptersData = chapterStore.chapters;
-		const pageSize = parseInt(chaptersPreference.chaptersPerPage);
 
-		const pagesData = (chaptersData?.pages ?? []).map((it) => ({
-			page: it.page,
+		const allItems = (chaptersData?.archive.items ?? [])
+			.map((comic, index) => ({
+				id: comic.id.toString(),
+				name: comic.name,
+				title: comic.name,
+				fileName: comic.name,
+				isRead: Array.isArray(readChapters) ? readChapters.includes(comic.id.toString()) : false,
+				chapterSort: comic.chapterSort,
+				path: comic.path,
+				volumeId: comic.volumeId,
+				volumeName: comic.volumeName,
+				isSpecial: comic.isSpecial,
+				lastModified: comic.lastModified,
+				chapterIndex: index
+			}))
+			.filter((comic) => !expandedVolumeId || comic.volumeId === expandedVolumeId);
 
-			items: it.items
-				.map((comic, index) => ({
-					id: comic.id.toString(),
-					name: comic.name,
-					title: comic.name,
-					fileName: comic.name,
-					isRead: Array.isArray(readChapters) ? readChapters.includes(comic.id.toString()) : false,
-					chapterSort: comic.chapterSort,
-					path: comic.path,
-					volumeId: comic.volumeId,
-					volumeName: comic.volumeName,
-					isSpecial: comic.isSpecial,
-					lastModified: comic.lastModified,
-					chapterIndex: it.page * pageSize + index
-				}))
-				.filter((comic) => {
-					const matchesVolume = !expandedVolumeId || comic.volumeId === expandedVolumeId;
-					return matchesVolume;
-				})
-		}));
+		// Corta a lista plana em blocos fixos só pra virtualização de renderização
+		// (ComicChapterList/ComicVolumeList montam um AcerolaHeroButton por item
+		// só quando o bloco está perto do scroll) — não tem relação com a busca,
+		// que já veio inteira do backend.
+		const pagesData = Array.from(
+			{ length: Math.ceil(allItems.length / RENDER_CHUNK_SIZE) || 0 },
+			(_, page) => ({
+				page,
+				items: allItems.slice(page * RENDER_CHUNK_SIZE, (page + 1) * RENDER_CHUNK_SIZE)
+			})
+		);
 
 		const volumes = (chaptersData?.archive.volumes ?? []).map((volume) => {
 			const volCover = bustCache(
@@ -557,9 +500,7 @@
 				totalChapters: volume.chapterCount,
 				coverUri: volCover || fallbackCover,
 				bannerUri: volBanner || fallbackBanner || fallbackCover,
-				hasMore:
-					expandedVolumeId === volume.id.toString() &&
-					pagesData.flatMap((page) => page.items).length < volume.chapterCount,
+				hasMore: expandedVolumeId === volume.id.toString() && allItems.length < volume.chapterCount,
 				chapters: []
 			};
 		});
@@ -575,7 +516,7 @@
 			banner: bustCache(resolveBanner(item.artwork), coverCacheBust),
 			pagesData,
 			volumes,
-			pageSize,
+			pageSize: RENDER_CHUNK_SIZE,
 			metadata: {
 				description:
 					item.metadata.description || m['pages.comic.metadata.description.unavailable'](),
@@ -616,7 +557,8 @@
 				chaptersCount: manga.chaptersCount,
 				description: manga.metadata.description,
 				cover: manga.cover,
-				bookmarkColor: bookmarkStore.bookmarks.find((b) => b.id === currentBookmarkId)?.color
+				bookmarkColor: bookmarkStore.bookmarks.find((b) => b.id === currentBookmarkId)?.color,
+				bookmarkName: bookmarkStore.bookmarks.find((b) => b.id === currentBookmarkId)?.name
 			}}
 			state={{
 				isResuming: !!readingHistory,
@@ -712,88 +654,90 @@
 								/>
 							{/if}
 
-							<div class="relative">
-								<AcerolaButton
-									ui={{ variant: 'ghost', size: 'sm', class: 'rounded-lg' }}
-									events={{ onClick: () => (showSortMenu = !showSortMenu) }}
-								>
-									<ArrowUpDown size={16} />
-									{m['pages.comic.sort.button']()}
-								</AcerolaButton>
+							<AcerolaPopover
+								state={{ open: showSortMenu }}
+								events={{ onOpenChange: (open) => (showSortMenu = open) }}
+								ui={{
+									align: 'end',
+									side: 'bottom',
+									sideOffset: 8,
+									contentClass: 'w-48 p-2 rounded-xl'
+								}}
+							>
+								{#snippet trigger()}
+									<AcerolaButton ui={{ variant: 'ghost', size: 'sm', class: 'rounded-lg' }}>
+										<ArrowUpDown size={16} />
+										{m['pages.comic.sort.button']()}
+									</AcerolaButton>
+								{/snippet}
 
-								{#if showSortMenu}
-									<div
-										class="absolute top-full right-0 z-50 mt-2 min-w-48 rounded-xl bg-surface shadow-lg"
+								{#snippet content()}
+									<AcerolaButton
+										ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
+										events={{
+											onClick: () => {
+												sortBy = 'number_asc';
+												showSortMenu = false;
+											}
+										}}
 									>
-										<div class="p-2">
-											<AcerolaButton
-												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-												events={{
-													onClick: () => {
-														sortBy = 'number_asc';
-														showSortMenu = false;
-													}
-												}}
-											>
-												{#if sortBy === 'number_asc'}
-													<Check size={16} />
-												{:else}
-													<div class="w-4"></div>
-												{/if}
-												{m['pages.comic.sort.number.asc']()}
-											</AcerolaButton>
-											<AcerolaButton
-												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-												events={{
-													onClick: () => {
-														sortBy = 'number_desc';
-														showSortMenu = false;
-													}
-												}}
-											>
-												{#if sortBy === 'number_desc'}
-													<Check size={16} />
-												{:else}
-													<div class="w-4"></div>
-												{/if}
-												{m['pages.comic.sort.number.desc']()}
-											</AcerolaButton>
-											<AcerolaButton
-												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-												events={{
-													onClick: () => {
-														sortBy = 'modified_desc';
-														showSortMenu = false;
-													}
-												}}
-											>
-												{#if sortBy === 'modified_desc'}
-													<Check size={16} />
-												{:else}
-													<div class="w-4"></div>
-												{/if}
-												{m['pages.comic.sort.modified.desc']()}
-											</AcerolaButton>
-											<AcerolaButton
-												ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
-												events={{
-													onClick: () => {
-														sortBy = 'modified_asc';
-														showSortMenu = false;
-													}
-												}}
-											>
-												{#if sortBy === 'modified_asc'}
-													<Check size={16} />
-												{:else}
-													<div class="w-4"></div>
-												{/if}
-												{m['pages.comic.sort.modified.asc']()}
-											</AcerolaButton>
-										</div>
-									</div>
-								{/if}
-							</div>
+										{#if sortBy === 'number_asc'}
+											<Check size={16} />
+										{:else}
+											<div class="w-4"></div>
+										{/if}
+										{m['pages.comic.sort.number.asc']()}
+									</AcerolaButton>
+									<AcerolaButton
+										ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
+										events={{
+											onClick: () => {
+												sortBy = 'number_desc';
+												showSortMenu = false;
+											}
+										}}
+									>
+										{#if sortBy === 'number_desc'}
+											<Check size={16} />
+										{:else}
+											<div class="w-4"></div>
+										{/if}
+										{m['pages.comic.sort.number.desc']()}
+									</AcerolaButton>
+									<AcerolaButton
+										ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
+										events={{
+											onClick: () => {
+												sortBy = 'modified_desc';
+												showSortMenu = false;
+											}
+										}}
+									>
+										{#if sortBy === 'modified_desc'}
+											<Check size={16} />
+										{:else}
+											<div class="w-4"></div>
+										{/if}
+										{m['pages.comic.sort.modified.desc']()}
+									</AcerolaButton>
+									<AcerolaButton
+										ui={{ variant: 'ghost', class: 'w-full justify-start rounded-lg' }}
+										events={{
+											onClick: () => {
+												sortBy = 'modified_asc';
+												showSortMenu = false;
+											}
+										}}
+									>
+										{#if sortBy === 'modified_asc'}
+											<Check size={16} />
+										{:else}
+											<div class="w-4"></div>
+										{/if}
+										{m['pages.comic.sort.modified.asc']()}
+									</AcerolaButton>
+								{/snippet}
+							</AcerolaPopover>
 						</div>
 					{/if}
 				</div>
@@ -845,7 +789,6 @@
 								}}
 								events={{
 									onExpand: (value) => (expandedVolumeId = value),
-									onVisiblePages: (pages) => (visiblePages = pages),
 									onOpenChapter: openReader,
 									onToggleSelect: handleToggleSelect,
 									onEnterSelection: handleEnterSelection,
@@ -863,7 +806,6 @@
 									isSelected: chapterSelection.isSelected
 								}}
 								events={{
-									onVisiblePages: (pages: number[]) => (visiblePages = pages),
 									onOpenChapter: openReader,
 									onToggleSelect: handleToggleSelect,
 									onEnterSelection: handleEnterSelection,
@@ -876,16 +818,16 @@
 						<ComicPreferences
 							data={{
 								hasVolumeStructure: chapterStore.chapters?.hasVolumeStructure ?? false,
-								bookmarks: bookmarkStore.bookmarks
+								bookmarks: bookmarkStore.bookmarks,
+								pairedPeers: pairedPeersForUi
 							}}
 							state={{
-								chaptersPerPage: chaptersPreference.chaptersPerPage,
 								volumeViewMode: volumeViewPreference.volumeViewMode,
 								bookmarkId: currentBookmarkId,
-								externalSyncEnabled: manga.metadata.externalSync
+								externalSyncEnabled: manga.metadata.externalSync,
+								syncingPeerIds
 							}}
 							events={{
-								onChaptersPerPageChange: (value) => (chaptersPreference.chaptersPerPage = value),
 								onVolumeViewModeChange: (value) => (volumeViewPreference.volumeViewMode = value),
 								onBookmarkChange: async (value) => {
 									const id =
@@ -907,7 +849,8 @@
 								onDeepRescanComic: handleDeepRescanComic,
 								onRegenerateCover: handleRegenerateCover,
 								onRegenerateVolumeCovers: handleRegenerateVolumeCovers,
-								onClearMetadata: handleClearMetadata
+								onClearMetadata: handleClearMetadata,
+								onSyncToDevice: handleSyncToDevice
 							}}
 						/>
 					{/if}

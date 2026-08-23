@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import AcerolaCommand from './acerola-command.svelte';
 
 describe('AcerolaCommand', () => {
-	it('renderiza o comando e lida com mudanca de valor', async () => {
+	it('renders the command and handles value change', async () => {
 		let value = '';
 		const children = createRawSnippet(() => ({
 			render: () =>

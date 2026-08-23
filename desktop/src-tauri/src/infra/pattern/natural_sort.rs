@@ -42,7 +42,7 @@ mod tests {
     use super::natural_key;
 
     #[test]
-    fn teste_ordena_paginas_numeradas_por_ordem_natural() {
+    fn test_sorts_numbered_pages_in_natural_order() {
         let mut pages = vec!["page10.jpg", "page2.jpg", "page001.jpg"];
         pages.sort_by_key(|page| natural_key(page));
 

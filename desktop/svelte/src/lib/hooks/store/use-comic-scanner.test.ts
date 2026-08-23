@@ -68,7 +68,7 @@ describe('useLibraryScanner', () => {
 		invokeMock.mockResolvedValue(undefined);
 	});
 
-	it('exibe erro quando não há pasta selecionada', async () => {
+	it('displays error when no folder is selected', async () => {
 		const hook = await renderScanner(undefined);
 
 		await hook.start();
@@ -78,7 +78,7 @@ describe('useLibraryScanner', () => {
 		expect(toast.error).toHaveBeenCalledWith('Sem pasta selecionada.');
 	});
 
-	it('exibe progresso e conclui scan com sucesso', async () => {
+	it('displays progress and completes scan successfully', async () => {
 		const { callbacks, unlisteners } = setupListeners();
 		const hook = await renderScanner('C:/Comics');
 
@@ -91,20 +91,20 @@ describe('useLibraryScanner', () => {
 
 		callbacks.get(LIBRARY_EVENTS.scanProgress)?.({ payload: undefined });
 
-		expect(toast.info).toHaveBeenCalledWith('Scan em andamento...');
+		expect(toast.info).not.toHaveBeenCalled();
 		expect(notificationStore.notifications[0]?.message).toBe('Scan em andamento...');
 
 		callbacks.get(LIBRARY_EVENTS.scanComplete)?.({ payload: undefined });
 
 		expect(hook.scanning).toBe(false);
-		expect(toast.success).toHaveBeenCalledWith('Scan concluído!');
+		expect(toast.success).not.toHaveBeenCalled();
 		expect(notificationStore.notifications.at(-1)?.message).toBe('Scan concluído!');
 		expect(unlisteners.get(LIBRARY_EVENTS.scanProgress)).toHaveBeenCalledOnce();
 		expect(unlisteners.get(LIBRARY_EVENTS.scanComplete)).toHaveBeenCalledOnce();
 		expect(unlisteners.get(LIBRARY_EVENTS.scanError)).toHaveBeenCalledOnce();
 	});
 
-	it('remove progresso e exibe erro quando scan falha', async () => {
+	it('removes progress and displays error when scan fails', async () => {
 		const { callbacks } = setupListeners();
 		const hook = await renderScanner('C:/Comics');
 
@@ -115,7 +115,7 @@ describe('useLibraryScanner', () => {
 		});
 
 		expect(hook.scanning).toBe(false);
-		expect(toast.error).toHaveBeenCalledWith('falha no scan');
+		expect(toast.error).not.toHaveBeenCalled();
 		expect(
 			notificationStore.notifications.some((item) => item.message === 'Scan em andamento...')
 		).toBe(false);

@@ -1,0 +1,66 @@
+package br.acerola.comic.module.comic.component
+
+import android.content.res.Configuration
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.PhoneAndroid
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import br.acerola.comic.common.state.SyncActionVisualState
+import br.acerola.comic.common.ux.Acerola
+import br.acerola.comic.common.ux.component.HeroButton
+import br.acerola.comic.common.ux.component.SyncActionIcon
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import br.acerola.comic.module.comic.Comic
+import br.acerola.comic.ui.R
+
+/**
+ * Single entry point for `acerola/sync-comic/1`, shared by the Comic Detail's config section
+ * and (via [br.acerola.comic.module.main.common.component.PeerPickerSheet]) the Home's
+ * `ComicActionsSheet`. Opens the peer picker on click — the actual `syncComic` call only
+ * fires once a peer is chosen.
+ */
+@Composable
+fun Comic.Component.SyncWithPeerAction(
+    state: SyncActionVisualState,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Acerola.Component.HeroButton(
+        title = stringResource(id = R.string.action_sync_comic_with_peer),
+        description = stringResource(id = R.string.description_sync_comic_with_peer),
+        iconBackground = MaterialTheme.colorScheme.primaryContainer,
+        onClick = if (state == SyncActionVisualState.LOADING) null else onClick,
+        icon = {
+            Acerola.Component.SyncActionIcon(
+                state = state,
+                defaultBackground = MaterialTheme.colorScheme.primaryContainer,
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.PhoneAndroid,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        },
+        modifier = modifier,
+    )
+}
+
+@Preview(name = "Light", showBackground = true)
+@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SyncWithPeerActionPreview() {
+    AcerolaTheme {
+        Comic.Component.SyncWithPeerAction(
+            state = SyncActionVisualState.IDLE,
+            onClick = {},
+        )
+    }
+}

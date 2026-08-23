@@ -130,7 +130,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_encontra_arquivos_no_root() {
+    async fn test_finds_files_in_root() {
         let root = tempdir().unwrap();
 
         fs::write(root.path().join("cap1.cbz"), b"").unwrap();
@@ -143,7 +143,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_associa_arquivos_ao_diretorio_pai() {
+    async fn test_associates_files_with_parent_directory() {
         let root = tempdir().unwrap();
 
         let berserk = root.path().join("Berserk");
@@ -167,7 +167,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_escaneia_em_profundidade() {
+    async fn test_scans_in_depth() {
         let root = tempdir().unwrap();
 
         let mangas = root.path().join("Mangas").join("Berserk");
@@ -182,7 +182,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_respeita_max_depth() {
+    async fn test_respects_max_depth() {
         let root = tempdir().unwrap();
 
         let level1 = root.path().join("Mangas");
@@ -209,7 +209,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_diretorio_vazio_nao_emite_entrada() {
+    async fn test_empty_directory_does_not_emit_entry() {
         let root = tempdir().unwrap();
         fs::create_dir_all(root.path().join("vazio")).unwrap();
 

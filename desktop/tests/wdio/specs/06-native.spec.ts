@@ -1,8 +1,14 @@
-import { firstDisplayed, getTitle, navigateTo, navigateToWithState, waitForAppReady } from '../helpers/app';
+import {
+	firstDisplayed,
+	getTitle,
+	navigateTo,
+	navigateToWithState,
+	waitForAppReady
+} from '../helpers/app';
 import { createReaderFixture, readerChapterFor } from '../helpers/fixtures';
 
-describe('acerola nativo via WebDriverIO', () => {
-	it('inicializa o app sem crash', async () => {
+describe('native acerola via WebDriverIO', () => {
+	it('initializes the app without crashing', async () => {
 		await waitForAppReady();
 
 		const title = await getTitle();
@@ -16,7 +22,7 @@ describe('acerola nativo via WebDriverIO', () => {
 		}
 	});
 
-	it('aciona seleção de pasta sem travar o app', async () => {
+	it('triggers folder selection without freezing the app', async () => {
 		await waitForAppReady();
 		await navigateTo('/config');
 
@@ -35,7 +41,7 @@ describe('acerola nativo via WebDriverIO', () => {
 		expect(url).toMatch(/tauri:\/\/localhost|localhost/i);
 	});
 
-	it('carrega imagem do capítulo nativo no reader', async () => {
+	it('loads native chapter image in the reader', async () => {
 		const fixture = createReaderFixture('Acerola WDIO Native');
 		await waitForAppReady();
 		await navigateToWithState('/reader', {
@@ -51,7 +57,7 @@ describe('acerola nativo via WebDriverIO', () => {
 		expect(src).toMatch(/^blob:|asset:\/\/|tauri:\/\//i);
 	});
 
-	it.skip('aciona controle nativo de minimizar pela titlebar', async () => {
+	it.skip('triggers native minimize control via titlebar', async () => {
 		await waitForAppReady();
 		await navigateTo('/home');
 

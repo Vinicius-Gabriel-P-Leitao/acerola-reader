@@ -1,6 +1,6 @@
 <script lang="ts" module>
 	import type { AcerolaSelectOption } from '$lib/components/acerola-select/acerola-select.svelte';
-	import type { DockItem } from '$lib/components/acerola-dock/acerola-dock.svelte';
+	import type { SidebarItem } from '$lib/components/acerola-sidebar/acerola-sidebar.svelte';
 	import type { Locale } from '$lib/paraglide/runtime.js';
 
 	import { m } from '$lib/paraglide/messages';
@@ -8,6 +8,7 @@
 
 	import HistoryIcon from '@lucide/svelte/icons/history';
 	import HouseIcon from '@lucide/svelte/icons/house';
+	import Share2Icon from '@lucide/svelte/icons/share-2';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 
 	import AcerolaLogo from '$lib/assets/icons/acerola.svg?component';
@@ -25,9 +26,10 @@
 		label: localeLabels[locale] || locale.toUpperCase()
 	}));
 
-	const navItems: DockItem[] = $derived([
+	const navItems: SidebarItem[] = $derived([
 		{ label: m['routes.home'](), href: '/home', icon: HouseIcon },
 		{ label: m['routes.history'](), href: '/history', icon: HistoryIcon },
+		{ label: m['routes.network'](), href: '/network', icon: Share2Icon },
 		{ label: m['routes.config'](), href: '/config', icon: SettingsIcon }
 	]);
 </script>
@@ -39,7 +41,6 @@
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { useOnboarding } from '$lib/hooks/onboarding/use-onboarding.svelte';
-	import { useNavDockMode } from '$lib/hooks/preferences/use-nav-dock-mode.svelte';
 	import { setComicContext } from '$lib/state/comic-context.svelte';
 	import { getLocale, setLocale } from '$lib/paraglide/runtime';
 	import { onMount } from 'svelte';
@@ -51,7 +52,7 @@
 	import AcerolaSelect from '$lib/components/acerola-select/acerola-select.svelte';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaPopover from '$lib/components/acerola-popover/acerola-popover.svelte';
-	import AcerolaDock from '$lib/components/acerola-dock/acerola-dock.svelte';
+	import AcerolaSidebar from '$lib/components/acerola-sidebar/acerola-sidebar.svelte';
 	import AcerolaSonner from '$lib/components/acerola-sonner/acerola-sonner.svelte';
 	import AcerolaDialog from '$lib/components/acerola-dialog/acerola-dialog.svelte';
 	import AcerolaCommand from '$lib/components/acerola-command/acerola-command.svelte';
@@ -77,7 +78,6 @@
 	const summary = useComicSummary();
 	const bookmarkStore = useBookmarks();
 	const onboarding = useOnboarding();
-	const dockMode = useNavDockMode();
 
 	const incrementalScanner = useLibraryScanner(
 		DIRECTORY_SCAN_COMMANDS.incrementalScan,
@@ -93,15 +93,17 @@
 		await folder.loadSavedPath();
 		await bookmarkStore.loadBookmarks();
 
-		try {
-			const packageFamilyName = await invoke<string>('get_package_family_name');
-			if (packageFamilyName !== 'No package identity' && !packageFamilyName.startsWith('Error')) {
-				packageIdentity = `Package: ${packageFamilyName}`;
-			} else {
-				packageIdentity = `Not running with package identity`;
+		if (import.meta.env.DEV) {
+			try {
+				const packageFamilyName = await invoke<string>('get_package_family_name');
+				if (packageFamilyName !== 'No package identity' && !packageFamilyName.startsWith('Error')) {
+					packageIdentity = `Package: ${packageFamilyName}`;
+				} else {
+					packageIdentity = `Not running with package identity`;
+				}
+			} catch (error) {
+				logError(`Failed to check package identity: ${error}`);
 			}
-		} catch (error) {
-			logError(`Failed to check package identity: ${error}`);
 		}
 
 		appWindow = getCurrentWindow();
@@ -186,7 +188,15 @@
 	<div class="relative flex flex-1 overflow-hidden">
 		<AcerolaSonner />
 
-		<main class="h-full flex-1 overflow-y-auto {dockMode.mode === 'fixed' ? 'pb-24' : ''}">
+		{#if onboarding.isCompleted}
+			<AcerolaSidebar data={{ items: navItems }}>
+				{#snippet brand()}
+					<AcerolaLogo class="h-full w-full" />
+				{/snippet}
+			</AcerolaSidebar>
+		{/if}
+
+		<main class="h-full flex-1 overflow-y-auto">
 			{#if onboarding.isLoading}
 				<div class="flex h-full w-full items-center justify-center text-muted-foreground">
 					Loading...
@@ -215,7 +225,7 @@
 							>
 								<span>{m['layout.search_placeholder']()}</span>
 								<kbd
-									class="pointer-events-none hidden select-none items-center gap-1 rounded border border-surface/80 bg-surface/50 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground sm:flex"
+									class="pointer-events-none hidden items-center gap-1 rounded border border-surface/80 bg-surface/50 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground select-none sm:flex"
 								>
 									Ctrl+K
 								</kbd>
@@ -264,14 +274,6 @@
 	</div>
 </div>
 
-{#if onboarding.isCompleted}
-	<AcerolaDock data={{ items: navItems }} state={{ mode: dockMode.mode }}>
-		{#snippet brand()}
-			<AcerolaLogo class="h-full w-full" />
-		{/snippet}
-	</AcerolaDock>
-{/if}
-
 <AcerolaDialog
 	state={{ open: isSearchDialogOpen }}
 	events={{ onOpenChange: (open) => (isSearchDialogOpen = open) }}
@@ -296,10 +298,13 @@
 		</div>
 		<Command.List class="max-h-[70vh] overflow-y-auto p-4">
 			<Command.Empty class="py-24 text-center text-lg text-muted-foreground">
-				Nenhum quadrinho encontrado.
+				{m['layout.command.no_results']()}
 			</Command.Empty>
 
-			<Command.Group heading={m['layout.command.navigation_group']()} class="px-2 text-muted-foreground">
+			<Command.Group
+				heading={m['layout.command.navigation_group']()}
+				class="px-2 text-muted-foreground"
+			>
 				{#each navItems as item (item.href)}
 					<Command.Item
 						value={item.label}
@@ -316,13 +321,16 @@
 			</Command.Group>
 
 			{#if summary.comics && summary.comics.total > 0}
-				<Command.Group heading="Biblioteca" class="px-2 text-muted-foreground">
+				<Command.Group
+					heading={m['layout.command.library_group']()}
+					class="px-2 text-muted-foreground"
+				>
 					<div class="flex flex-col gap-2">
 						{#each summary.comics.comics as comic (comic.relations.directoryId)}
 							{@const cover = resolveCover(comic.artwork)}
-							{@const bookmarkColor = bookmarkStore.getBookmarkForComic(
+							{@const comicBookmark = bookmarkStore.getBookmarkForComic(
 								comic.relations.directoryId
-							)?.color}
+							)}
 							<Command.Item
 								value={`${comic.metadata.title ?? ''} ${comic.filesystem.folderName}`}
 								onSelect={() => {
@@ -341,8 +349,11 @@
 									ui={{ size: 'sm', hideTitle: true }}
 								>
 									{#snippet floatingBadge()}
-										{#if bookmarkColor != null}
-											<AcerolaBookmarkRibbon color={bookmarkColor} />
+										{#if comicBookmark != null}
+											<AcerolaBookmarkRibbon
+												color={comicBookmark.color}
+												name={comicBookmark.name}
+											/>
 										{/if}
 									{/snippet}
 								</AcerolaCardImage>

@@ -24,7 +24,7 @@ function props(overrides = {}) {
 }
 
 describe('ReaderFooter', () => {
-	it('renderiza progresso, modo, zoom e capitulos restantes', () => {
+	it('renders progress, mode, zoom and remaining chapters', () => {
 		render(ReaderFooter, { props: props() });
 
 		expect(screen.getByText('45% lido')).toBeInTheDocument();
@@ -37,7 +37,7 @@ describe('ReaderFooter', () => {
 		expect(progress.firstElementChild).toHaveStyle({ width: '45%' });
 	});
 
-	it('renderiza valores extremos de progresso', () => {
+	it('renders extreme progress values', () => {
 		const values = [
 			{ percent: 0, width: '0%' },
 			{ percent: 100, width: '100%' }
@@ -62,7 +62,7 @@ describe('ReaderFooter', () => {
 		}
 	});
 
-	it('propaga mudanca do modo de leitura pelo seletor mobile', async () => {
+	it('propagates reading mode change through mobile selector', async () => {
 		const user = userEvent.setup();
 		const footerProps = props();
 

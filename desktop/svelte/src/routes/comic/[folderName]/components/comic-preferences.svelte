@@ -3,15 +3,21 @@
 		data?: {
 			hasVolumeStructure?: boolean;
 			bookmarks?: { id: number; name: string; color: number }[];
+			/** Dispositivos já pareados (ver `usePeerConnection().pairedPeers`), resolvidos pelo
+			 *  chamador com rótulo pronto pra exibir e o `addrs` já disponível pra disparar
+			 *  `syncComic` sem essa tela precisar conhecer o hook de rede. */
+			pairedPeers?: { peerId: string; label: string; addrs: number[] }[];
 		};
 		state: {
-			chaptersPerPage: string;
 			volumeViewMode: 'cover' | 'banner';
 			bookmarkId: number | null;
 			externalSyncEnabled: boolean;
+			/** `peerId`s com um sync individual em andamento agora (pode ser mais de um em
+			 *  paralelo, um por dispositivo) — só pra desabilitar o item da lista certo e
+			 *  mostrar o spinner. */
+			syncingPeerIds?: string[];
 		};
 		events: {
-			onChaptersPerPageChange: (value: string) => void;
 			onVolumeViewModeChange: (value: 'cover' | 'banner') => void;
 			onBookmarkChange: (value: number | null) => void;
 			onExternalSyncChange: (value: boolean) => void;
@@ -23,6 +29,8 @@
 			onRegenerateCover?: () => void;
 			onRegenerateVolumeCovers?: () => void;
 			onClearMetadata?: () => Promise<void> | void;
+			/** Dispara `syncComic` pro `peerId` escolhido — ver `use-network-sync.svelte.ts`. */
+			onSyncToDevice?: (peerId: string, addrs: number[]) => Promise<void> | void;
 		};
 	};
 </script>
@@ -32,10 +40,12 @@
 	import AcerolaSelect from '$lib/components/acerola-select/acerola-select.svelte';
 	import AcerolaToggleGroup from '$lib/components/acerola-toggle-group/acerola-toggle-group.svelte';
 	import AcerolaAlertDialog from '$lib/components/acerola-alert-dialog/acerola-alert-dialog.svelte';
+	import AcerolaButton from '$lib/components/acerola-button/acerola-button.svelte';
+	import AcerolaPopover from '$lib/components/acerola-popover/acerola-popover.svelte';
+	import { buttonVariants } from '$lib/components/ui/button';
 	import { ToggleGroupItem } from '$lib/components/ui/toggle-group/index.js';
 	import { m } from '$lib/paraglide/messages';
 
-	import Hash from '@lucide/svelte/icons/hash';
 	import Layers from '@lucide/svelte/icons/layers';
 	import Settings2 from '@lucide/svelte/icons/settings-2';
 	import BookmarkIcon from '@lucide/svelte/icons/bookmark';
@@ -50,12 +60,17 @@
 	import Image from '@lucide/svelte/icons/image';
 	import Layers2 from '@lucide/svelte/icons/layers-2';
 	import Eraser from '@lucide/svelte/icons/eraser';
+	import Share2 from '@lucide/svelte/icons/share-2';
+	import Monitor from '@lucide/svelte/icons/monitor';
+	import Loader2 from '@lucide/svelte/icons/loader-2';
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaSwitch from '$lib/components/acerola-switch/acerola-switch.svelte';
 
 	let { data, events, state: preferences }: ComicPreferencesProps = $props();
 
 	let showClearMetadataDialog = $state(false);
+	let showDeepRescanDialog = $state(false);
+	let showPeerMenu = $state(false);
 </script>
 
 <div class="space-y-12">
@@ -109,34 +124,6 @@
 					{/snippet}
 				</AcerolaHeroButton>
 			{/if}
-
-			<!-- Chapters per page -->
-			<AcerolaHeroButton
-				data={{
-					title: m['pages.comic.preferences.chapters_per_page.title'](),
-					description: m['pages.comic.preferences.chapters_per_page.desc']()
-				}}
-			>
-				{#snippet icon()}
-					<Hash class="text-chart-3" size={24} />
-				{/snippet}
-
-				{#snippet action()}
-					<AcerolaSelect
-						data={{
-							options: [
-								{ value: '25', label: '25' },
-								{ value: '50', label: '50' },
-								{ value: '100', label: '100' }
-							]
-						}}
-						state={{ value: preferences.chaptersPerPage }}
-						events={{
-							onValueChange: events.onChaptersPerPageChange
-						}}
-					/>
-				{/snippet}
-			</AcerolaHeroButton>
 
 			<!-- Bookmark Assignment -->
 			<AcerolaHeroButton
@@ -316,7 +303,7 @@
 					title: m['pages.comic.preferences.file_sync.deep_rescan.title'](),
 					description: m['pages.comic.preferences.file_sync.deep_rescan.desc']()
 				}}
-				events={{ onClick: events.onDeepRescanComic }}
+				events={{ onClick: () => (showDeepRescanDialog = true) }}
 			>
 				{#snippet icon()}
 					<DatabaseZap class="text-destructive" size={24} />
@@ -333,6 +320,83 @@
 					</AcerolaButtonIcon>
 				{/snippet}
 			</AcerolaHeroButton>
+		</div>
+	</section>
+
+	<!-- P2P Sync Section -->
+	<section class="space-y-4">
+		<div
+			class="flex items-center gap-3 text-xs font-bold tracking-widest text-muted-foreground uppercase"
+		>
+			<Share2 size={16} />
+			{m['pages.comic.preferences.p2p_sync.title']()}
+		</div>
+
+		<div class="grid gap-4">
+			{#if !data?.pairedPeers || data.pairedPeers.length === 0}
+				<p class="px-2 text-xs text-muted-foreground">
+					{m['pages.comic.preferences.p2p_sync.empty']()}
+				</p>
+			{:else}
+				<AcerolaHeroButton
+					data={{
+						title: m['pages.comic.preferences.p2p_sync.send.title'](),
+						description: m['pages.comic.preferences.p2p_sync.send.desc']()
+					}}
+				>
+					{#snippet icon()}
+						<Share2 class="text-chart-1" size={24} />
+					{/snippet}
+
+					{#snippet action()}
+						<AcerolaPopover
+							state={{ open: showPeerMenu }}
+							events={{ onOpenChange: (open) => (showPeerMenu = open) }}
+							ui={{
+								align: 'end',
+								contentClass:
+									'w-64 overflow-hidden rounded-2xl border-border/40 bg-card/95 p-1.5 shadow-2xl backdrop-blur-md'
+							}}
+						>
+							{#snippet trigger()}
+								<span class={buttonVariants({ variant: 'outline', size: 'sm', class: 'gap-2' })}>
+									<Share2 size={14} />
+									{m['pages.comic.preferences.p2p_sync.send.button']()}
+								</span>
+							{/snippet}
+
+							{#snippet content()}
+								<div class="flex flex-col gap-0.5">
+									{#each data.pairedPeers as peer (peer.peerId)}
+										{@const syncing = (preferences.syncingPeerIds ?? []).includes(peer.peerId)}
+										<AcerolaButton
+											ui={{
+												variant: 'ghost',
+												disabled: syncing,
+												class:
+													'h-9 w-full justify-start gap-2.5 rounded-xl px-2.5 text-sm font-medium'
+											}}
+											events={{
+												onClick: () => {
+													showPeerMenu = false;
+													events.onSyncToDevice?.(peer.peerId, peer.addrs);
+												}
+											}}
+										>
+											{#if syncing}
+												<Loader2 size={16} class="shrink-0 animate-spin" />
+											{:else}
+												<Monitor size={16} class="shrink-0" />
+											{/if}
+											{peer.label}
+										</AcerolaButton>
+									{/each}
+								</div>
+							{/snippet}
+						</AcerolaPopover>
+					{/snippet}
+				</AcerolaHeroButton>
+			{/if}
 		</div>
 	</section>
 
@@ -435,6 +499,24 @@
 			showClearMetadataDialog = false;
 		},
 		onCancel: () => (showClearMetadataDialog = false)
+	}}
+	ui={{ variant: 'destructive' }}
+/>
+
+<AcerolaAlertDialog
+	state={{ open: showDeepRescanDialog }}
+	data={{
+		title: m['pages.comic.preferences.file_sync.deep_rescan.confirm.title'](),
+		description: m['pages.comic.preferences.file_sync.deep_rescan.confirm.desc'](),
+		cancelText: m['pages.comic.preferences.file_sync.deep_rescan.confirm.cancel'](),
+		actionText: m['pages.comic.preferences.file_sync.deep_rescan.confirm.action']()
+	}}
+	events={{
+		onAction: () => {
+			events.onDeepRescanComic?.();
+			showDeepRescanDialog = false;
+		},
+		onCancel: () => (showDeepRescanDialog = false)
 	}}
 	ui={{ variant: 'destructive' }}
 />

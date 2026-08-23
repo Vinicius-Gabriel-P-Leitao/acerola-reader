@@ -16,6 +16,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import p2p.FfiComicSummaryEntry
 import p2p.FfiFileManifestEntry
 import p2p.FileSyncProvider
 import java.io.IOException
@@ -25,8 +26,6 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
-
-private const val SYNCED_FOLDER_NAME = "synced"
 
 /**
  * Kotlin implementation of [FileSyncProvider] used by the Rust protocol `acerola/sync-files/1`.
@@ -99,6 +98,22 @@ class FileSyncProviderImpl
                 }
             }
 
+        // Só Room/SQLite — nenhum `DocumentFile`/SAF aqui, de propósito. `getFileManifest()`
+        // acima paga um `DocumentFile.exists()` por capítulo (uma transação binder cada) porque
+        // precisa apontar pra um arquivo de verdade pra transferência; `browse-library` só
+        // precisa de nome + contagem, então usa a consulta agregada direto no DB e nunca toca
+        // SAF — é o mesmo custo que estourava o timeout do protocolo antes dessa separação.
+        override fun getLibrarySummary(): List<FfiComicSummaryEntry> =
+            runBlocking {
+                chapterArchiveDao.getLibrarySummary().map { row ->
+                    FfiComicSummaryEntry(
+                        comicName = row.comicName,
+                        chapterCount = row.chapterCount.toUInt(),
+                        coverVersion = row.coverVersion,
+                    )
+                }
+            }
+
         override fun openChapterForRead(
             comicName: String,
             chapter: String,
@@ -149,8 +164,21 @@ class FileSyncProviderImpl
         ): Long =
             runBlocking {
                 val root = libraryRoot() ?: return@runBlocking -1L
-                val syncedFolder = root.findFile(SYNCED_FOLDER_NAME) ?: root.createDirectory(SYNCED_FOLDER_NAME)
-                val comicFolder = syncedFolder?.findFile(comicName) ?: syncedFolder?.createDirectory(comicName)
+
+                // Se o quadrinho já existe localmente, o capítulo tem que cair na MESMA pasta
+                // que os capítulos já existentes (`comic.path`). Quadrinho novo cai direto em
+                // `<root>/<comicName>/` — mesmo lugar que o DirectoryScanner criaria se o
+                // usuário tivesse adicionado manualmente. Sem pasta `synced/` intermediária:
+                // ela não tinha nenhuma exclusão no DirectoryScanner (que desce recursivo em
+                // qualquer pasta sem manga direto nela), então um rescan completo podia
+                // redescobrir `synced/<comicName>/` como um segundo ComicDirectory fantasma.
+                val existingComic = comicDirectoryDao.getDirectoryByName(comicName)
+                val comicFolder =
+                    if (existingComic != null) {
+                        DocumentFile.fromTreeUri(context, Uri.parse(existingComic.path))
+                    } else {
+                        root.findFile(comicName) ?: root.createDirectory(comicName)
+                    }
                 if (comicFolder == null) return@runBlocking -1L
 
                 // Final name comes from the peer (preserves the original .cbz/.cbr extension);

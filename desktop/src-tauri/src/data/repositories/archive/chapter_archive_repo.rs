@@ -6,7 +6,11 @@ use crate::{
     data::{
         models::{
             archive::chapter_archive::ChapterArchive,
-            relations::chapter_with_volume::ChapterArchiveWithVolume,
+            relations::{
+                chapter_with_comic::ChapterArchiveWithComic,
+                chapter_with_volume::ChapterArchiveWithVolume,
+                library_summary_row::LibrarySummaryRow,
+            },
         },
         repositories::Repository,
     },
@@ -22,6 +26,7 @@ pub enum ChapterSortCriteria {
     ModifiedDesc,
 }
 
+#[derive(Clone)]
 pub struct ChapterRepository {
     pub base: Repository<ChapterArchive>,
     pool: SqlitePool,
@@ -154,6 +159,94 @@ impl ChapterRepository {
         Ok(rows.into_iter().map(|(id,)| id).collect())
     }
 
+    /// Busca um capítulo pelo id determinístico (`path_hash` do arquivo) — usado pelo
+    /// scanner pra decidir, antes de tocar o disco, se um capítulo é novo, mudou
+    /// (`last_modified` diferente) ou só precisa de backfill de checksum.
+    pub async fn find_by_id(&self, id: i64) -> Result<Option<ChapterArchive>, DbError> {
+        let result = sqlx::query_as::<_, ChapterArchive>(
+            "SELECT id, chapter, path, chapter_sort, is_special, checksum, comic_directory_fk, volume_id_fk, last_modified
+             FROM chapter_archive WHERE id = ?",
+        )
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    /// Busca um capítulo pela chave natural (nome do quadrinho + rótulo do capítulo),
+    /// já garantida única pelo `UNIQUE(comic_directory_fk, chapter)` da tabela. Usado pelo
+    /// sync P2P pra resolver entradas recebidas de outro device, que não compartilha os
+    /// mesmos IDs autoincrement locais.
+    pub async fn find_by_comic_and_chapter(
+        &self, comic_directory_fk: i64, chapter: &str,
+    ) -> Result<Option<ChapterArchive>, DbError> {
+        let result = sqlx::query_as::<_, ChapterArchive>(
+            "SELECT id, chapter, path, chapter_sort, is_special, checksum, comic_directory_fk, volume_id_fk, last_modified
+             FROM chapter_archive WHERE comic_directory_fk = ? AND chapter = ?",
+        )
+        .bind(comic_directory_fk)
+        .bind(chapter)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    /// Busca um capítulo por `chapter_sort` em vez do rótulo — usado pelo sync P2P de
+    /// **histórico**, não de arquivos. O rótulo (`chapter`) não é comparável entre devices
+    /// (cada um nomeia o arquivo como quiser), mas `chapter_sort` é derivado do mesmo jeito
+    /// nos dois apps a partir do nome, então funciona como chave natural cross-device — é
+    /// também o que o Android usa pra resolver `chapter_archive_id` depois de receber um
+    /// manifesto (via `updateHistoryChapterIdBySort`).
+    pub async fn find_by_comic_and_chapter_sort(
+        &self, comic_directory_fk: i64, chapter_sort: &str,
+    ) -> Result<Option<ChapterArchive>, DbError> {
+        let result = sqlx::query_as::<_, ChapterArchive>(
+            "SELECT id, chapter, path, chapter_sort, is_special, checksum, comic_directory_fk, volume_id_fk, last_modified
+             FROM chapter_archive WHERE comic_directory_fk = ? AND chapter_sort = ?",
+        )
+        .bind(comic_directory_fk)
+        .bind(chapter_sort)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    /// Retorna todos os capítulos indexados junto do nome do quadrinho, usado pelo sync de
+    /// arquivos pra montar o manifesto local sem depender de N+1 queries por quadrinho.
+    /// Só SQL, de propósito — nenhum `tokio::fs::metadata` por capítulo. Usada por
+    /// `browse-library` (P2P) pra listar título + contagem de capítulos + versão de capa sem
+    /// pagar o custo de I/O de disco por capítulo, que já estourou o timeout do protocolo numa
+    /// biblioteca grande (ver `FileSyncService::build_manifest`, usado até então). `cover_version`
+    /// reaproveita `comic_directory.last_modified`, já existente — sem hash novo.
+    pub async fn get_library_summary(&self) -> Result<Vec<LibrarySummaryRow>, DbError> {
+        let result = sqlx::query_as::<_, LibrarySummaryRow>(
+            "SELECT cd.name AS comic_name, COUNT(ca.id) AS chapter_count, cd.last_modified AS cover_version
+             FROM comic_directory cd
+             JOIN chapter_archive ca ON ca.comic_directory_fk = cd.id
+             GROUP BY cd.name
+             ORDER BY cd.name ASC",
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    pub async fn find_all_with_comic_name(&self) -> Result<Vec<ChapterArchiveWithComic>, DbError> {
+        let result = sqlx::query_as::<_, ChapterArchiveWithComic>(
+            "SELECT ca.id, ca.chapter, ca.path, ca.checksum, ca.last_modified, c.name AS comic_name
+             FROM chapter_archive ca
+             JOIN comic_directory c ON ca.comic_directory_fk = c.id",
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
     pub async fn get_chapters_by_volume(
         &self, comic_directory_fk: i64, volume_id_fk: i64, page_size: i64, offset: i64,
         criteria: ChapterSortCriteria,
@@ -198,7 +291,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_inserir_e_buscar_todos() {
+    async fn test_insert_and_find_all() {
         let pool = setup_test_db_with_comic().await;
         let repo = ChapterRepository::new(pool);
 
@@ -212,7 +305,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_contagens() {
+    async fn test_counts() {
         let pool = setup_test_db_with_volumes().await;
         let repo = ChapterRepository::new(pool);
         repo.base.insert(&chapter(1, "1")).await.unwrap();
@@ -228,7 +321,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_ordenacao_por_numero_asc() {
+    async fn test_sorting_by_number_asc() {
         let pool = setup_test_db_with_comic().await;
         let repo = ChapterRepository::new(pool);
 
@@ -248,7 +341,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_ordenacao_por_numero_desc() {
+    async fn test_sorting_by_number_desc() {
         let pool = setup_test_db_with_comic().await;
         let repo = ChapterRepository::new(pool);
 
@@ -270,7 +363,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_ordenacao_por_modificado_asc() {
+    async fn test_sorting_by_modified_asc() {
         let pool = setup_test_db_with_comic().await;
         let repo = ChapterRepository::new(pool);
 
@@ -297,7 +390,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_ordenacao_por_modificado_desc() {
+    async fn test_sorting_by_modified_desc() {
         let pool = setup_test_db_with_comic().await;
         let repo = ChapterRepository::new(pool);
 
@@ -324,7 +417,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_erro_ao_inserir_duplicado() {
+    async fn test_error_on_duplicate_insert() {
         let pool = setup_test_db_with_comic().await;
         let repo = ChapterRepository::new(pool);
 
@@ -339,7 +432,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_erro_ao_atualizar_inexistente() {
+    async fn test_error_on_updating_nonexistent() {
         let pool = setup_test_db_with_comic().await;
         let repo = ChapterRepository::new(pool);
 
@@ -353,7 +446,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_delete_by_comic_remove_apenas_capitulos_do_comic() {
+    async fn test_delete_by_comic_removes_only_chapters_from_that_comic() {
         let pool = setup_test_db_with_comic().await;
         sqlx::query(
             "INSERT INTO comic_directory (id, name, path, last_modified, external_sync_enabled, hidden)
@@ -380,7 +473,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_find_all_ids_by_directory() {
+    async fn test_find_all_ids_by_directory() {
         let pool = setup_test_db_with_comic().await;
         let repo = ChapterRepository::new(pool);
 
@@ -394,7 +487,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn teste_erro_fk_invalida_ao_inserir() {
+    async fn test_error_on_invalid_fk_insert() {
         let pool = setup_test_db_with_comic().await;
         sqlx::query("PRAGMA foreign_keys = ON").execute(&pool).await.unwrap();
         let repo = ChapterRepository::new(pool);

@@ -32,7 +32,7 @@ async function selectCommand(label: string) {
 }
 
 describe('ReaderCommandPalette', () => {
-	it('nao renderiza quando esta fechado', () => {
+	it('does not render when closed', () => {
 		render(ReaderCommandPalette, {
 			props: props({
 				state: {
@@ -46,7 +46,7 @@ describe('ReaderCommandPalette', () => {
 		expect(screen.queryByText('Zoom')).not.toBeInTheDocument();
 	});
 
-	it('renderiza grupos, input e comandos quando esta aberto', () => {
+	it('renders groups, input and commands when open', () => {
 		render(ReaderCommandPalette, { props: props() });
 
 		expect(screen.getByPlaceholderText('Comandos do leitor...')).toBeInTheDocument();
@@ -61,7 +61,7 @@ describe('ReaderCommandPalette', () => {
 		expect(screen.getByText('Webtoon')).toBeInTheDocument();
 	});
 
-	it('troca texto do comando de zoom quando modo de zoom esta ativo', () => {
+	it('changes zoom command text when zoom mode is active', () => {
 		render(ReaderCommandPalette, {
 			props: props({
 				data: {
@@ -74,7 +74,7 @@ describe('ReaderCommandPalette', () => {
 		expect(screen.queryByText('Ativar modo zoom')).not.toBeInTheDocument();
 	});
 
-	it('fecha e limpa busca ao clicar no backdrop', async () => {
+	it('closes and clears search when clicking backdrop', async () => {
 		const user = userEvent.setup();
 		const paletteProps = props({
 			state: {
@@ -90,7 +90,7 @@ describe('ReaderCommandPalette', () => {
 		expect(paletteProps.events.onValueChange).toHaveBeenCalledWith('');
 	});
 
-	it('propaga alteracao do valor de busca', async () => {
+	it('propagates search value change', async () => {
 		const user = userEvent.setup();
 		const paletteProps = props();
 
@@ -100,7 +100,7 @@ describe('ReaderCommandPalette', () => {
 		expect(paletteProps.events.onValueChange).toHaveBeenCalled();
 	});
 
-	it('executa comandos de zoom e fecha a paleta', async () => {
+	it('executes zoom commands and closes palette', async () => {
 		const paletteProps = props();
 
 		render(ReaderCommandPalette, { props: paletteProps });
@@ -118,7 +118,7 @@ describe('ReaderCommandPalette', () => {
 		expect(paletteProps.events.onValueChange).toHaveBeenCalledWith('');
 	});
 
-	it('executa comandos de modo de leitura e fecha a paleta', async () => {
+	it('executes reading mode commands and closes palette', async () => {
 		const paletteProps = props();
 
 		render(ReaderCommandPalette, { props: paletteProps });
