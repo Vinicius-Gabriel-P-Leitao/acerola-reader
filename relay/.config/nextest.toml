@@ -1,0 +1,17 @@
+[test-groups]
+run-in-isolation = { max-threads = 1 }
+# Testes que fazem bind de portas ou usam recursos globais do sistema 
+# devem rodar isolados para evitar conflitos de porta (Address already in use).
+
+[[profile.default.overrides]]
+filter = 'test(::run_in_isolation::)'
+test-group = 'run-in-isolation'
+
+[profile.default]
+# Timeout para testes lentos (comum em rede P2P)
+slow-timeout = { period = "20s", terminate-after = 2 }
+
+[profile.ci]
+# No CI, damos um pouco mais de margem para latência de rede e IO
+slow-timeout = { period = "60s", terminate-after = 3 }
+fail-fast = false
