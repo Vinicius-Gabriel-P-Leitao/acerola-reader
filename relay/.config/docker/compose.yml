@@ -1,0 +1,40 @@
+services:
+  relay:
+    image: acerola-relay
+    build:
+      context: ../..
+      dockerfile: .config/docker/dockerfile
+    container_name: acerola-relay
+    restart: always
+    environment:
+      - IROH_RELAY_HTTP_BEARER_TOKEN=${RELAY_TOKEN:-}
+    ports:
+      - "7824:7824/udp"
+    networks:
+      - acerola_net
+      - proxy
+    volumes:
+      - ./certs:/certs
+    command: ["--config-path", "/config.toml"]
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "80"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  acerola_net:
+    name: acerola_net
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+        - subnet: fd00:ace:1010::/64
+  proxy:
+    external: true
