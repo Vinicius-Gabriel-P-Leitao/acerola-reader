@@ -1,4 +1,4 @@
-name: Mutation Testing (Guards)
+name: "[desktop] Mutation Tests"
 
 on:
   schedule:
@@ -12,7 +12,7 @@ jobs:
     defaults:
       run:
         shell: pwsh
-        working-directory: acerola
+        working-directory: desktop
 
     steps:
       - name: Checkout
@@ -27,7 +27,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('acerola/src-tauri/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('desktop/src-tauri/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-registry-
 
@@ -54,4 +54,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mutants-report
-          path: acerola/src-tauri/mutants.out
+          path: desktop/src-tauri/mutants.out

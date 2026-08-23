@@ -1,9 +1,12 @@
-name: Acerola Relay Tests
+name: "[relay] Tests"
 
 on:
   push:
     branches:
       - develop
+    paths:
+      - 'lib/relay/**'
+      - '.github/workflows/relay-tests.yml'
   workflow_dispatch:
 
 env:
@@ -13,6 +16,9 @@ jobs:
   test:
     name: Run Workspace Tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lib/relay
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

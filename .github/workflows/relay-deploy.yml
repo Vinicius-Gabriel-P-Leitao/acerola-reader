@@ -1,8 +1,11 @@
-name: CI/CD Pipeline
+name: "[relay] Deploy"
 
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'lib/relay/**'
+      - '.github/workflows/relay-deploy.yml'
   workflow_dispatch:
 
 env:
@@ -12,6 +15,9 @@ jobs:
   test:
     name: Run Workspace Tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lib/relay
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -40,6 +46,9 @@ jobs:
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lib/relay
     steps:
       - uses: actions/checkout@v4
 

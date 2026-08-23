@@ -1,14 +1,20 @@
-﻿name: Tests
+name: "[android] Tests"
 
 on:
   push:
     branches:
       - main
       - develop
+    paths:
+      - 'android/**'
+      - '.github/workflows/android-tests.yml'
   pull_request:
     branches:
       - main
       - develop
+    paths:
+      - 'android/**'
+      - '.github/workflows/android-tests.yml'
   workflow_dispatch:
 
 jobs:
@@ -37,11 +43,11 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-        working-directory: acerola
+        working-directory: android
 
       - name: Run unit tests
         run: ./gradlew test
-        working-directory: acerola
+        working-directory: android
 
       - name: Upload test reports
         if: always()
@@ -49,6 +55,6 @@ jobs:
         with:
           name: test-reports
           path: |
-            **/build/reports/tests/
-            **/build/test-results/
+            android/**/build/reports/tests/
+            android/**/build/test-results/
           retention-days: 7
