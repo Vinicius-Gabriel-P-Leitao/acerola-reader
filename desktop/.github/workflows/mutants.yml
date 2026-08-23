@@ -1,0 +1,57 @@
+name: Mutation Testing (Guards)
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  mutants:
+    name: cargo-mutants (filesystem guards)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: acerola
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('acerola/src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Install cargo-make and cargo-mutants
+        run: |
+          $cargoBin = "$HOME/.cargo/bin"
+          New-Item -ItemType Directory -Force $cargoBin | Out-Null
+
+          if (!(Test-Path "$cargoBin/cargo-make.exe")) {
+            cargo install cargo-make --locked
+          }
+
+          if (!(Test-Path "$cargoBin/cargo-mutants.exe")) {
+            cargo install cargo-mutants --locked
+          }
+
+          Add-Content -Path $env:GITHUB_PATH -Value $cargoBin
+
+      - name: Run cargo-mutants on the guard/allowlist boundary
+        run: cargo make --cwd ./src-tauri mutants
+
+      - name: Upload mutants report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutants-report
+          path: acerola/src-tauri/mutants.out
