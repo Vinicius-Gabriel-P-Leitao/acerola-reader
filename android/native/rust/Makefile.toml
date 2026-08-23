@@ -1,0 +1,89 @@
+[env]
+KOTLIN_OUT = "../src/main/java/br/acerola/comic"
+JNILIBS_OUT = "../src/main/jniLibs"
+
+# --- Build (device físico, arm64-v8a) ---
+
+[tasks.build-rust]
+description = "Build the Rust library for Android (arm64-v8a) via cargo-ndk."
+command = "cargo"
+args = ["ndk", "-t", "aarch64-linux-android", "build", "--release"]
+
+[tasks.generate-bindings]
+description = "Generate the Kotlin (UniFFI) bindings from the compiled arm64-v8a .so."
+dependencies = ["build-rust"]
+command = "cargo"
+args = [
+    "run", "--bin", "uniffi-bindgen", "--",
+    "generate",
+    "--config", "uniffi.toml",
+    "--library", "target/aarch64-linux-android/release/libacerola.so",
+    "--language", "kotlin",
+    "--out-dir", "${KOTLIN_OUT}",
+]
+
+[tasks.copy-libs]
+description = "Copy the compiled arm64-v8a .so into jniLibs."
+dependencies = ["build-rust"]
+script_runner = "@duckscript"
+script = '''
+mkdir ${JNILIBS_OUT}/arm64-v8a
+cp target/aarch64-linux-android/release/libacerola.so ${JNILIBS_OUT}/arm64-v8a/libacerola.so
+'''
+
+[tasks.build]
+description = "Full build for a physical device: arm64-v8a lib + Kotlin bindings + .so copy."
+dependencies = ["build-rust", "generate-bindings", "copy-libs"]
+
+# --- Build (emulador, x86_64) ---
+#
+# Emuladores Android Studio comuns (Pixel/gphone) rodam em x86_64, não arm64 — sem essa
+# variante, `libacerola.so` (só arm64-v8a) não carrega neles (`UnsatisfiedLinkError`).
+# Separado do build padrão porque só é necessário pra rodar `connectedAndroidTest` num
+# emulador; builds pra device físico não precisam pagar o custo extra de compilação.
+
+[tasks.build-rust-x86_64]
+description = "Build the Rust library for Android (x86_64) via cargo-ndk — for running on an emulator."
+command = "cargo"
+args = ["ndk", "-t", "x86_64-linux-android", "build", "--release"]
+
+[tasks.copy-libs-x86_64]
+description = "Copy the compiled x86_64 .so into jniLibs."
+dependencies = ["build-rust-x86_64"]
+script_runner = "@duckscript"
+script = '''
+mkdir ${JNILIBS_OUT}/x86_64
+cp target/x86_64-linux-android/release/libacerola.so ${JNILIBS_OUT}/x86_64/libacerola.so
+'''
+
+[tasks.build-emulator]
+description = "Full build including the x86_64 variant, for testing on an emulator."
+dependencies = ["build", "copy-libs-x86_64"]
+
+# --- Testes ---
+
+[tasks.test]
+description = "Run the Rust tests (nextest)."
+command = "cargo"
+args = ["nextest", "run"]
+
+[tasks.test-mutants]
+description = "Mutation testing scoped to the sync-files protocol (checksum mismatch bug investigation)."
+command = "cargo"
+args = [
+    "mutants",
+    "--file", "src/protocol/files/exchange.rs",
+    "--file", "src/protocol/files/model.rs",
+    "--file", "src/protocol/files/mod.rs",
+    "--", "--lib",
+]
+
+# --- Limpeza ---
+
+[tasks.clean]
+description = "Clean the Rust build artifacts (cargo clean)."
+command = "cargo"
+args = ["clean"]
+
+[tasks.default]
+alias = "build"

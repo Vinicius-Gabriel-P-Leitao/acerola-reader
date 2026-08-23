@@ -1,0 +1,18 @@
+package br.acerola.comic.usecase.library
+
+import arrow.core.Either
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
+import br.acerola.comic.error.message.LibrarySyncError
+import kotlinx.coroutines.flow.StateFlow
+
+/**
+ * UseCase para forçar o reescaneamento de capítulos de um quadrinho específico.
+ */
+class RescanComicChaptersUseCase(
+    private val chapterRepository: ChapterSyncGateway,
+) {
+    val progress: StateFlow<Int> = chapterRepository.progress
+    val isIndexing: StateFlow<Boolean> = chapterRepository.isIndexing
+
+    suspend operator fun invoke(comicId: Long): Either<LibrarySyncError, Unit> = chapterRepository.refreshComicChapters(comicId)
+}

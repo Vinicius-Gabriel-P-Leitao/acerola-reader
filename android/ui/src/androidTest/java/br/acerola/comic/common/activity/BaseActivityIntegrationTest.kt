@@ -1,0 +1,72 @@
+package br.acerola.comic.common.activity
+
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import br.acerola.comic.common.state.LocalSnackbarHostState
+import br.acerola.comic.common.ux.Acerola
+import br.acerola.comic.common.ux.component.SnackbarError
+import br.acerola.comic.common.ux.component.SnackbarSuccess
+import br.acerola.comic.common.ux.component.SnackbarVariant
+import br.acerola.comic.common.ux.component.showSnackbar
+import br.acerola.comic.common.ux.theme.AcerolaTheme
+import org.junit.Rule
+import org.junit.Test
+
+class BaseActivityIntegrationTest {
+    @get:Rule
+    val composeTestRule = createComposeRule()
+
+    @Test
+    fun should_display_error_snackbar_when_requested_via_LocalSnackbarHostState() {
+        val snackbarHostState = SnackbarHostState()
+
+        composeTestRule.setContent {
+            AcerolaTheme {
+                CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
+                    androidx.compose.material3.Scaffold(
+                        snackbarHost = {
+                            androidx.compose.material3.SnackbarHost(hostState = snackbarHostState) { data ->
+                                Acerola.Component.SnackbarError(message = data.visuals.message)
+                            }
+                        },
+                    ) { _ -> }
+
+                    LaunchedEffect(Unit) {
+                        snackbarHostState.showSnackbar("Test error", SnackbarVariant.Error)
+                    }
+                }
+            }
+        }
+
+        composeTestRule.onNodeWithText("Test error").assertIsDisplayed()
+    }
+
+    @Test
+    fun should_display_success_snackbar_when_requested() {
+        val snackbarHostState = SnackbarHostState()
+
+        composeTestRule.setContent {
+            AcerolaTheme {
+                CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
+                    androidx.compose.material3.Scaffold(
+                        snackbarHost = {
+                            androidx.compose.material3.SnackbarHost(hostState = snackbarHostState) { data ->
+                                Acerola.Component.SnackbarSuccess(message = data.visuals.message)
+                            }
+                        },
+                    ) { _ -> }
+
+                    LaunchedEffect(Unit) {
+                        snackbarHostState.showSnackbar("Success!", SnackbarVariant.Success)
+                    }
+                }
+            }
+        }
+
+        composeTestRule.onNodeWithText("Success!").assertIsDisplayed()
+    }
+}

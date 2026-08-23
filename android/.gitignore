@@ -1,0 +1,20 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+/.kotlin
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# ai
+.claude/commands
+.claude/agents
+.claude/settings.json
+.claude/package.json
+.claude/gsd-file-manifest.json
+.claude/get-shit-done
+app/release

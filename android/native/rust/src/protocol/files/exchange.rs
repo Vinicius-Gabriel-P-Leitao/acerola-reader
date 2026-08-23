@@ -1,0 +1,981 @@
+use std::{collections::HashMap, sync::Arc, time::Duration};
+
+use acerola_p2p::api::{error::P2pError, peer::PeerIdentity, protocol::EventEmitter};
+use futures::SinkExt;
+use serde::{de::DeserializeOwned, Serialize};
+use tokio::io::{AsyncRead, AsyncWrite};
+use tokio_stream::StreamExt;
+use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
+
+use super::model::{
+    build_manifest, FileComicInfo, FileHeader, FileManifest, FileSyncStats, FileWantList, SessionBusy,
+};
+use crate::{callbacks::FileSyncProvider, protocol::ffi_blocking::run_blocking};
+
+/// Valor do campo `error` em `SessionBusy` — mesmo literal usado pelo Desktop
+/// (`file_handler.rs`), é o que os dois lados usam para reconhecer essa mensagem específica
+/// em vez de um `FileManifest` normal.
+pub(super) const SESSION_BUSY_TAG: &str = "busy";
+
+const FRAME_READ_TIMEOUT: Duration = Duration::from_secs(30);
+const CHUNK_SIZE: usize = 64 * 1024;
+const PROGRESS_EVERY_BYTES: u64 = 1024 * 1024;
+
+pub(super) type Recv = FramedRead<Box<dyn AsyncRead + Send + Unpin>, LengthDelimitedCodec>;
+pub(super) type Writer = FramedWrite<Box<dyn AsyncWrite + Send + Unpin>, LengthDelimitedCodec>;
+
+/// Escreve uma mensagem de controle como frame JSON solto (sem tag de enum) — mesmo
+/// formato que o Desktop usa em `infra/sync/framing.rs::write_json`.
+async fn write_json<T: Serialize>(send: &mut Writer, value: &T) -> Result<(), P2pError> {
+    let bytes = serde_json::to_vec(value)
+        .map_err(|err| P2pError::StreamFailed(format!("failed to encode file sync message: {err}")))?;
+    send.send(bytes.into())
+        .await
+        .map_err(|err| P2pError::StreamFailed(format!("failed to write file sync message: {err}")))
+}
+
+async fn read_json<T: DeserializeOwned>(recv: &mut Recv) -> Result<T, P2pError> {
+    let frame = tokio::time::timeout(FRAME_READ_TIMEOUT, recv.next())
+        .await
+        .map_err(|_| P2pError::StreamFailed("timed out reading file sync message".into()))?
+        .ok_or_else(|| P2pError::StreamFailed("stream closed before file sync message".into()))?
+        .map_err(|err| P2pError::StreamFailed(format!("failed to read file sync message: {err}")))?;
+
+    serde_json::from_slice(&frame)
+        .map_err(|err| P2pError::StreamFailed(format!("failed to decode file sync message: {err}")))
+}
+
+/// Escreve a mensagem de rejeição de sessão diretamente no stream, no lugar do manifesto —
+/// usado quando `FileSyncSessionGuard::try_acquire` já barrou a sessão em `run_and_report`,
+/// antes de `run_exchange` ser chamado. Recebe `send` cru (não um `Writer` já montado) porque
+/// esse é exatamente o estado em que `run_and_report` está no momento da rejeição: o stream
+/// ainda não foi envolvido em nenhum framing.
+pub(super) async fn write_session_busy(
+    send: Box<dyn AsyncWrite + Send + Unpin>, reason: &str,
+) -> Result<(), P2pError> {
+    let mut writer: Writer = FramedWrite::new(send, LengthDelimitedCodec::new());
+    write_json(&mut writer, &SessionBusy { error: SESSION_BUSY_TAG.to_string(), reason: reason.to_string() })
+        .await
+}
+
+/// Lê a primeira mensagem do peer podendo ser tanto o `FileManifest` normal quanto uma
+/// rejeição `SessionBusy` — a única forma de saber qual é sem uma tag de enum no wire (regra
+/// já estabelecida pelo resto do protocolo) é espiar o JSON bruto antes de decidir o tipo
+/// concreto. Só os dois pontos de leitura inicial em `exchange_manifests` usam isso: depois da
+/// primeira mensagem, uma sessão aceita nunca mais manda `SessionBusy`.
+async fn read_manifest_or_busy(reader: &mut Recv) -> Result<FileManifest, P2pError> {
+    let value: serde_json::Value = read_json(reader).await?;
+
+    let is_busy = value.get("error").and_then(|tag| tag.as_str()) == Some(SESSION_BUSY_TAG);
+    if is_busy {
+        let reason = value.get("reason").and_then(|r| r.as_str()).unwrap_or("peer is busy");
+        return Err(P2pError::StreamFailed(format!("peer busy: {reason}")));
+    }
+
+    serde_json::from_value(value)
+        .map_err(|err| P2pError::StreamFailed(format!("failed to decode file sync message: {err}")))
+}
+
+/// Escreve um frame binário cru (sem envelope JSON) — usado só para bytes de arquivo,
+/// igual ao `write_bytes` do Desktop.
+async fn write_bytes(send: &mut Writer, bytes: Vec<u8>) -> Result<(), P2pError> {
+    send.send(bytes.into())
+        .await
+        .map_err(|err| P2pError::StreamFailed(format!("failed to write file chunk: {err}")))
+}
+
+async fn read_bytes(recv: &mut Recv) -> Result<Vec<u8>, P2pError> {
+    let frame = tokio::time::timeout(FRAME_READ_TIMEOUT, recv.next())
+        .await
+        .map_err(|_| P2pError::StreamFailed("timed out reading file chunk".into()))?
+        .ok_or_else(|| P2pError::StreamFailed("stream closed before file chunk".into()))?
+        .map_err(|err| P2pError::StreamFailed(format!("failed to read file chunk: {err}")))?;
+
+    Ok(frame.to_vec())
+}
+
+// --- Fronteira FFI (Kotlin): uma função por método de `FileSyncProvider`, cada uma só
+// clonando o `Arc` e delegando pro pool de blocking threads via `run_blocking` — nunca
+// direto na worker thread do runtime async. Existem só pra `send_one_chapter`/
+// `receive_one_chapter` não repetirem o bloco `{ Arc::clone + run_blocking }` a cada chamada.
+
+async fn open_chapter_for_read(
+    provider: &Arc<dyn FileSyncProvider>, comic_name: String, chapter: String,
+) -> Result<i64, P2pError> {
+    let provider = Arc::clone(provider);
+    run_blocking(move || provider.open_chapter_for_read(comic_name, chapter)).await
+}
+
+async fn read_chapter_chunk(provider: &Arc<dyn FileSyncProvider>, handle: i64) -> Result<Vec<u8>, P2pError> {
+    let provider = Arc::clone(provider);
+    run_blocking(move || provider.read_chapter_chunk(handle, CHUNK_SIZE as u32)).await
+}
+
+async fn close_read_handle(provider: &Arc<dyn FileSyncProvider>, handle: i64) -> Result<(), P2pError> {
+    let provider = Arc::clone(provider);
+    run_blocking(move || provider.close_read_handle(handle)).await
+}
+
+async fn begin_chapter_write(provider: &Arc<dyn FileSyncProvider>, header: &FileHeader) -> Result<i64, P2pError> {
+    let provider = Arc::clone(provider);
+    let (comic_name, chapter, file_name, checksum, size) = (
+        header.comic_name.clone(),
+        header.chapter.clone(),
+        header.file_name.clone(),
+        header.checksum.clone().unwrap_or_default(),
+        header.size,
+    );
+
+    // Log estratégico 3/4: último ponto do lado Rust antes do checksum atravessar a FFI
+    // de volta pro Kotlin (`beginChapterWrite`), onde fica guardado em `WriteHandle` até
+    // `finalizeChapterWrite` comparar contra o hash recém-calculado do arquivo recebido.
+    // Se este valor bater com o log 2/4 (mesmo comic/chapter) mas o Kotlin ainda assim
+    // reportar mismatch, a corrupção está inteiramente do lado Kotlin (escrita/releitura),
+    // fora do alcance do que dá pra instrumentar aqui.
+    tracing::debug!(
+        comic = %comic_name,
+        chapter = %chapter,
+        checksum = %checksum,
+        "sync-files: passando expected_checksum pra FFI Rust->Kotlin (begin_chapter_write)",
+    );
+
+    run_blocking(move || provider.begin_chapter_write(comic_name, chapter, file_name, checksum, size)).await
+}
+
+async fn write_chapter_chunk(
+    provider: &Arc<dyn FileSyncProvider>, handle: i64, chunk: Vec<u8>,
+) -> Result<bool, P2pError> {
+    let provider = Arc::clone(provider);
+    run_blocking(move || provider.write_chapter_chunk(handle, chunk)).await
+}
+
+async fn finalize_chapter_write(provider: &Arc<dyn FileSyncProvider>, handle: i64) -> Result<bool, P2pError> {
+    let provider = Arc::clone(provider);
+    run_blocking(move || provider.finalize_chapter_write(handle)).await
+}
+
+async fn abort_chapter_write(provider: &Arc<dyn FileSyncProvider>, handle: i64) -> Result<(), P2pError> {
+    let provider = Arc::clone(provider);
+    run_blocking(move || provider.abort_chapter_write(handle)).await
+}
+
+async fn build_local_manifest(provider: &Arc<dyn FileSyncProvider>) -> Result<FileManifest, P2pError> {
+    let provider = Arc::clone(provider);
+    let entries = run_blocking(move || provider.get_file_manifest()).await?;
+    Ok(build_manifest(entries))
+}
+
+/// Retorna `(comic_name, chapter)` que `peer` oferece e que `local` não tem (ausente, ou
+/// presente com checksum diferente — tratado como "faltando" também, sem tentar reconciliar).
+fn missing_from(local: &FileManifest, peer: &FileManifest) -> Vec<(String, String)> {
+    let local_checksums: HashMap<(&str, &str), Option<&str>> = local
+        .comics
+        .iter()
+        .flat_map(|comic| {
+            comic
+                .chapters
+                .iter()
+                .map(move |chapter| ((comic.comic_name.as_str(), chapter.chapter.as_str()), chapter.checksum.as_deref()))
+        })
+        .collect();
+
+    peer.comics
+        .iter()
+        .flat_map(|comic| {
+            let local_checksums = &local_checksums;
+            comic.chapters.iter().filter_map(move |chapter| {
+                let key = (comic.comic_name.as_str(), chapter.chapter.as_str());
+                let missing = match local_checksums.get(&key) {
+                    Some(checksum) => *checksum != chapter.checksum.as_deref(),
+                    None => true,
+                };
+                missing.then(|| (comic.comic_name.clone(), chapter.chapter.clone()))
+            })
+        })
+        .collect()
+}
+
+fn manifest_index(manifest: &FileManifest) -> HashMap<(&str, &str), &super::model::FileChapterInfo> {
+    manifest
+        .comics
+        .iter()
+        .flat_map(|comic: &FileComicInfo| {
+            comic.chapters.iter().map(move |chapter| ((comic.comic_name.as_str(), chapter.chapter.as_str()), chapter))
+        })
+        .collect()
+}
+
+async fn write_missing_header(writer: &mut Writer, comic_name: &str, chapter: &str) -> Result<(), P2pError> {
+    write_json(
+        writer,
+        &FileHeader {
+            comic_name: comic_name.to_string(),
+            chapter: chapter.to_string(),
+            file_name: String::new(),
+            size: 0,
+            checksum: None,
+        },
+    )
+    .await
+}
+
+/// Lê e escreve o conteúdo de um capítulo já aberto (`handle` válido) um chunk de cada vez —
+/// nunca carrega o arquivo inteiro em memória (regra 7).
+async fn stream_chapter_out(
+    writer: &mut Writer, provider: &Arc<dyn FileSyncProvider>, handle: i64, total_size: u64, emit: &EventEmitter,
+    peer: &PeerIdentity, comic_name: &str, chapter: &str,
+) -> Result<(), P2pError> {
+    let mut sent_bytes: u64 = 0;
+    let mut bytes_since_progress: u64 = 0;
+
+    while sent_bytes < total_size {
+        let chunk = read_chapter_chunk(provider, handle).await?;
+        if chunk.is_empty() {
+            break;
+        }
+
+        sent_bytes += chunk.len() as u64;
+        bytes_since_progress += chunk.len() as u64;
+        write_bytes(writer, chunk).await?;
+
+        if bytes_since_progress >= PROGRESS_EVERY_BYTES {
+            bytes_since_progress = 0;
+            emit_progress(emit, peer, comic_name, chapter, sent_bytes, total_size);
+        }
+    }
+
+    Ok(())
+}
+
+/// Envia um único capítulo pedido: abre, escreve o header, transmite os bytes, fecha.
+/// `Ok(false)` sinaliza "não pôde atender" (item sumiu ou handle inválido) — header vazio já
+/// escrito, sem transferência.
+async fn send_one_chapter(
+    writer: &mut Writer, provider: &Arc<dyn FileSyncProvider>, comic_name: &str, chapter: &str,
+    entry: &super::model::FileChapterInfo, emit: &EventEmitter, peer: &PeerIdentity,
+) -> Result<bool, P2pError> {
+    let handle = open_chapter_for_read(provider, comic_name.to_string(), chapter.to_string()).await?;
+    if handle < 0 {
+        write_missing_header(writer, comic_name, chapter).await?;
+        return Ok(false);
+    }
+
+    // Log estratégico 1/4: o checksum aqui é `entry.checksum`, que veio de
+    // `FileChapterInfo` — montado em `build_manifest` a partir do `FfiFileManifestEntry`
+    // que acabou de atravessar a FFI vindo do Kotlin (`getFileManifest`). Se esse valor já
+    // vier errado daqui, o bug está do lado Kotlin ou na travessia Kotlin -> Rust; se vier
+    // certo, o problema é mais adiante (framing/wire ou lado do receptor).
+    tracing::debug!(
+        comic = %comic_name,
+        chapter = %chapter,
+        checksum = %entry.checksum.as_deref().unwrap_or("<none>"),
+        size = entry.size,
+        "sync-files: enviando header com checksum declarado (pós-FFI Kotlin->Rust)",
+    );
+
+    write_json(
+        writer,
+        &FileHeader {
+            comic_name: comic_name.to_string(),
+            chapter: chapter.to_string(),
+            file_name: entry.file_name.clone(),
+            size: entry.size,
+            checksum: entry.checksum.clone(),
+        },
+    )
+    .await?;
+
+    stream_chapter_out(writer, provider, handle, entry.size, emit, peer, comic_name, chapter).await?;
+    close_read_handle(provider, handle).await?;
+
+    Ok(true)
+}
+
+/// Envia os capítulos pedidos, na ordem pedida. Um item que não existe mais localmente
+/// (corrida com deleção concorrente) manda um `FileHeader` com `size: 0` em vez de ser
+/// simplesmente pulado — o outro lado conta exatamente `requested.len()` headers, então
+/// a contagem precisa ficar determinística mesmo quando um item não pode ser atendido.
+async fn send_files(
+    writer: &mut Writer, provider: &Arc<dyn FileSyncProvider>, local_manifest: &FileManifest,
+    requested: &[(String, String)], emit: &EventEmitter, peer: &PeerIdentity, stats: &mut FileSyncStats,
+) -> Result<(), P2pError> {
+    let by_key = manifest_index(local_manifest);
+
+    for (comic_name, chapter) in requested {
+        let Some(entry) = by_key.get(&(comic_name.as_str(), chapter.as_str())) else {
+            write_missing_header(writer, comic_name, chapter).await?;
+            continue;
+        };
+
+        if send_one_chapter(writer, provider, comic_name, chapter, entry, emit, peer).await? {
+            stats.sent_count += 1;
+        }
+    }
+
+    Ok(())
+}
+
+/// Recebe exatamente `expected_count` capítulos (a mesma contagem que este lado pediu em
+/// `FileWantList`), cada um como `FileHeader` seguido de frames binários crus até somar
+/// `size` bytes. `size: 0` sinaliza "peer não tem mais esse capítulo" — sem corpo a seguir.
+async fn receive_files(
+    reader: &mut Recv, expected_count: usize, provider: &Arc<dyn FileSyncProvider>, emit: &EventEmitter,
+    peer: &PeerIdentity, stats: &mut FileSyncStats,
+) -> Result<(), P2pError> {
+    for _ in 0..expected_count {
+        let header: FileHeader = read_json(reader).await?;
+
+        if header.size == 0 {
+            continue;
+        }
+
+        // Log estratégico 2/4: checksum como decodificado do frame JSON que acabou de
+        // chegar pela rede. Comparar isto com o log 1/4 do lado que enviou (mesmo
+        // comic/chapter) isola se a corrupção aconteceu no wire/framing — se os dois
+        // valores baterem, o checksum sobreviveu à rede intacto.
+        tracing::debug!(
+            comic = %header.comic_name,
+            chapter = %header.chapter,
+            checksum = %header.checksum.as_deref().unwrap_or("<none>"),
+            size = header.size,
+            "sync-files: header recebido do wire",
+        );
+
+        receive_one_chapter(reader, provider, emit, peer, &header, stats).await?;
+    }
+
+    Ok(())
+}
+
+/// Lê o corpo de um capítulo até somar `header.size` bytes, gravando cada chunk assim que
+/// chega. Retorna `true` se alguma escrita falhou no meio do caminho (`handle` inválido conta
+/// como falha imediata) — quem chama decide o que fazer com isso.
+async fn receive_chapter_bytes(
+    reader: &mut Recv, provider: &Arc<dyn FileSyncProvider>, handle: i64, header: &FileHeader, emit: &EventEmitter,
+    peer: &PeerIdentity,
+) -> Result<bool, P2pError> {
+    let mut received_bytes: u64 = 0;
+    let mut bytes_since_progress: u64 = 0;
+    let mut write_failed = handle < 0;
+
+    while received_bytes < header.size {
+        let chunk = read_bytes(reader).await?;
+        if chunk.is_empty() {
+            break;
+        }
+
+        received_bytes += chunk.len() as u64;
+        bytes_since_progress += chunk.len() as u64;
+
+        if !write_failed && !write_chapter_chunk(provider, handle, chunk).await? {
+            write_failed = true;
+        }
+
+        if bytes_since_progress >= PROGRESS_EVERY_BYTES {
+            bytes_since_progress = 0;
+            emit_progress(emit, peer, &header.comic_name, &header.chapter, received_bytes, header.size);
+        }
+    }
+
+    Ok(write_failed)
+}
+
+fn chapter_complete_payload(peer: &PeerIdentity, header: &FileHeader) -> String {
+    serde_json::json!({ "peerId": peer.id, "comicName": header.comic_name, "chapter": header.chapter }).to_string()
+}
+
+fn chapter_failed_payload(peer: &PeerIdentity, header: &FileHeader) -> String {
+    serde_json::json!({
+        "peerId": peer.id,
+        "comicName": header.comic_name,
+        "chapter": header.chapter,
+        "reason": "checksum or I/O failure",
+    })
+    .to_string()
+}
+
+async fn receive_one_chapter(
+    reader: &mut Recv, provider: &Arc<dyn FileSyncProvider>, emit: &EventEmitter, peer: &PeerIdentity,
+    header: &FileHeader, stats: &mut FileSyncStats,
+) -> Result<(), P2pError> {
+    let handle = begin_chapter_write(provider, header).await?;
+    let write_failed = receive_chapter_bytes(reader, provider, handle, header, emit, peer).await?;
+
+    let succeeded = if !write_failed && handle >= 0 {
+        finalize_chapter_write(provider, handle).await?
+    } else {
+        false
+    };
+
+    // Log estratégico 4/4: resultado final da verificação de checksum, que acontece
+    // inteiramente dentro do Kotlin (`finalizeChapterWrite` relê o arquivo escrito e
+    // compara com `expectedChecksum`). O Rust só vê o booleano de volta — não o hash
+    // real calculado do lado Kotlin — então este log mostra o `expected_checksum` que
+    // tínhamos (log 3/4) ao lado do resultado, mas não prova sozinho onde a diferença
+    // está; serve pra confirmar QUAL capítulo falhou e correlacionar com os logs 1-3.
+    tracing::debug!(
+        comic = %header.comic_name,
+        chapter = %header.chapter,
+        expected_checksum = %header.checksum.as_deref().unwrap_or("<none>"),
+        write_failed,
+        succeeded,
+        "sync-files: resultado da finalização (checksum verificado do lado Kotlin)",
+    );
+
+    if succeeded {
+        stats.received_count += 1;
+        emit("sync:files:chapter_complete", chapter_complete_payload(peer, header));
+    } else {
+        if handle >= 0 {
+            abort_chapter_write(provider, handle).await?;
+        }
+        stats.failed_count += 1;
+        emit("sync:files:chapter_failed", chapter_failed_payload(peer, header));
+    }
+
+    Ok(())
+}
+
+fn emit_progress(
+    emit: &EventEmitter, peer: &PeerIdentity, comic_name: &str, chapter: &str, transferred: u64, total: u64,
+) {
+    emit(
+        "sync:files:progress",
+        serde_json::json!({
+            "peerId": peer.id,
+            "comicName": comic_name,
+            "chapter": chapter,
+            "bytesTransferred": transferred,
+            "totalBytes": total,
+        })
+        .to_string(),
+    );
+}
+
+fn manifest_exchanged_payload(peer: &PeerIdentity, missing_count: usize, offering_count: usize) -> String {
+    serde_json::json!({ "peerId": peer.id, "missingCount": missing_count, "offeringCount": offering_count }).to_string()
+}
+
+/// Fase 1: troca de manifesto (regra 4) — outbound escreve primeiro, inbound lê primeiro.
+async fn exchange_manifests(
+    outbound_role: bool, writer: &mut Writer, reader: &mut Recv, local_manifest: &FileManifest,
+) -> Result<FileManifest, P2pError> {
+    if outbound_role {
+        write_json(writer, local_manifest).await?;
+        read_manifest_or_busy(reader).await
+    } else {
+        let peer_manifest = read_manifest_or_busy(reader).await?;
+        write_json(writer, local_manifest).await?;
+        Ok(peer_manifest)
+    }
+}
+
+/// Fase 2: troca de want-list, mesma ordem espelhada da fase 1.
+async fn exchange_want_lists(
+    outbound_role: bool, writer: &mut Writer, reader: &mut Recv, wanted_locally: &[(String, String)],
+) -> Result<Vec<(String, String)>, P2pError> {
+    let mine = FileWantList { wanted: wanted_locally.to_vec() };
+
+    if outbound_role {
+        write_json(writer, &mine).await?;
+        let theirs: FileWantList = read_json(reader).await?;
+        Ok(theirs.wanted)
+    } else {
+        let theirs: FileWantList = read_json(reader).await?;
+        write_json(writer, &mine).await?;
+        Ok(theirs.wanted)
+    }
+}
+
+/// Fase 3: cada lado envia o que o outro pediu e recebe o que pediu, na ordem espelhada —
+/// outbound sempre escreve primeiro em cada etapa, inbound sempre lê primeiro.
+#[allow(clippy::too_many_arguments)]
+async fn transfer_files(
+    outbound_role: bool, writer: &mut Writer, reader: &mut Recv, provider: &Arc<dyn FileSyncProvider>,
+    local_manifest: &FileManifest, wanted_locally: &[(String, String)], their_wanted: &[(String, String)],
+    emit: &EventEmitter, peer: &PeerIdentity, stats: &mut FileSyncStats,
+) -> Result<(), P2pError> {
+    if outbound_role {
+        receive_files(reader, wanted_locally.len(), provider, emit, peer, stats).await?;
+        send_files(writer, provider, local_manifest, their_wanted, emit, peer, stats).await?;
+    } else {
+        send_files(writer, provider, local_manifest, their_wanted, emit, peer, stats).await?;
+        receive_files(reader, wanted_locally.len(), provider, emit, peer, stats).await?;
+    }
+
+    Ok(())
+}
+
+/// Executa a sessão inteira do protocolo `acerola/sync-files/1` pra um dos dois lados.
+/// Schema e sequência de wire idênticos ao Desktop (`infra/sync/protocol/file_handler.rs`):
+/// (1) troca de manifesto; (2) troca de want-list; (3) transferência de arquivos.
+pub(super) async fn run_exchange(
+    outbound_role: bool, peer: &PeerIdentity, emit: &EventEmitter, provider: &Arc<dyn FileSyncProvider>,
+    send: Box<dyn AsyncWrite + Send + Unpin>, recv: Box<dyn AsyncRead + Send + Unpin>,
+) -> Result<FileSyncStats, P2pError> {
+    let mut writer: Writer = FramedWrite::new(send, LengthDelimitedCodec::new());
+    let mut reader: Recv = FramedRead::new(recv, LengthDelimitedCodec::new());
+    let mut stats = FileSyncStats::default();
+
+    let local_manifest = build_local_manifest(provider).await?;
+    let peer_manifest = exchange_manifests(outbound_role, &mut writer, &mut reader, &local_manifest).await?;
+
+    let wanted_locally = missing_from(&local_manifest, &peer_manifest);
+    let wanted_by_peer = missing_from(&peer_manifest, &local_manifest);
+    emit(
+        "sync:files:manifest_exchanged",
+        manifest_exchanged_payload(peer, wanted_locally.len(), wanted_by_peer.len()),
+    );
+
+    let their_wanted = exchange_want_lists(outbound_role, &mut writer, &mut reader, &wanted_locally).await?;
+
+    transfer_files(
+        outbound_role,
+        &mut writer,
+        &mut reader,
+        provider,
+        &local_manifest,
+        &wanted_locally,
+        &their_wanted,
+        emit,
+        peer,
+        &mut stats,
+    )
+    .await?;
+
+    Ok(stats)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        collections::HashMap,
+        sync::{
+            atomic::{AtomicI64, AtomicU32, AtomicUsize, Ordering},
+            Mutex,
+        },
+        time::Duration,
+    };
+
+    use super::*;
+    use crate::callbacks::FfiFileManifestEntry;
+
+    /// Provider que nunca é usado pra transferir nada — todos os métodos de dados retornam
+    /// "vazio"/"-1"/"false". Só `get_file_manifest` faz algo (definido por closure em cada
+    /// mock específico via composição).
+    struct CountingSlowProvider {
+        manifest_calls: Arc<AtomicUsize>,
+        sleep_ms: u64,
+    }
+
+    impl FileSyncProvider for CountingSlowProvider {
+        fn get_file_manifest(&self) -> Vec<FfiFileManifestEntry> {
+            self.manifest_calls.fetch_add(1, Ordering::SeqCst);
+            if self.sleep_ms > 0 {
+                std::thread::sleep(Duration::from_millis(self.sleep_ms));
+            }
+            vec![]
+        }
+        fn open_chapter_for_read(&self, _comic_name: String, _chapter: String) -> i64 {
+            -1
+        }
+        fn read_chapter_chunk(&self, _handle: i64, _chunk_size: u32) -> Vec<u8> {
+            vec![]
+        }
+        fn close_read_handle(&self, _handle: i64) {}
+        fn begin_chapter_write(
+            &self, _comic_name: String, _chapter: String, _file_name: String, _expected_checksum: String,
+            _size_bytes: u64,
+        ) -> i64 {
+            -1
+        }
+        fn write_chapter_chunk(&self, _handle: i64, _bytes: Vec<u8>) -> bool {
+            false
+        }
+        fn finalize_chapter_write(&self, _handle: i64) -> bool {
+            false
+        }
+        fn abort_chapter_write(&self, _handle: i64) {}
+    }
+
+    fn make_peer(id: &str) -> PeerIdentity {
+        PeerIdentity { id: id.to_string(), device_id: None }
+    }
+
+    fn no_op_emitter() -> EventEmitter {
+        Arc::new(|_event: &str, _payload: String| {})
+    }
+
+    /// Prova, no nível de `build_local_manifest` (já usando `run_blocking`), que uma chamada
+    /// FFI lenta não trava outras tasks async concorrentes rodando no mesmo runtime — a
+    /// assinatura exata do bug relatado (sync-files travava o app inteiro por minutos).
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn build_local_manifest_does_not_block_runtime() {
+        let provider: Arc<dyn FileSyncProvider> =
+            Arc::new(CountingSlowProvider { manifest_calls: Arc::new(AtomicUsize::new(0)), sleep_ms: 200 });
+
+        let ticks = Arc::new(AtomicU32::new(0));
+        let ticks_clone = Arc::clone(&ticks);
+        let ticker = tokio::spawn(async move {
+            for _ in 0..15 {
+                tokio::time::sleep(Duration::from_millis(10)).await;
+                ticks_clone.fetch_add(1, Ordering::SeqCst);
+            }
+        });
+
+        let manifest = build_local_manifest(&provider).await.unwrap();
+        let _ = tokio::join!(ticker);
+
+        assert!(manifest.comics.is_empty());
+        assert!(ticks.load(Ordering::SeqCst) >= 8, "runtime ficou travado durante get_file_manifest");
+    }
+
+    /// Prova que `run_exchange` monta o manifesto local exatamente 1 vez por sessão — antes
+    /// do fix, `send_files` reconstruía do zero internamente, dobrando o trabalho.
+    #[tokio::test]
+    async fn run_exchange_builds_local_manifest_exactly_once_per_side() {
+        let (client_io, server_io) = tokio::io::duplex(64 * 1024);
+        let (client_recv, client_send) = tokio::io::split(client_io);
+        let (server_recv, server_send) = tokio::io::split(server_io);
+
+        let outbound_calls = Arc::new(AtomicUsize::new(0));
+        let inbound_calls = Arc::new(AtomicUsize::new(0));
+        let outbound_provider: Arc<dyn FileSyncProvider> =
+            Arc::new(CountingSlowProvider { manifest_calls: Arc::clone(&outbound_calls), sleep_ms: 0 });
+        let inbound_provider: Arc<dyn FileSyncProvider> =
+            Arc::new(CountingSlowProvider { manifest_calls: Arc::clone(&inbound_calls), sleep_ms: 0 });
+
+        let peer = make_peer("peer-x");
+        let emit = no_op_emitter();
+
+        let outbound_fut = run_exchange(
+            true,
+            &peer,
+            &emit,
+            &outbound_provider,
+            Box::new(client_send) as Box<dyn AsyncWrite + Send + Unpin>,
+            Box::new(client_recv) as Box<dyn AsyncRead + Send + Unpin>,
+        );
+        let inbound_fut = run_exchange(
+            false,
+            &peer,
+            &emit,
+            &inbound_provider,
+            Box::new(server_send) as Box<dyn AsyncWrite + Send + Unpin>,
+            Box::new(server_recv) as Box<dyn AsyncRead + Send + Unpin>,
+        );
+
+        let (outbound_result, inbound_result) = tokio::join!(outbound_fut, inbound_fut);
+        outbound_result.unwrap();
+        inbound_result.unwrap();
+
+        assert_eq!(outbound_calls.load(Ordering::SeqCst), 1);
+        assert_eq!(inbound_calls.load(Ordering::SeqCst), 1);
+    }
+
+    // --- Testes de integridade de transferência ---
+    //
+    // Os mocks acima (`CountingSlowProvider`) nunca tocam bytes reais — `read_chapter_chunk`
+    // sempre devolve vazio, `write_chapter_chunk` sempre falha. Isso deixa uma lacuna: nenhum
+    // teste existente exercita o caminho real de envio -> framing -> recepção -> verificação
+    // de checksum, que é exatamente onde suspeitamos um bug de "checksum mismatch" em produção
+    // (já provado, com hash real de um arquivo real, que o checksum ORIGEM está correto — o
+    // problema está em algum ponto entre a origem e a verificação final).
+    //
+    // `InMemoryFileSyncProvider` guarda bytes de verdade nos dois sentidos e usa blake3 (só
+    // como checksum de teste — não é o SHA-256 real de produção, que é calculado no Kotlin)
+    // pra provar que o que sai de um lado chega intacto no outro, incluindo o próprio valor
+    // do checksum atravessando `FileHeader` pelo wire. Mesmo espírito dos testes de stress do
+    // `acerola-p2p` (`transport_stress.rs`: payload real + hash real + comparação), só que
+    // exercitando o protocolo `sync-files` inteiro (manifesto -> want-list -> transferência)
+    // em vez do transporte cru.
+
+    struct WriteState {
+        comic_name: String,
+        chapter: String,
+        expected_checksum: String,
+        buffer: Vec<u8>,
+    }
+
+    /// Um capítulo que já foi finalizado do lado que recebeu — guarda tanto o checksum
+    /// declarado pelo remetente (`expected_checksum`, o que veio no `FileHeader`) quanto o
+    /// que este provider recalculou dos bytes efetivamente recebidos (`actual_checksum`),
+    /// além dos bytes crus — pra poder comparar tanto o hash quanto o conteúdo byte-a-byte.
+    struct FinalizedChapter {
+        comic_name: String,
+        chapter: String,
+        expected_checksum: String,
+        actual_checksum: String,
+        bytes: Vec<u8>,
+    }
+
+    struct InMemoryFileSyncProvider {
+        readable: HashMap<(String, String), (String, Vec<u8>)>,
+        read_handles: Mutex<HashMap<i64, (Vec<u8>, usize)>>,
+        write_handles: Mutex<HashMap<i64, WriteState>>,
+        finalized: Mutex<Vec<FinalizedChapter>>,
+        next_handle: AtomicI64,
+    }
+
+    impl InMemoryFileSyncProvider {
+        fn with_readable(entries: Vec<(String, String, String, Vec<u8>)>) -> Self {
+            let readable = entries
+                .into_iter()
+                .map(|(comic_name, chapter, file_name, bytes)| ((comic_name, chapter), (file_name, bytes)))
+                .collect();
+            Self {
+                readable,
+                read_handles: Mutex::new(HashMap::new()),
+                write_handles: Mutex::new(HashMap::new()),
+                finalized: Mutex::new(Vec::new()),
+                next_handle: AtomicI64::new(1),
+            }
+        }
+    }
+
+    impl FileSyncProvider for InMemoryFileSyncProvider {
+        fn get_file_manifest(&self) -> Vec<FfiFileManifestEntry> {
+            self.readable
+                .iter()
+                .map(|((comic_name, chapter), (file_name, bytes))| FfiFileManifestEntry {
+                    comic_name: comic_name.clone(),
+                    chapter: chapter.clone(),
+                    file_name: file_name.clone(),
+                    checksum: blake3::hash(bytes).to_hex().to_string(),
+                    size_bytes: bytes.len() as u64,
+                })
+                .collect()
+        }
+
+        fn open_chapter_for_read(&self, comic_name: String, chapter: String) -> i64 {
+            let Some((_, bytes)) = self.readable.get(&(comic_name, chapter)) else {
+                return -1;
+            };
+            let handle = self.next_handle.fetch_add(1, Ordering::SeqCst);
+            self.read_handles.lock().unwrap().insert(handle, (bytes.clone(), 0));
+            handle
+        }
+
+        fn read_chapter_chunk(&self, handle: i64, chunk_size: u32) -> Vec<u8> {
+            let mut handles = self.read_handles.lock().unwrap();
+            let Some((bytes, pos)) = handles.get_mut(&handle) else {
+                return vec![];
+            };
+            let end = (*pos + chunk_size as usize).min(bytes.len());
+            if *pos >= end {
+                return vec![];
+            }
+            let chunk = bytes[*pos..end].to_vec();
+            *pos = end;
+            chunk
+        }
+
+        fn close_read_handle(&self, handle: i64) {
+            self.read_handles.lock().unwrap().remove(&handle);
+        }
+
+        fn begin_chapter_write(
+            &self, comic_name: String, chapter: String, _file_name: String, expected_checksum: String,
+            _size_bytes: u64,
+        ) -> i64 {
+            let handle = self.next_handle.fetch_add(1, Ordering::SeqCst);
+            self.write_handles
+                .lock()
+                .unwrap()
+                .insert(handle, WriteState { comic_name, chapter, expected_checksum, buffer: Vec::new() });
+            handle
+        }
+
+        fn write_chapter_chunk(&self, handle: i64, bytes: Vec<u8>) -> bool {
+            let mut handles = self.write_handles.lock().unwrap();
+            let Some(state) = handles.get_mut(&handle) else {
+                return false;
+            };
+            state.buffer.extend_from_slice(&bytes);
+            true
+        }
+
+        fn finalize_chapter_write(&self, handle: i64) -> bool {
+            let Some(state) = self.write_handles.lock().unwrap().remove(&handle) else {
+                return false;
+            };
+            let actual_checksum = blake3::hash(&state.buffer).to_hex().to_string();
+            let succeeded = actual_checksum == state.expected_checksum;
+            self.finalized.lock().unwrap().push(FinalizedChapter {
+                comic_name: state.comic_name,
+                chapter: state.chapter,
+                expected_checksum: state.expected_checksum,
+                actual_checksum,
+                bytes: state.buffer,
+            });
+            succeeded
+        }
+
+        fn abort_chapter_write(&self, handle: i64) {
+            self.write_handles.lock().unwrap().remove(&handle);
+        }
+    }
+
+    /// Gerador determinístico de payload — varia com `seed` pra capítulos diferentes não
+    /// terem o mesmo conteúdo (evita mascarar bug de troca/mistura entre capítulos).
+    fn make_payload(size: usize, seed: u8) -> Vec<u8> {
+        (0..size).map(|i| ((i as u64).wrapping_mul(31).wrapping_add(seed as u64) % 251) as u8).collect()
+    }
+
+    /// Round-trip com bytes de verdade nos dois sentidos, tamanhos propositalmente NÃO
+    /// múltiplos de `CHUNK_SIZE` (64KB) pra exercitar o último chunk parcial do loop em
+    /// `stream_chapter_out`/`receive_chapter_bytes`. Verifica três coisas independentes:
+    /// (1) o checksum declarado pelo remetente sobrevive ao wire; (2) o checksum recalculado
+    /// do lado que recebe bate com o declarado; (3) os bytes recebidos são idênticos,
+    /// byte-a-byte, ao que foi enviado — não só o hash batendo (hash batendo não prova
+    /// ausência de bug se o mock também estivesse errado do mesmo jeito dos dois lados).
+    #[tokio::test]
+    async fn run_exchange_transfers_real_bytes_with_correct_checksum_round_trip() {
+        let outbound_payload = make_payload(1_500_037, 7);
+        let inbound_payload = make_payload(900_321, 42);
+
+        let outbound_provider = Arc::new(InMemoryFileSyncProvider::with_readable(vec![(
+            "Comic A".to_string(),
+            "Ch. 1".to_string(),
+            "ch1.cbz".to_string(),
+            outbound_payload.clone(),
+        )]));
+        let inbound_provider = Arc::new(InMemoryFileSyncProvider::with_readable(vec![(
+            "Comic B".to_string(),
+            "Ch. 1".to_string(),
+            "ch1.cbz".to_string(),
+            inbound_payload.clone(),
+        )]));
+
+        let (client_io, server_io) = tokio::io::duplex(256 * 1024);
+        let (client_recv, client_send) = tokio::io::split(client_io);
+        let (server_recv, server_send) = tokio::io::split(server_io);
+
+        let peer = make_peer("peer-x");
+        let emit = no_op_emitter();
+
+        let outbound_dyn: Arc<dyn FileSyncProvider> = Arc::clone(&outbound_provider) as Arc<dyn FileSyncProvider>;
+        let inbound_dyn: Arc<dyn FileSyncProvider> = Arc::clone(&inbound_provider) as Arc<dyn FileSyncProvider>;
+
+        let outbound_fut = run_exchange(
+            true,
+            &peer,
+            &emit,
+            &outbound_dyn,
+            Box::new(client_send) as Box<dyn AsyncWrite + Send + Unpin>,
+            Box::new(client_recv) as Box<dyn AsyncRead + Send + Unpin>,
+        );
+        let inbound_fut = run_exchange(
+            false,
+            &peer,
+            &emit,
+            &inbound_dyn,
+            Box::new(server_send) as Box<dyn AsyncWrite + Send + Unpin>,
+            Box::new(server_recv) as Box<dyn AsyncRead + Send + Unpin>,
+        );
+
+        let (outbound_result, inbound_result) = tokio::join!(outbound_fut, inbound_fut);
+        outbound_result.expect("outbound deveria completar sem erro");
+        inbound_result.expect("inbound deveria completar sem erro");
+
+        let outbound_received = outbound_provider.finalized.lock().unwrap();
+        assert_eq!(outbound_received.len(), 1, "outbound deveria ter recebido exatamente 1 capítulo de B");
+        let received_from_b = &outbound_received[0];
+        assert_eq!(received_from_b.comic_name, "Comic B");
+        assert_eq!(
+            received_from_b.expected_checksum, received_from_b.actual_checksum,
+            "checksum declarado por B não bate com o recalculado por A após receber"
+        );
+        assert_eq!(received_from_b.bytes, inbound_payload, "bytes recebidos por A não batem byte-a-byte com o que B enviou");
+
+        let inbound_received = inbound_provider.finalized.lock().unwrap();
+        assert_eq!(inbound_received.len(), 1, "inbound deveria ter recebido exatamente 1 capítulo de A");
+        let received_from_a = &inbound_received[0];
+        assert_eq!(received_from_a.comic_name, "Comic A");
+        assert_eq!(
+            received_from_a.expected_checksum, received_from_a.actual_checksum,
+            "checksum declarado por A não bate com o recalculado por B após receber"
+        );
+        assert_eq!(received_from_a.bytes, outbound_payload, "bytes recebidos por B não batem byte-a-byte com o que A enviou");
+    }
+
+    /// Stress: muitos capítulos de tamanhos variados transferidos SEQUENCIALMENTE numa única
+    /// sessão (mesmo `send_files`/`receive_files` loop). Alvo específico: o bug real em
+    /// produção falha capítulos DIFERENTES a cada execução, espalhados por vários quadrinhos
+    /// — a assinatura clássica de um handle sendo reaproveitado incorretamente ou de estado
+    /// (buffer, posição de leitura) vazando entre capítulos consecutivos, não de um bug
+    /// determinístico de cálculo. Se esse tipo de vazamento existisse no lado Rust, um
+    /// arquivo receberia bytes de outro e o checksum bateria errado só nesse — este teste
+    /// pega isso comparando cada capítulo recebido, individualmente, contra seu payload
+    /// original exato.
+    #[tokio::test]
+    async fn run_exchange_stress_many_sequential_chapters_preserve_checksum_integrity() {
+        const CHAPTER_COUNT: usize = 40;
+
+        let mut outbound_entries = Vec::with_capacity(CHAPTER_COUNT);
+        for i in 0..CHAPTER_COUNT {
+            let size = 10_000 + (i * 37_123) % 500_000;
+            outbound_entries.push((
+                "Stress Comic".to_string(),
+                format!("Ch. {i}"),
+                format!("ch{i}.cbz"),
+                make_payload(size, i as u8),
+            ));
+        }
+
+        let outbound_provider = Arc::new(InMemoryFileSyncProvider::with_readable(outbound_entries.clone()));
+        let inbound_provider = Arc::new(InMemoryFileSyncProvider::with_readable(vec![]));
+
+        let (client_io, server_io) = tokio::io::duplex(1024 * 1024);
+        let (client_recv, client_send) = tokio::io::split(client_io);
+        let (server_recv, server_send) = tokio::io::split(server_io);
+
+        let peer = make_peer("peer-stress");
+        let emit = no_op_emitter();
+
+        let outbound_dyn: Arc<dyn FileSyncProvider> = Arc::clone(&outbound_provider) as Arc<dyn FileSyncProvider>;
+        let inbound_dyn: Arc<dyn FileSyncProvider> = Arc::clone(&inbound_provider) as Arc<dyn FileSyncProvider>;
+
+        let outbound_fut = run_exchange(
+            true,
+            &peer,
+            &emit,
+            &outbound_dyn,
+            Box::new(client_send) as Box<dyn AsyncWrite + Send + Unpin>,
+            Box::new(client_recv) as Box<dyn AsyncRead + Send + Unpin>,
+        );
+        let inbound_fut = run_exchange(
+            false,
+            &peer,
+            &emit,
+            &inbound_dyn,
+            Box::new(server_send) as Box<dyn AsyncWrite + Send + Unpin>,
+            Box::new(server_recv) as Box<dyn AsyncRead + Send + Unpin>,
+        );
+
+        let (outbound_result, inbound_result) = tokio::join!(outbound_fut, inbound_fut);
+        outbound_result.expect("outbound deveria completar sem erro");
+        inbound_result.expect("inbound deveria completar sem erro");
+
+        let received = inbound_provider.finalized.lock().unwrap();
+        assert_eq!(received.len(), CHAPTER_COUNT, "nem todos os capítulos chegaram");
+
+        let by_chapter: HashMap<&str, &FinalizedChapter> =
+            received.iter().map(|f| (f.chapter.as_str(), f)).collect();
+
+        for (comic_name, chapter, _file_name, expected_bytes) in &outbound_entries {
+            let got = by_chapter
+                .get(chapter.as_str())
+                .unwrap_or_else(|| panic!("capítulo {chapter} nunca chegou do lado que recebeu"));
+            assert_eq!(&got.comic_name, comic_name, "capítulo {chapter}: comic_name divergiu");
+            assert_eq!(
+                got.expected_checksum, got.actual_checksum,
+                "capítulo {chapter}: checksum declarado não bate com o recalculado"
+            );
+            assert_eq!(
+                &got.bytes, expected_bytes,
+                "capítulo {chapter}: bytes recebidos divergem do original (possível vazamento de estado entre capítulos sequenciais)"
+            );
+        }
+    }
+}

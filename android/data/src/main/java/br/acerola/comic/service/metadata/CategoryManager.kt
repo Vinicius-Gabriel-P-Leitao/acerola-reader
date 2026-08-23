@@ -1,0 +1,64 @@
+package br.acerola.comic.service.metadata
+
+import br.acerola.comic.dto.metadata.category.CategoryDto
+import br.acerola.comic.local.dao.category.CategoryDao
+import br.acerola.comic.local.entity.category.Category
+import br.acerola.comic.local.entity.category.ComicCategory
+import br.acerola.comic.local.translator.ui.toViewDto
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class CategoryManager
+    @Inject
+    constructor(
+        private val categoryDao: CategoryDao,
+    ) {
+        fun getAllCategories(): Flow<List<CategoryDto>> =
+            categoryDao.observeAllCategories().map { list ->
+                list.map { it.toViewDto() }
+            }
+
+        suspend fun createCategory(
+            name: String,
+            color: Int,
+        ) {
+            categoryDao.insert(Category(name = name, color = color))
+        }
+
+        suspend fun deleteCategory(id: Long) {
+            categoryDao.delete(Category(id = id, name = "", color = 0))
+        }
+
+        suspend fun updateComicCategory(
+            directoryId: Long,
+            categoryId: Long?,
+        ) {
+            categoryDao.deleteComicCategoryByDirectoryId(directoryId)
+            if (categoryId != null) {
+                categoryDao.insertComicCategory(
+                    ComicCategory(
+                        comicDirectoryFk = directoryId,
+                        categoryFk = categoryId,
+                    ),
+                )
+            }
+        }
+
+        fun getCategoryByComicId(directoryId: Long): Flow<CategoryDto?> =
+            categoryDao.observeCategoryByDirectoryId(directoryId).map { it?.toViewDto() }
+
+        fun getAllComicCategories(): Flow<Map<Long, CategoryDto>> =
+            categoryDao.observeAllComicCategoriesJoined().map { list ->
+                list.associate { result ->
+                    result.comicDirectoryId to
+                        CategoryDto(
+                            id = result.categoryId,
+                            name = result.name,
+                            color = result.color,
+                        )
+                }
+            }
+    }
