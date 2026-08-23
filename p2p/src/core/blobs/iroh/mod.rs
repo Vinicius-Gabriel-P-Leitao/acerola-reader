@@ -81,20 +81,41 @@ impl P2pBlobStore for IrohBlobStore {
         let addr = parse_endpoint_addr(from)?;
         let iroh_hash = to_iroh_hash(hash);
         let conn = self.endpoint.connect(addr, iroh_blobs::ALPN).await?;
-        self.store.remote().fetch(conn, iroh_hash).complete().await?;
 
-        // `remote().fetch()` só escreve os bytes baixados no store local — ao contrário de
-        // `put()` (que passa por `AddProgress::with_tag()` e já sai com uma tag permanente),
-        // o blob baixado aqui fica SEM NENHUMA proteção contra o GC periódico do store
-        // (`DEFAULT_GC_INTERVAL`, ver `config.rs`). Sem essa tag, existe uma janela real entre
-        // este `fetch()` retornar e o próximo `get()` do chamador (`fetch_reader` em
-        // `acerola-desktop`/`acerola-android`) onde uma varredura de GC pode reciclar o blob
-        // recém-baixado antes de alguém lê-lo — foi exatamente esse bug, reproduzido ao vivo,
-        // que causava `BlobNotFound` esporádico em transferências de vários capítulos (alguns
-        // fetches caem na borda de uma varredura de GC, outros não). Cria a mesma tag
-        // permanente que `put()` já cria, protegendo o blob até `remove()` ser chamado
-        // explicitamente.
+        // `remote().fetch()` não usa nenhuma proteção interna — confirmado lendo o código-fonte
+        // do iroh-blobs (`api::remote::execute_get_sink`, que escreve os chunks direto no store)
+        // e o próprio teste `gc_file_delete` da lib, que mostra um arquivo PARCIAL sendo apagado
+        // por um `gc_run_once` no meio do download. Um fetch em andamento fica visível pra
+        // `store.blobs().list()` (o que o GC varre) sem nada impedindo a varredura de deletar
+        // ele antes mesmo do download terminar.
+        //
+        // Uma primeira versão deste fix criava um `temp_tag()` antes do fetch e só o soltava
+        // DEPOIS de criar a tag permanente, pensando que a sobreposição entre os dois eliminava
+        // qualquer janela. Não elimina: `gc_mark_task` (iroh-blobs) lê tags permanentes
+        // (`tags().list()`) e temporárias (`tags().list_temp_tags()`) em DUAS chamadas separadas
+        // e não-atômicas. Se a proteção de um hash migra de "só temp tag" pra "só tag permanente"
+        // bem no meio dessas duas leituras — exatamente o que a troca "cria permanente, solta
+        // temp" fazia — o mark não vê nenhuma das duas, mesmo o hash nunca tendo ficado
+        // desprotegido do ponto de vista do nosso código. Sob 1 fetch por vez isso quase nunca
+        // acontecia; sob ~20 fetches concorrentes (o caso ao vivo de `browse-cover`), a
+        // probabilidade de pelo menos um cair nessa janela sobe rápido — reproduzido de forma
+        // determinística em teste com fetches concorrentes mesmo com payload pequeno (download
+        // quase instantâneo), provando que não é sobre duração do download, é sobre a transição
+        // em si. `TempTag::new` (iroh-blobs) já documenta essa responsabilidade do chamador:
+        // "make sure that temp tags created between a mark phase and a sweep phase are
+        // protected" — a troca por baixo do pano viola exatamente essa garantia.
+        //
+        // Fix: cria a tag permanente ANTES do fetch começar, não depois. Sem transição nenhuma
+        // pra qualquer varredura de GC observar de forma inconsistente — a tag existe
+        // continuamente antes da primeira chamada de `list()` que algum dia vier a enxergá-la.
+        // Se o fetch falhar, desfaz a tag (senão fica uma tag permanente órfã apontando pra um
+        // hash sem dado nenhum).
         self.store.tags().create(HashAndFormat::raw(iroh_hash)).await?;
+
+        if let Err(err) = self.store.remote().fetch(conn, iroh_hash).complete().await {
+            let _ = gc::untag(&self.store, iroh_hash).await;
+            return Err(err.into());
+        }
 
         Ok(())
     }
