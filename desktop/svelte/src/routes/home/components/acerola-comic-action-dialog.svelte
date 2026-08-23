@@ -297,7 +297,8 @@
 								</div>
 							{:else}
 								{#each filteredBookmarks as category}
-									{@const hexColor = '#' + (category.color & 0xffffff).toString(16).padStart(6, '0')}
+									{@const hexColor =
+										'#' + (category.color & 0xffffff).toString(16).padStart(6, '0')}
 									<AcerolaButton
 										ui={{
 											variant: 'ghost',

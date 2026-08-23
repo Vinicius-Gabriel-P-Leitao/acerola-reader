@@ -92,8 +92,6 @@ describe('native reader', () => {
 
 		const firstPage = await firstDisplayed('img[alt="Página 1"], img[alt="Page 1"]', 20_000);
 
-
-
 		await (await firstDisplayed('[title^="Próxima página"]')).click();
 		await waitForTextContaining(`${fixture.comicTitle} - 2 / 3 páginas`, 10_000);
 		await waitForTextContaining('67%', 10_000);

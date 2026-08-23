@@ -9,6 +9,7 @@ use crate::{
             relations::{
                 chapter_with_comic::ChapterArchiveWithComic,
                 chapter_with_volume::ChapterArchiveWithVolume,
+                library_summary_row::LibrarySummaryRow,
             },
         },
         repositories::Repository,
@@ -215,6 +216,25 @@ impl ChapterRepository {
 
     /// Retorna todos os capítulos indexados junto do nome do quadrinho, usado pelo sync de
     /// arquivos pra montar o manifesto local sem depender de N+1 queries por quadrinho.
+    /// Só SQL, de propósito — nenhum `tokio::fs::metadata` por capítulo. Usada por
+    /// `browse-library` (P2P) pra listar título + contagem de capítulos + versão de capa sem
+    /// pagar o custo de I/O de disco por capítulo, que já estourou o timeout do protocolo numa
+    /// biblioteca grande (ver `FileSyncService::build_manifest`, usado até então). `cover_version`
+    /// reaproveita `comic_directory.last_modified`, já existente — sem hash novo.
+    pub async fn get_library_summary(&self) -> Result<Vec<LibrarySummaryRow>, DbError> {
+        let result = sqlx::query_as::<_, LibrarySummaryRow>(
+            "SELECT cd.name AS comic_name, COUNT(ca.id) AS chapter_count, cd.last_modified AS cover_version
+             FROM comic_directory cd
+             JOIN chapter_archive ca ON ca.comic_directory_fk = cd.id
+             GROUP BY cd.name
+             ORDER BY cd.name ASC",
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
     pub async fn find_all_with_comic_name(&self) -> Result<Vec<ChapterArchiveWithComic>, DbError> {
         let result = sqlx::query_as::<_, ChapterArchiveWithComic>(
             "SELECT ca.id, ca.chapter, ca.path, ca.checksum, ca.last_modified, c.name AS comic_name

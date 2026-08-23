@@ -29,7 +29,7 @@ struct MockNetworkState {
     local_id: String,
     mode: NetworkMode,
     peers: Vec<ConnectedPeerInfo>,
-    paired_peers: Vec<PeerAddr>,
+    paired_peers: Vec<(PeerAddr, Option<DeviceInfo>)>,
     last_connection: Option<(String, Vec<u8>)>,
     failure: Option<String>,
 }
@@ -61,7 +61,7 @@ impl MockNetworkService {
         self.state.lock().expect("network mock mutex should not be poisoned").peers = peers;
     }
 
-    fn set_paired_peers(&self, paired_peers: Vec<PeerAddr>) {
+    fn set_paired_peers(&self, paired_peers: Vec<(PeerAddr, Option<DeviceInfo>)>) {
         self.state.lock().expect("network mock mutex should not be poisoned").paired_peers = paired_peers;
     }
 
@@ -119,7 +119,7 @@ impl NetworkServiceApi for MockNetworkService {
         Ok(state.peers.clone())
     }
 
-    async fn paired_peers(&self) -> Result<Vec<PeerAddr>, String> {
+    async fn paired_peers(&self) -> Result<Vec<(PeerAddr, Option<DeviceInfo>)>, String> {
         let mut state = self.state.lock().expect("network mock mutex should not be poisoned");
         Self::take_failure(&mut state)?;
         Ok(state.paired_peers.clone())
@@ -307,10 +307,28 @@ async fn test_get_local_id_serializes_service_error() -> Result<()> {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_get_paired_peers_returns_persisted_peers_regardless_of_active_connection() -> Result<()> {
     let service = mock_network_service();
-    service.set_paired_peers(vec![PeerAddr {
-        id: PeerIdentity { id: "paired-offline-peer".to_string(), device_id: None },
-        addrs: vec![9, 9, 9],
-    }]);
+    service.set_paired_peers(vec![
+        (
+            PeerAddr {
+                id: PeerIdentity { id: "paired-offline-peer".to_string(), device_id: None },
+                addrs: vec![9, 9, 9],
+            },
+            Some(DeviceInfo {
+                name: "Notebook do Vinicius".to_string(),
+                os: "linux".to_string(),
+                version: "0.0.1".to_string(),
+            }),
+        ),
+        // Peer pareado que nunca respondeu a entrevista de identidade (handshake antigo,
+        // versão anterior a `DeviceInfo` existir, etc.) — frontend deve cair pro id cru.
+        (
+            PeerAddr {
+                id: PeerIdentity { id: "peer-without-device-info".to_string(), device_id: None },
+                addrs: vec![1, 2, 3],
+            },
+            None,
+        ),
+    ]);
     // Nenhum peer conectado agora (`set_peers` não chamado) — a lista de pareados não
     // depende disso, ao contrário de `get_network_status`.
     let (_app, webview) = build_network_app(service)?;
@@ -319,6 +337,10 @@ async fn test_get_paired_peers_returns_persisted_peers_regardless_of_active_conn
 
     assert_eq!(paired[0]["peerId"], "paired-offline-peer");
     assert_eq!(paired[0]["addrs"], json!([9, 9, 9]));
+    assert_eq!(paired[0]["deviceName"], "Notebook do Vinicius");
+
+    assert_eq!(paired[1]["peerId"], "peer-without-device-info");
+    assert_eq!(paired[1]["deviceName"], Value::Null);
 
     Ok(())
 }

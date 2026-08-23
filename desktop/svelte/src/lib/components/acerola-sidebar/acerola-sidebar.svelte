@@ -31,7 +31,9 @@
 		class="flex w-[4.6rem] shrink-0 flex-col items-center gap-1 border-r border-surface/30 bg-mantle/40 py-4 backdrop-blur-xl"
 	>
 		{#if brand}
-			<div class="mb-4 flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full">
+			<div
+				class="mb-4 flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full"
+			>
 				{@render brand()}
 			</div>
 		{/if}

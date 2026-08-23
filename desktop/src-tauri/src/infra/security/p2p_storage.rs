@@ -9,6 +9,23 @@ use tokio::sync::RwLock;
 
 use super::{decrypt, encrypt};
 
+/// Colapsa entradas com o mesmo `id.id`, mantendo a última (mesma regra de "mais recente
+/// vence" do upsert em `save_peer`). Migração pra arquivos `peers.enc` gravados antes da
+/// correção do upsert (que comparava `PeerId` inteira, então `device_id: None` vs
+/// `device_id: Some(..)` pro mesmo peer virava duas entradas) — sem isso, quem já tem uma
+/// duplicata persistida continuaria vendo `pairedPeers` quebrar `{#each ... (peer.peerId)}`
+/// no frontend mesmo depois de atualizar.
+fn dedupe_by_id(peers: Vec<PeerAddr>) -> Vec<PeerAddr> {
+    let mut deduped: Vec<PeerAddr> = Vec::with_capacity(peers.len());
+    for peer in peers {
+        match deduped.iter_mut().find(|cached| cached.id.id == peer.id.id) {
+            Some(cached) => *cached = peer,
+            None => deduped.push(peer),
+        }
+    }
+    deduped
+}
+
 /// Implementação de `P2PStorage` (identidade do nó + cache de peers pareados) com
 /// criptografia em repouso — ver `infra::security` pro esquema (chave mestra no
 /// keyring do SO, AES-256-GCM pro resto). Layout dentro de `base_dir`:
@@ -44,7 +61,7 @@ impl SecureP2pStorage {
     /// com o que estiver em memória: um cache vazio por engano apaga todo peer pareado
     /// anterior assim que a próxima sincronização salvar algo.
     fn read_peers(base_dir: &Path, master_key: &[u8; 32]) -> std::io::Result<Vec<PeerAddr>> {
-        match std::fs::read(Self::peers_path(base_dir)) {
+        let peers = match std::fs::read(Self::peers_path(base_dir)) {
             Ok(encrypted) => {
                 let json = decrypt(master_key, &encrypted).map_err(|err| {
                     std::io::Error::new(
@@ -57,11 +74,13 @@ impl SecureP2pStorage {
                         std::io::ErrorKind::InvalidData,
                         format!("failed to parse peers.enc contents: {err}"),
                     )
-                })
+                })?
             },
-            Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(Vec::new()),
-            Err(err) => Err(err),
-        }
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => Vec::new(),
+            Err(err) => return Err(err),
+        };
+
+        Ok(dedupe_by_id(peers))
     }
 }
 
@@ -87,7 +106,14 @@ impl P2PStorage for SecureP2pStorage {
 
     async fn save_peer(&self, peer: &PeerAddr) -> Result<(), P2pError> {
         let mut peers = self.peers_cache.write().await;
-        match peers.iter_mut().find(|cached| cached.id == peer.id) {
+        // Compara só `id.id` (a string de identidade), não a `PeerId` inteira — `PeerId` deriva
+        // `PartialEq` incluindo `device_id`, que nem sempre é conhecido em quem chama (ex:
+        // comandos do frontend montam `PeerIdentity { id, device_id: None }` porque só têm a
+        // string). Comparar a struct inteira faz uma reconexão sem `device_id` duplicar o peer
+        // já pareado (que tem `device_id: Some(..)` do handshake original) em vez de atualizá-lo
+        // — e a lista de pareados vira o `pairedPeers` que a UI usa como chave de `{#each}`, então
+        // a duplicata quebra a renderização (`each_key_duplicate`) em vez de só ser um dado feio.
+        match peers.iter_mut().find(|cached| cached.id.id == peer.id.id) {
             Some(cached) => *cached = peer.clone(),
             None => peers.push(peer.clone()),
         }
@@ -172,6 +198,61 @@ mod tests {
         assert_eq!(peers.len(), 2);
         assert!(peers.iter().any(|p| p.id.id == "peer-a"));
         assert!(peers.iter().any(|p| p.id.id == "peer-b"));
+    }
+
+    /// Regressão: `sync_comic`/`query_remote_library`/etc. montam `PeerIdentity { id, device_id:
+    /// None }` porque o frontend só manda a string do peer — mas o pareamento inicial (handshake)
+    /// salva com `device_id: Some(uuid)`. Se o upsert comparasse `PeerId` inteira (como fazia
+    /// antes), essas duas chamadas para o MESMO peer virariam duas entradas na lista, e a UI
+    /// (`{#each pairedPeers as peer (peer.peerId)}`) quebra com chave duplicada.
+    #[tokio::test]
+    async fn save_peer_upserts_by_id_string_even_when_device_id_differs() {
+        let dir = tempfile::tempdir().unwrap();
+        let storage = SecureP2pStorage::open(dir.path(), [7u8; 32]).unwrap();
+
+        let paired_via_handshake = PeerAddr {
+            id: PeerIdentity { id: "peer-a".to_string(), device_id: Some("uuid-1".to_string()) },
+            addrs: vec![1, 2, 3],
+        };
+        let reconnected_via_action = PeerAddr {
+            id: PeerIdentity { id: "peer-a".to_string(), device_id: None },
+            addrs: vec![4, 5, 6],
+        };
+
+        storage.save_peer(&paired_via_handshake).await.unwrap();
+        storage.save_peer(&reconnected_via_action).await.unwrap();
+
+        let peers = storage.load_peers().await.unwrap();
+        assert_eq!(peers.len(), 1, "mesmo peer.id.id deveria atualizar, não duplicar");
+        assert_eq!(peers[0].addrs, vec![4, 5, 6]);
+    }
+
+    /// Migração: um `peers.enc` já gravado ANTES da correção do upsert pode ter duplicatas
+    /// persistidas no disco (mesmo `id.id`, `device_id` diferente). `open()` tem que limpar
+    /// isso na leitura — sem isso, quem já pegou o bug continuaria vendo `pairedPeers` quebrar
+    /// a UI mesmo depois de atualizar o app, porque a duplicata já estava salva antes do fix.
+    #[tokio::test]
+    async fn open_deduplicates_peers_already_persisted_before_the_fix() {
+        let dir = tempfile::tempdir().unwrap();
+        let key = [11u8; 32];
+
+        let duplicated_on_disk = vec![
+            PeerAddr {
+                id: PeerIdentity { id: "peer-a".to_string(), device_id: Some("uuid-1".to_string()) },
+                addrs: vec![1, 2, 3],
+            },
+            PeerAddr {
+                id: PeerIdentity { id: "peer-a".to_string(), device_id: None },
+                addrs: vec![4, 5, 6],
+            },
+        ];
+        let json = serde_json::to_vec(&duplicated_on_disk).unwrap();
+        std::fs::write(dir.path().join("peers.enc"), encrypt(&key, &json)).unwrap();
+
+        let storage = SecureP2pStorage::open(dir.path(), key).unwrap();
+        let peers = storage.load_peers().await.unwrap();
+        assert_eq!(peers.len(), 1, "duplicata pré-existente deveria ser colapsada na leitura");
+        assert_eq!(peers[0].addrs, vec![4, 5, 6], "mantém a última entrada, mesma regra do upsert");
     }
 
     #[tokio::test]

@@ -9,7 +9,7 @@ export type TransferLogEntry = {
 	id: number;
 	/** Vazio quando a origem não é resolvível (ex.: `files:progress`, que não carrega peer id). */
 	peerId: string;
-	kind: 'history' | 'files';
+	kind: 'history' | 'files' | 'comic';
 	status: 'started' | 'progress' | 'complete' | 'error';
 	message: string;
 	timestamp: number;
@@ -144,7 +144,14 @@ export function useNetworkSync() {
 		status: TransferLogEntry['status'],
 		message: string
 	) {
-		const entry: TransferLogEntry = { id: nextId++, peerId, kind, status, message, timestamp: Date.now() };
+		const entry: TransferLogEntry = {
+			id: nextId++,
+			peerId,
+			kind,
+			status,
+			message,
+			timestamp: Date.now()
+		};
 		log = [entry, ...log].slice(0, MAX_LOG_ENTRIES);
 		if (peerId && isOpenStatus(status)) inFlightEntryId.set(key, entry.id);
 	}
@@ -209,6 +216,21 @@ export function useNetworkSync() {
 				const { peerId, message } = parseErrorPayload(event.payload);
 				if (peerId) clearSyncing(peerId, 'files');
 				push(peerId ?? '', 'files', 'error', message);
+			}),
+			await listen<string>(NETWORK_EVENTS.comicStarted, (event) =>
+				push(event.payload, 'comic', 'started', event.payload)
+			),
+			await listen<string>(NETWORK_EVENTS.comicProgress, (event) =>
+				push('', 'comic', 'progress', event.payload)
+			),
+			await listen<string>(NETWORK_EVENTS.comicComplete, (event) => {
+				clearSyncing(event.payload, 'comic');
+				push(event.payload, 'comic', 'complete', event.payload);
+			}),
+			await listen<string>(NETWORK_EVENTS.comicError, (event) => {
+				const { peerId, message } = parseErrorPayload(event.payload);
+				if (peerId) clearSyncing(peerId, 'comic');
+				push(peerId ?? '', 'comic', 'error', message);
 			})
 		);
 	}
@@ -253,6 +275,17 @@ export function useNetworkSync() {
 		await withSyncGuard(peerId, ['history', 'files'], NETWORK_COMMANDS.syncAll, { peerId, addrs });
 	}
 
+	/// Sync individual de UM quadrinho (push ou pull, ver `comic_handler.rs` no backend) — o
+	/// `comicName` é o mesmo nome (`comic_directory.name`) usado como chave natural em todo o
+	/// resto do protocolo de sync de arquivos.
+	async function syncComic(peerId: string, addrs: number[], comicName: string) {
+		await withSyncGuard(peerId, ['comic'], NETWORK_COMMANDS.syncComic, {
+			peerId,
+			addrs,
+			comicName
+		});
+	}
+
 	/// Timestamp da última sessão concluída com sucesso pra esse peer (qualquer `kind`), ou
 	/// `undefined` se nunca sincronizou — usado pra mostrar "Última sync: ..." por peer.
 	function lastSyncedAt(peerId: string): number | undefined {
@@ -265,6 +298,7 @@ export function useNetworkSync() {
 		syncHistory,
 		syncFiles,
 		syncAll,
+		syncComic,
 		isSyncing,
 		lastSyncedAt,
 		get log() {

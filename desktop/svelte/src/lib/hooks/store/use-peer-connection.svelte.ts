@@ -78,7 +78,10 @@ export function usePeerConnection() {
 		unlistenStatus = await listen<NetworkStatusPayload>(NETWORK_EVENTS.status, (event) => {
 			status = event.payload;
 		});
-		unlistenDeviceInfoReceived = await listen(NETWORK_EVENTS.deviceInfoReceived, handlePeerHandshake);
+		unlistenDeviceInfoReceived = await listen(
+			NETWORK_EVENTS.deviceInfoReceived,
+			handlePeerHandshake
+		);
 		unlistenDeviceInfoExchanged = await listen(
 			NETWORK_EVENTS.deviceInfoExchanged,
 			handlePeerHandshake
@@ -124,11 +127,15 @@ export function usePeerConnection() {
 		return knownAddrs.get(peerId);
 	}
 
-	/// Nome amigável de um peer conectado (a partir do `network:status`), com fallback pro
-	/// id truncado quando o dispositivo ainda não trocou `DeviceInfo` (ex: logo após conectar).
+	/// Nome amigável de um peer — prioriza `network:status` (mais fresco, cobre o caso raro de
+	/// um dispositivo renomeado no meio da sessão), mas cai pra `pairedPeers` (persistente,
+	/// sobrevive ao handshake fechar — é o caso comum, já que a sessão de handshake em si dura
+	/// só segundos) antes de cair pro id truncado.
 	function peerLabel(peerId: string): string {
-		const device = status?.peers.find((peer) => peer.peerId === peerId)?.device;
-		return device?.name ?? shortId(peerId);
+		const liveDevice = status?.peers.find((peer) => peer.peerId === peerId)?.device;
+		if (liveDevice) return liveDevice.name;
+		const paired = pairedPeers.find((peer) => peer.peerId === peerId);
+		return paired?.deviceName ?? shortId(peerId);
 	}
 
 	return {

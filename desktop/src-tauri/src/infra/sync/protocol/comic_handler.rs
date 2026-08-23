@@ -16,51 +16,70 @@ use crate::{
     },
     infra::sync::{
         framing::{framed_reader, framed_writer, read_json, write_json, FramedReader, FramedWriter},
-        messages::FileWantList,
+        messages::{ComicSyncRequest, FileManifest, FileWantList},
         protocol::{
+            comic_sync_registry::PendingComicSyncRegistry,
             file_session_guard::FileSyncSessionGuard,
             transfer::{emit_busy, read_or_busy, receive_files, send_files, write_session_busy, ChapterTransfer},
         },
     },
 };
 
-const LOG_KIND: &str = "files";
-const STARTED_EVENT: &str = "sync:files:started";
-const PROGRESS_EVENT: &str = "sync:files:progress";
-const COMPLETE_EVENT: &str = "sync:files:complete";
-const ERROR_EVENT: &str = "sync:files:error";
+const LOG_KIND: &str = "comic";
+const STARTED_EVENT: &str = "sync:comic:started";
+const PROGRESS_EVENT: &str = "sync:comic:progress";
+const COMPLETE_EVENT: &str = "sync:comic:complete";
+const ERROR_EVENT: &str = "sync:comic:error";
 
-/// Lado que INICIA a sessão de sync de arquivos. Sequência (cada passo alterna quem
-/// escreve/lê, nunca os dois escrevendo ao mesmo tempo no stream):
-/// 1. escreve manifesto local → 2. lê manifesto do peer → 3. escreve o que quer → 4. lê o
-///    que o peer quer → 5. lê os arquivos que pediu (o peer escreve primeiro nessa fase) →
-///    6. escreve os arquivos que o peer pediu.
-pub struct FileSyncOutbound {
+/// Lado que INICIA um sync individual de UM quadrinho (`acerola/sync-comic/1`). Reaproveita o
+/// mesmo mecanismo de diff/want-list/transfer de `acerola/sync-files/1`
+/// (`file_handler.rs`/`transfer.rs`), só trocando manifesto de biblioteca inteira por
+/// manifesto escopado a um `comic_name` — ver o comentário de design no
+/// `FileSyncService::build_manifest_for_comic`. Isso resolve push e pull com o mesmo código:
+/// se eu tenho o quadrinho e o peer não, o manifesto dele vem vazio e o `diff_wanted` dele pede
+/// tudo de mim; se é o contrário, o meu vem vazio e sou eu que peço tudo dele.
+///
+/// Sequência (uma mensagem a mais que `FileSyncOutbound`, no começo, pra informar QUAL
+/// quadrinho — sem isso o lado que responde não teria como escopar quando o meu manifesto
+/// vier vazio, caso "pull"):
+/// 1. escreve `ComicSyncRequest{comic_name}` → 2. escreve manifesto local escopado → 3. lê
+///    manifesto do peer (escopado) → 4. escreve o que quer → 5. lê o que o peer quer → 6. lê
+///    os arquivos que pediu → 7. escreve os arquivos que o peer pediu.
+pub struct ComicSyncOutbound {
     emit: EventEmitter,
     service: FileSyncService,
     log_repo: SyncHistoryLogRepository,
     guard: Arc<FileSyncSessionGuard>,
+    registry: Arc<PendingComicSyncRegistry>,
     transfer: Arc<dyn ChapterTransfer>,
 }
 
-impl FileSyncOutbound {
+impl ComicSyncOutbound {
     pub fn new(
         emit: EventEmitter, service: FileSyncService, log_repo: SyncHistoryLogRepository,
-        guard: Arc<FileSyncSessionGuard>, transfer: Arc<dyn ChapterTransfer>,
+        guard: Arc<FileSyncSessionGuard>, registry: Arc<PendingComicSyncRegistry>,
+        transfer: Arc<dyn ChapterTransfer>,
     ) -> Self {
-        Self { emit, service, log_repo, guard, transfer }
+        Self { emit, service, log_repo, guard, registry, transfer }
     }
 
-    /// Ver doc de `receive_files`/`send_files` (`transfer.rs`) — o `usize` retornado é a soma
-    /// de capítulos que não foram transferidos de verdade nas duas fases. `handle()` usa isso
-    /// pra não reportar a sessão como "completa" quando algo ficou faltando.
+    /// Retorna quantos capítulos (de qualquer uma das duas fases) não foram transferidos de
+    /// verdade — `handle()` usa isso pra decidir se a sessão pode mesmo ser reportada como
+    /// "completa", em vez de mascarar itens faltando atrás de um evento de sucesso genérico
+    /// (ver doc de `receive_files`/`send_files` em `transfer.rs`).
     async fn run(
         &self, peer: &PeerIdentity, writer: &mut FramedWriter, reader: &mut FramedReader,
     ) -> Result<usize, P2pError> {
-        let local_manifest = self.service.build_manifest().await?;
+        let comic_name = self.registry.take(&peer.id).ok_or_else(|| {
+            P2pError::StreamFailed("no pending comic sync scope registered for this peer".into())
+        })?;
+
+        write_json(writer, &ComicSyncRequest { comic_name: comic_name.clone() }).await?;
+
+        let local_manifest = self.service.build_manifest_for_comic(&comic_name).await?;
         write_json(writer, &local_manifest).await?;
 
-        let peer_manifest = read_or_busy(reader).await?;
+        let peer_manifest: FileManifest = read_or_busy(reader).await?;
 
         let my_wanted = self.service.diff_wanted(&peer_manifest).await?;
         write_json(writer, &FileWantList { wanted: my_wanted.clone() }).await?;
@@ -84,7 +103,7 @@ impl FileSyncOutbound {
 }
 
 #[async_trait]
-impl Handler for FileSyncOutbound {
+impl Handler for ComicSyncOutbound {
     async fn handle(
         &self, peer: &PeerIdentity, send: Box<dyn AsyncWrite + Send + Unpin>,
         recv: Box<dyn AsyncRead + Send + Unpin>,
@@ -110,11 +129,14 @@ impl Handler for FileSyncOutbound {
                     .ok();
                 Ok(())
             },
+            // Sessão terminou sem erro de protocolo, mas nem todos os capítulos chegaram —
+            // reportar como "complete" aqui esconderia exatamente o tipo de perda de dado
+            // silenciosa que motivou essa mudança (ver doc de `receive_files`).
             Ok(skipped) => {
                 let message = format!(
                     "{skipped} capítulo(s) não sincronizado(s) — veja o log do backend pra detalhes"
                 );
-                tracing::warn!(peer = %peer.id, skipped, "[FileSync] session finished with missing chapters");
+                tracing::warn!(peer = %peer.id, skipped, "[ComicSync] session finished with missing chapters");
                 (self.emit)(
                     ERROR_EVENT,
                     serde_json::json!({ "peerId": peer.id, "message": &message }).to_string(),
@@ -143,9 +165,11 @@ impl Handler for FileSyncOutbound {
     }
 }
 
-/// Lado que RESPONDE à sessão de sync de arquivos — mesma sequência lógica do outbound,
-/// com os papéis de leitura/escrita invertidos em cada passo.
-pub struct FileSyncInbound {
+/// Lado que RESPONDE à sessão de sync individual — mesma sequência lógica do outbound, com os
+/// papéis de leitura/escrita invertidos em cada passo. O `comic_name` a escopar vem do
+/// `ComicSyncRequest` recebido, não de um registro local (só o lado que inicia precisa do
+/// `PendingComicSyncRegistry`).
+pub struct ComicSyncInbound {
     emit: EventEmitter,
     service: FileSyncService,
     log_repo: SyncHistoryLogRepository,
@@ -153,7 +177,7 @@ pub struct FileSyncInbound {
     transfer: Arc<dyn ChapterTransfer>,
 }
 
-impl FileSyncInbound {
+impl ComicSyncInbound {
     pub fn new(
         emit: EventEmitter, service: FileSyncService, log_repo: SyncHistoryLogRepository,
         guard: Arc<FileSyncSessionGuard>, transfer: Arc<dyn ChapterTransfer>,
@@ -161,13 +185,16 @@ impl FileSyncInbound {
         Self { emit, service, log_repo, guard, transfer }
     }
 
-    /// Ver doc equivalente em `FileSyncOutbound::run`.
+    /// Ver doc equivalente em `ComicSyncOutbound::run` — mesmo contrato de contagem de
+    /// capítulos faltando.
     async fn run(
         &self, peer: &PeerIdentity, writer: &mut FramedWriter, reader: &mut FramedReader,
     ) -> Result<usize, P2pError> {
-        let peer_manifest = read_or_busy(reader).await?;
+        let request: ComicSyncRequest = read_or_busy(reader).await?;
 
-        let local_manifest = self.service.build_manifest().await?;
+        let peer_manifest: FileManifest = read_json(reader).await?;
+
+        let local_manifest = self.service.build_manifest_for_comic(&request.comic_name).await?;
         write_json(writer, &local_manifest).await?;
 
         let their_wanted: FileWantList = read_json(reader).await?;
@@ -192,7 +219,7 @@ impl FileSyncInbound {
 }
 
 #[async_trait]
-impl Handler for FileSyncInbound {
+impl Handler for ComicSyncInbound {
     async fn handle(
         &self, peer: &PeerIdentity, send: Box<dyn AsyncWrite + Send + Unpin>,
         recv: Box<dyn AsyncRead + Send + Unpin>,
@@ -222,7 +249,7 @@ impl Handler for FileSyncInbound {
                 let message = format!(
                     "{skipped} capítulo(s) não sincronizado(s) — veja o log do backend pra detalhes"
                 );
-                tracing::warn!(peer = %peer.id, skipped, "[FileSync] session finished with missing chapters");
+                tracing::warn!(peer = %peer.id, skipped, "[ComicSync] session finished with missing chapters");
                 (self.emit)(
                     ERROR_EVENT,
                     serde_json::json!({ "peerId": peer.id, "message": &message }).to_string(),
@@ -283,12 +310,32 @@ mod tests {
         (log_repo, service, temp_dir)
     }
 
-    /// Reproduz a corrida documentada no fix: uma segunda sessão inbound chega pro mesmo
-    /// peer enquanto uma já está em andamento. Sem o guard, `handle()` chamaria
-    /// `self.run()` (que abre o manifesto via `FileSyncService`) mesmo com outra sessão
-    /// ativa. Como a lease já está reservada antes de `handle()` rodar, a asserção de que
-    /// só o evento de "busy" foi emitido — nunca "started" — é a prova de que `run()` (e,
-    /// portanto, o `FileSyncService`) nunca chegou a ser tocado.
+    /// Sem `comic_name` registrado pro peer, o outbound aborta a sessão sem nunca chegar a
+    /// escrever nada no stream — evita disparar o resto do protocolo com um escopo
+    /// indefinido, o que aconteceria se o comando Tauri `sync_comic` esquecesse de chamar
+    /// `registry.set(...)` antes de `connect()`.
+    #[tokio::test]
+    async fn outbound_fails_fast_when_no_comic_is_pending_for_the_peer() {
+        let (log_repo, service, _dir) = setup().await;
+        let guard = FileSyncSessionGuard::new();
+        let registry = PendingComicSyncRegistry::new();
+        let (emit, events) = mock_emitter();
+
+        let peer = PeerIdentity { id: "peer-no-scope".to_string(), device_id: None };
+        let outbound = ComicSyncOutbound::new(emit, service, log_repo, guard, registry, test_transfer());
+
+        let result = outbound
+            .handle(&peer, Box::new(tokio::io::empty()), Box::new(tokio::io::empty()))
+            .await;
+
+        assert!(result.is_err());
+        let recorded = events.lock().unwrap();
+        assert!(recorded.iter().any(|(name, _)| name == "sync:comic:error"));
+    }
+
+    /// Mesma corrida documentada em `file_handler.rs`, aplicada ao protocolo individual: uma
+    /// segunda sessão pro mesmo peer enquanto uma já está ativa é rejeitada sem tocar o
+    /// serviço, reaproveitando o `FileSyncSessionGuard` compartilhado com `FILE_SYNC_ALPN`.
     #[tokio::test]
     async fn inbound_rejects_second_session_for_same_peer_without_touching_the_service() {
         let (log_repo, service, _dir) = setup().await;
@@ -298,7 +345,7 @@ mod tests {
         let peer = PeerIdentity { id: "peer-busy".to_string(), device_id: None };
         let _held_lease = guard.try_acquire(&peer.id).expect("primeira reserva deveria suceder");
 
-        let inbound = FileSyncInbound::new(emit, service, log_repo, guard, test_transfer());
+        let inbound = ComicSyncInbound::new(emit, service, log_repo, guard, test_transfer());
 
         let result =
             inbound.handle(&peer, Box::new(tokio::io::empty()), Box::new(tokio::io::empty())).await;
@@ -306,49 +353,7 @@ mod tests {
         assert!(result.is_ok());
         let recorded = events.lock().unwrap();
         assert_eq!(recorded.len(), 1, "esperava só o evento de busy, recebeu: {recorded:?}");
-        assert_eq!(recorded[0].0, "sync:files:error");
+        assert_eq!(recorded[0].0, "sync:comic:error");
         assert!(recorded[0].1.contains("already in progress"));
-    }
-
-    /// Mesma corrida do teste acima, mas cruzando papéis: a lease foi reservada por uma
-    /// sessão inbound e a segunda tentativa é outbound — prova que o guard é compartilhado
-    /// entre os dois papéis, não só entre sessões do mesmo tipo.
-    #[tokio::test]
-    async fn outbound_and_inbound_share_the_same_guard_per_peer() {
-        let (log_repo, service, _dir) = setup().await;
-        let guard = FileSyncSessionGuard::new();
-        let (emit, events) = mock_emitter();
-
-        let peer = PeerIdentity { id: "peer-cross".to_string(), device_id: None };
-        let _held_lease = guard.try_acquire(&peer.id).expect("reserva inicial deveria suceder");
-
-        let outbound = FileSyncOutbound::new(emit, service, log_repo, guard, test_transfer());
-
-        let result = outbound
-            .handle(&peer, Box::new(tokio::io::empty()), Box::new(tokio::io::empty()))
-            .await;
-
-        assert!(result.is_ok());
-        let recorded = events.lock().unwrap();
-        assert_eq!(recorded.len(), 1);
-        assert_eq!(recorded[0].0, "sync:files:error");
-    }
-
-    /// Sem nenhuma lease pré-existente, `handle()` deve seguir normalmente até `run()` —
-    /// confirma que o guard não bloqueia sessões novas depois que a anterior é liberada.
-    #[tokio::test]
-    async fn inbound_proceeds_to_run_when_no_session_is_active() {
-        let (log_repo, service, _dir) = setup().await;
-        let guard = FileSyncSessionGuard::new();
-        let (emit, events) = mock_emitter();
-
-        let peer = PeerIdentity { id: "peer-free".to_string(), device_id: None };
-        let inbound = FileSyncInbound::new(emit, service, log_repo, guard, test_transfer());
-
-        let _ =
-            inbound.handle(&peer, Box::new(tokio::io::empty()), Box::new(tokio::io::empty())).await;
-
-        let recorded = events.lock().unwrap();
-        assert!(recorded.iter().any(|(name, _)| name == "sync:files:started"));
     }
 }

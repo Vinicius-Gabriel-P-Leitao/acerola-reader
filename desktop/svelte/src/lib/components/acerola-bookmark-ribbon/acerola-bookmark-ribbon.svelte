@@ -22,7 +22,9 @@
 	// 0xFFF44336 & 0xFFFFFF = 0xF44336
 	let hexColor = $derived('#' + (color & 0xffffff).toString(16).padStart(6, '0'));
 	let label = $derived(
-		name ? m['components.bookmark_ribbon.label']({ name }) : m['components.bookmark_ribbon.default_label']()
+		name
+			? m['components.bookmark_ribbon.label']({ name })
+			: m['components.bookmark_ribbon.default_label']()
 	);
 </script>
 

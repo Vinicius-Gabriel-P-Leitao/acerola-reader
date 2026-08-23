@@ -12,7 +12,11 @@ use crate::{
     },
     infra::{
         security::MasterKeySource,
-        sync::protocol::{FILE_SYNC_ALPN, HISTORY_SYNC_ALPN},
+        sync::protocol::{
+            comic_sync_registry::PendingComicSyncRegistry,
+            cover_request_registry::PendingCoverRequestRegistry,
+            COMIC_SYNC_ALPN, COVER_BROWSE_ALPN, FILE_SYNC_ALPN, HISTORY_SYNC_ALPN, LIBRARY_BROWSE_ALPN,
+        },
     },
 };
 
@@ -142,6 +146,64 @@ pub async fn sync_all(
     let files_addr = PeerAddr { id: peer_identity, addrs };
     service.connect(files_addr, FILE_SYNC_ALPN.to_vec()).await?;
 
+    Ok(())
+}
+
+/// Dispara uma sessão de sync individual de UM quadrinho com um peer já pareado — funciona
+/// tanto pra "empurrar" (eu tenho, o peer não) quanto pra "puxar" (o peer tem, eu não), ver o
+/// comentário de design em `infra::sync::protocol::comic_handler`. Registra o `comic_name` no
+/// `PendingComicSyncRegistry` antes de conectar, porque o `Handler` (`ComicSyncOutbound`) é um
+/// singleton do boot e não recebe esse parâmetro por chamada de `connect()`. Progresso via os
+/// eventos `sync:comic:*`.
+#[tauri::command]
+pub async fn sync_comic(
+    service: State<'_, Arc<dyn NetworkServiceApi>>,
+    registry: State<'_, Arc<PendingComicSyncRegistry>>, peer_id: String, addrs: Vec<u8>,
+    comic_name: String,
+) -> Result<(), String> {
+    use acerola_p2p::api::peer::{PeerAddr, PeerIdentity};
+
+    registry.set(peer_id.clone(), comic_name);
+
+    let peer_addr = PeerAddr { id: PeerIdentity { id: peer_id, device_id: None }, addrs };
+    service.connect(peer_addr, COMIC_SYNC_ALPN.to_vec()).await?;
+    Ok(())
+}
+
+/// Consulta a biblioteca remota de um peer já pareado (só títulos + contagem de capítulos, sem
+/// transferir nada) — pré-requisito pra escolher um quadrinho pra puxar (`sync_comic`). O
+/// resultado chega pro frontend via o evento `library:query:result`.
+#[tauri::command]
+pub async fn query_remote_library(
+    service: State<'_, Arc<dyn NetworkServiceApi>>, peer_id: String, addrs: Vec<u8>,
+) -> Result<(), String> {
+    use acerola_p2p::api::peer::{PeerAddr, PeerIdentity};
+
+    let peer_addr = PeerAddr { id: PeerIdentity { id: peer_id, device_id: None }, addrs };
+    service.connect(peer_addr, LIBRARY_BROWSE_ALPN.to_vec()).await?;
+    Ok(())
+}
+
+/// Busca a capa (thumbnail) de UM quadrinho remoto — `known_version` é a versão já cacheada
+/// localmente (`None` se nunca buscou essa capa antes). Mesmo padrão fire-and-forget de
+/// `sync_comic`: enfileira `(comic_name, known_version)` em `PendingCoverRequestRegistry` antes
+/// de conectar, porque o `Handler` (`CoverBrowseOutbound`) é um singleton do boot e não recebe
+/// esse parâmetro por chamada de `connect()`. `use-remote-library.svelte.ts::fetchCoversFor`
+/// chama este comando em paralelo (um por quadrinho da lista) pro mesmo peer — por isso o
+/// registry é uma fila por peer (`push`/`take` FIFO), não um slot único que uma chamada
+/// sobrescreveria a da outra (bug reportado/corrigido em 22/08/2026, ver doc do registry).
+/// Resultado via `browse:cover:result`/`browse:cover:error`.
+#[tauri::command]
+pub async fn query_remote_cover(
+    service: State<'_, Arc<dyn NetworkServiceApi>>, registry: State<'_, Arc<PendingCoverRequestRegistry>>,
+    peer_id: String, addrs: Vec<u8>, comic_name: String, known_version: Option<i64>,
+) -> Result<(), String> {
+    use acerola_p2p::api::peer::{PeerAddr, PeerIdentity};
+
+    registry.push(peer_id.clone(), comic_name, known_version);
+
+    let peer_addr = PeerAddr { id: PeerIdentity { id: peer_id, device_id: None }, addrs };
+    service.connect(peer_addr, COVER_BROWSE_ALPN.to_vec()).await?;
     Ok(())
 }
 

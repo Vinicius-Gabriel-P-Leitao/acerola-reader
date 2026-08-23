@@ -112,7 +112,9 @@ describe('ComicPage Scroll Integration', () => {
 	const RENDER_CHUNK_SIZE = 25;
 	const ITEM_HEIGHT = 112;
 
-	let rustEventEmitter: ((event: { payload: ReturnType<typeof generateChaptersPayload> }) => void) | undefined;
+	let rustEventEmitter:
+		| ((event: { payload: ReturnType<typeof generateChaptersPayload> }) => void)
+		| undefined;
 	let intersectionObservers: MockIntersectionObserver[] = [];
 
 	beforeEach(() => {
@@ -237,7 +239,7 @@ describe('ComicPage Scroll Integration', () => {
 	}
 
 	async function renderLoadedComicPage() {
-		const view = render(ComicPage, { data: loaderDataMock });
+		const view = await render(ComicPage, { data: loaderDataMock });
 
 		await vi.waitFor(() => expect(rustEventEmitter).toBeDefined());
 		await waitForChapterFetch();
