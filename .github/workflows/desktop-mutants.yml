@@ -12,7 +12,7 @@ jobs:
     defaults:
       run:
         shell: pwsh
-        working-directory: desktop
+        working-directory: platforms/desktop
 
     steps:
       - name: Checkout
@@ -27,7 +27,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('desktop/src-tauri/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('platforms/desktop/src-tauri/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-registry-
 
@@ -54,4 +54,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mutants-report
-          path: desktop/src-tauri/mutants.out
+          path: platforms/desktop/src-tauri/mutants.out
