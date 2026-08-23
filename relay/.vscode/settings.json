@@ -1,0 +1,38 @@
+{
+  "files.watcherExclude": {
+    "**/target/**": true
+  },
+  "files.exclude": {
+    "**/target": true
+  },
+  "search.exclude": {
+    "**/target": true
+  },
+  "material-icon-theme.files.customClones": [
+    {
+      "name": "rust-lib",
+      "color": "cyan",
+      "base": "rust"
+    },
+    {
+      "name": "rust-mod",
+      "color": "green",
+      "base": "rust"
+    }
+  ],
+  "material-icon-theme.files.associations": {
+    "lib.rs": "rust-lib",
+    "mod.rs": "rust-mod"
+  },
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "mod.rs": "*"
+  },
+  "material-icon-theme.folders.associations": {
+    "iroh-relay": "connection",
+    "iroh-dns": "database",
+    "iroh": "connection",
+    "iroh-base": "core",
+    ".cargo": "rust"
+  }
+}
