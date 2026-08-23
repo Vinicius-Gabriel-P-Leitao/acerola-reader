@@ -19,7 +19,7 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 10
     commit-message:
-      prefix: "[chore](relay)"
+      prefix: "[chore](relay-lib)"
     groups:
       dependencies:
         patterns:
@@ -30,7 +30,7 @@ updates:
     schedule:
       interval: "weekly"
     commit-message:
-      prefix: "[chore](relay)"
+      prefix: "[chore](relay-lib)"
 
   - package-ecosystem: "github-actions"
     directory: "/"
