@@ -20,8 +20,9 @@ use model::LibrarySummary;
 /// `protocol::files::FileSyncSessionGuard`).
 pub(crate) const LIBRARY_BROWSE_ALPN: &[u8] = b"acerola/browse-library/1";
 
-/// Papel inbound: responde com o resumo da biblioteca local assim que a conexão é aceita — a
-/// conexão em si já é o pedido, não há mensagem de request no wire.
+/// Papel inbound: responde com o resumo da biblioteca local assim que a conexão é aceita — não
+/// espera nem lê o marcador que o outbound escreve (ver doc em `exchange::run_inbound`), pra não
+/// acoplar a resposta a quanto tempo o path P2P leva pra ficar pronto pra dados de verdade.
 pub(crate) struct LibraryBrowseInbound {
     provider: Arc<dyn FileSyncProvider>,
 }
@@ -38,9 +39,9 @@ impl Handler for LibraryBrowseInbound {
         &self,
         _peer: &PeerIdentity,
         send: Box<dyn AsyncWrite + Send + Unpin>,
-        recv: Box<dyn AsyncRead + Send + Unpin>,
+        _recv: Box<dyn AsyncRead + Send + Unpin>,
     ) -> Result<(), P2pError> {
-        exchange::run_inbound(&self.provider, send, recv).await
+        exchange::run_inbound(&self.provider, send).await
     }
 }
 

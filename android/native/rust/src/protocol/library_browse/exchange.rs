@@ -36,21 +36,16 @@ pub(super) async fn build_summary(provider: &Arc<dyn FileSyncProvider>) -> Resul
     Ok(LibrarySummary { comics })
 }
 
-/// Papel inbound: o pedido em si não carrega dados (o outbound manda só um marcador `{}`) — o
-/// que importa é que quinn exige uma escrita do lado que chamou `open_bi()` antes de garantir
-/// que o lado que aceita veja o stream via `accept_bi()`. Lê o marcador, builda o resumo local e
-/// manda de volta.
+/// Papel inbound: o marcador que `run_outbound` escreve existe só pra satisfazer a regra do
+/// quinn do lado de quem disca (`open_bi()` precisa escrever antes do `accept_bi()` remoto
+/// enxergar o stream) — este lado NÃO espera nem lê esse marcador antes de responder. Ler aqui
+/// acoplaria a resposta a quanto tempo o path P2P (NAT traversal/multipath) leva pra ficar
+/// pronto pra carregar dados de verdade, que pode ser bem maior que o handshake inicial da
+/// conexão — travando a sessão inteira nesse meio tempo (mesmo problema já corrigido no Desktop,
+/// ver `library_browse_handler.rs` lá).
 pub(super) async fn run_inbound(
     provider: &Arc<dyn FileSyncProvider>, send: Box<dyn AsyncWrite + Send + Unpin>,
-    recv: Box<dyn AsyncRead + Send + Unpin>,
 ) -> Result<(), P2pError> {
-    let mut reader: Recv = FramedRead::new(recv, LengthDelimitedCodec::new());
-    tokio::time::timeout(RESPONSE_READ_TIMEOUT, reader.next())
-        .await
-        .map_err(|_| P2pError::StreamFailed("timed out reading library browse request".into()))?
-        .ok_or_else(|| P2pError::StreamFailed("stream closed before library browse request".into()))?
-        .map_err(|err| P2pError::StreamFailed(format!("failed to read library browse request: {err}")))?;
-
     let summary = build_summary(provider).await?;
 
     let mut writer: Writer = FramedWrite::new(send, LengthDelimitedCodec::new());
@@ -149,22 +144,19 @@ mod tests {
 
     /// Round-trip real sobre um `tokio::io::duplex`: prova que `run_inbound`/`run_outbound`
     /// falam o mesmo formato de wire (sem depender de nenhum handler/ALPN, só o par de
-    /// funções puras de I/O) — incluindo o marcador de pedido que `run_outbound` escreve antes
-    /// de esperar a resposta.
+    /// funções puras de I/O) — o outbound escreve o marcador de pedido, mas o inbound nunca lê
+    /// nada, só responde direto (mesma garantia que o teste equivalente do Desktop cobre).
     #[tokio::test]
-    async fn run_outbound_reads_exactly_what_run_inbound_sent() {
+    async fn run_outbound_writes_request_but_inbound_never_reads_it_and_still_responds() {
         let provider: Arc<dyn FileSyncProvider> =
             Arc::new(StubProvider { summary: vec![summary_entry("Solo Leveling", 2)] });
 
         let (client_io, server_io) = tokio::io::duplex(64 * 1024);
         let (client_recv, client_send) = tokio::io::split(client_io);
-        let (server_recv, server_send) = tokio::io::split(server_io);
+        let (_server_recv, server_send) = tokio::io::split(server_io);
 
-        let inbound_fut = run_inbound(
-            &provider,
-            Box::new(server_send) as Box<dyn AsyncWrite + Send + Unpin>,
-            Box::new(server_recv) as Box<dyn AsyncRead + Send + Unpin>,
-        );
+        let inbound_fut =
+            run_inbound(&provider, Box::new(server_send) as Box<dyn AsyncWrite + Send + Unpin>);
         let outbound_fut = run_outbound(
             Box::new(client_send) as Box<dyn AsyncWrite + Send + Unpin>,
             Box::new(client_recv) as Box<dyn AsyncRead + Send + Unpin>,
