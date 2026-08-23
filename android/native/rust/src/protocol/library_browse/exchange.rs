@@ -36,11 +36,21 @@ pub(super) async fn build_summary(provider: &Arc<dyn FileSyncProvider>) -> Resul
     Ok(LibrarySummary { comics })
 }
 
-/// Papel inbound: o simples fato de aceitar a conexão nesta ALPN já é o pedido — não há
-/// mensagem de request no wire, só a resposta. Builda o resumo local e manda de volta.
+/// Papel inbound: o pedido em si não carrega dados (o outbound manda só um marcador `{}`) — o
+/// que importa é que quinn exige uma escrita do lado que chamou `open_bi()` antes de garantir
+/// que o lado que aceita veja o stream via `accept_bi()`. Lê o marcador, builda o resumo local e
+/// manda de volta.
 pub(super) async fn run_inbound(
     provider: &Arc<dyn FileSyncProvider>, send: Box<dyn AsyncWrite + Send + Unpin>,
+    recv: Box<dyn AsyncRead + Send + Unpin>,
 ) -> Result<(), P2pError> {
+    let mut reader: Recv = FramedRead::new(recv, LengthDelimitedCodec::new());
+    tokio::time::timeout(RESPONSE_READ_TIMEOUT, reader.next())
+        .await
+        .map_err(|_| P2pError::StreamFailed("timed out reading library browse request".into()))?
+        .ok_or_else(|| P2pError::StreamFailed("stream closed before library browse request".into()))?
+        .map_err(|err| P2pError::StreamFailed(format!("failed to read library browse request: {err}")))?;
+
     let summary = build_summary(provider).await?;
 
     let mut writer: Writer = FramedWrite::new(send, LengthDelimitedCodec::new());
@@ -52,10 +62,20 @@ pub(super) async fn run_inbound(
         .map_err(|err| P2pError::StreamFailed(format!("failed to write library summary: {err}")))
 }
 
-/// Papel outbound: só lê a resposta — não escreve nada, não há fase de request.
-pub(super) async fn run_outbound(recv: Box<dyn AsyncRead + Send + Unpin>) -> Result<LibrarySummary, P2pError> {
-    let mut reader: Recv = FramedRead::new(recv, LengthDelimitedCodec::new());
+/// Papel outbound: escreve um marcador mínimo (`{}`) antes de esperar a resposta — sem essa
+/// escrita, o lado que chamou `open_bi()` nunca garante que o inbound vai ver o stream via
+/// `accept_bi()` (regra do quinn, a lib QUIC por baixo do iroh), o que causava timeout/demora
+/// aleatória em vez de uma troca previsível.
+pub(super) async fn run_outbound(
+    send: Box<dyn AsyncWrite + Send + Unpin>, recv: Box<dyn AsyncRead + Send + Unpin>,
+) -> Result<LibrarySummary, P2pError> {
+    let mut writer: Writer = FramedWrite::new(send, LengthDelimitedCodec::new());
+    writer
+        .send(b"{}".to_vec().into())
+        .await
+        .map_err(|err| P2pError::StreamFailed(format!("failed to write library browse request: {err}")))?;
 
+    let mut reader: Recv = FramedRead::new(recv, LengthDelimitedCodec::new());
     let frame = tokio::time::timeout(RESPONSE_READ_TIMEOUT, reader.next())
         .await
         .map_err(|_| P2pError::StreamFailed("timed out reading library summary".into()))?
@@ -129,19 +149,26 @@ mod tests {
 
     /// Round-trip real sobre um `tokio::io::duplex`: prova que `run_inbound`/`run_outbound`
     /// falam o mesmo formato de wire (sem depender de nenhum handler/ALPN, só o par de
-    /// funções puras de I/O). `server_send` é o lado que `run_inbound` escreve;
-    /// `client_recv` é o lado que `run_outbound` lê — mesmo par conectado pelo duplex.
+    /// funções puras de I/O) — incluindo o marcador de pedido que `run_outbound` escreve antes
+    /// de esperar a resposta.
     #[tokio::test]
     async fn run_outbound_reads_exactly_what_run_inbound_sent() {
         let provider: Arc<dyn FileSyncProvider> =
             Arc::new(StubProvider { summary: vec![summary_entry("Solo Leveling", 2)] });
 
         let (client_io, server_io) = tokio::io::duplex(64 * 1024);
-        let (client_recv, _client_send) = tokio::io::split(client_io);
-        let (_server_recv, server_send) = tokio::io::split(server_io);
+        let (client_recv, client_send) = tokio::io::split(client_io);
+        let (server_recv, server_send) = tokio::io::split(server_io);
 
-        let inbound_fut = run_inbound(&provider, Box::new(server_send) as Box<dyn AsyncWrite + Send + Unpin>);
-        let outbound_fut = run_outbound(Box::new(client_recv) as Box<dyn AsyncRead + Send + Unpin>);
+        let inbound_fut = run_inbound(
+            &provider,
+            Box::new(server_send) as Box<dyn AsyncWrite + Send + Unpin>,
+            Box::new(server_recv) as Box<dyn AsyncRead + Send + Unpin>,
+        );
+        let outbound_fut = run_outbound(
+            Box::new(client_send) as Box<dyn AsyncWrite + Send + Unpin>,
+            Box::new(client_recv) as Box<dyn AsyncRead + Send + Unpin>,
+        );
 
         let (inbound_result, outbound_result) = tokio::join!(inbound_fut, outbound_fut);
         inbound_result.expect("inbound deveria completar sem erro");

@@ -38,15 +38,16 @@ impl Handler for LibraryBrowseInbound {
         &self,
         _peer: &PeerIdentity,
         send: Box<dyn AsyncWrite + Send + Unpin>,
-        _recv: Box<dyn AsyncRead + Send + Unpin>,
+        recv: Box<dyn AsyncRead + Send + Unpin>,
     ) -> Result<(), P2pError> {
-        exchange::run_inbound(&self.provider, send).await
+        exchange::run_inbound(&self.provider, send, recv).await
     }
 }
 
-/// Papel outbound: só lê a resposta e emite o resultado como evento pro Kotlin — quem disparou
-/// `P2PNode::browse_library` não tem retorno síncrono (mesmo padrão fire-and-forget de
-/// `connect`), então o resultado só chega via `browse:library:result`/`browse:library:error`.
+/// Papel outbound: escreve o marcador de pedido, lê a resposta e emite o resultado como evento
+/// pro Kotlin — quem disparou `P2PNode::browse_library` não tem retorno síncrono (mesmo padrão
+/// fire-and-forget de `connect`), então o resultado só chega via
+/// `browse:library:result`/`browse:library:error`.
 pub(crate) struct LibraryBrowseOutbound {
     emit: EventEmitter,
 }
@@ -62,10 +63,10 @@ impl Handler for LibraryBrowseOutbound {
     async fn handle(
         &self,
         peer: &PeerIdentity,
-        _send: Box<dyn AsyncWrite + Send + Unpin>,
+        send: Box<dyn AsyncWrite + Send + Unpin>,
         recv: Box<dyn AsyncRead + Send + Unpin>,
     ) -> Result<(), P2pError> {
-        match exchange::run_outbound(recv).await {
+        match exchange::run_outbound(send, recv).await {
             Ok(summary) => {
                 (self.emit)("browse:library:result", result_payload(peer, &summary));
                 Ok(())
