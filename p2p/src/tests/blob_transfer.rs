@@ -226,6 +226,140 @@ mod run_in_isolation {
         assert_eq!(received, payload);
     }
 
+    /// Mesma classe de bug de `fetched_blob_survives_a_gc_sweep_before_being_read`, mas
+    /// testando a janela mais estreita e mais perigosa: uma varredura de GC acontecendo
+    /// DURANTE o download em si, não só depois dele terminar. Reproduzido ao vivo em
+    /// 23/08/2026 sob carga real (dezenas de `browse-cover` disparados de uma vez): o fix
+    /// anterior só criava a tag DEPOIS do `fetch()` retornar, então uma varredura que caísse
+    /// durante o download (não depois) continuava sem nenhuma proteção — confirmado lendo
+    /// `api::remote::execute_get_sink` do iroh-blobs (escreve os chunks direto no store sem
+    /// usar `temp_tag()`) e o teste `gc_file_delete` da própria lib, que mostra um arquivo
+    /// parcial sendo apagado por `gc_run_once` no meio do download. Payload grande + intervalo
+    /// de GC minúsculo garante várias varreduras acontecendo enquanto os bytes ainda estão
+    /// chegando, tornando essa janela determinística sem precisar de carga concorrente real.
+    #[tokio::test]
+    async fn fetch_survives_gc_sweeps_happening_mid_download() {
+        use crate::api::blobs::IrohBlobsConfig;
+
+        let gc_interval = Duration::from_millis(5);
+
+        let node_a = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default().blobs(IrohBlobsConfig::Mem { gc_interval }),
+            test_device_info(),
+        )
+        .build()
+        .await
+        .unwrap();
+        let node_b = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default().blobs(IrohBlobsConfig::Mem { gc_interval }),
+            test_device_info(),
+        )
+        .build()
+        .await
+        .unwrap();
+
+        let addr_a = node_a.local_addr().clone();
+
+        // Grande o bastante pra um download real cruzar várias varreduras de GC de 5ms
+        // enquanto ainda está em andamento.
+        const PAYLOAD_SIZE: usize = 32 * 1024 * 1024; // 32 MiB
+        let payload: Vec<u8> = (0..PAYLOAD_SIZE).map(|i| (i % 251) as u8).collect();
+        let expected_hash = blake3::hash(&payload);
+
+        let blobs_a = node_a.blobs().await.unwrap();
+        let hash = blobs_a.put(payload).await.unwrap();
+
+        wait_for_mdns().await;
+
+        let blobs_b = node_b.blobs().await.unwrap();
+        blobs_b.fetch(&hash, &addr_a).await.expect("fetch must survive GC sweeps mid-download");
+
+        let mut reader =
+            blobs_b.get(&hash).await.expect("blob must be present immediately after fetch");
+        let mut received = Vec::new();
+        reader.read_to_end(&mut received).await.unwrap();
+
+        assert_eq!(blake3::hash(&received), expected_hash);
+    }
+
+    /// Reproduz o cenário real que expôs o bug (o teste acima isola o mecanismo com um único
+    /// fetch artificialmente lento) — não uma transferência lenta isolada, mas VÁRIAS
+    /// transferências concorrentes pro mesmo peer competindo por banda/CPU, o padrão ao vivo
+    /// de verdade (~20 buscas de capa disparadas de uma vez, `browse-cover` sem nenhum limite
+    /// de concorrência). Cada fetch concorrente aumenta a chance de algum deles cruzar uma
+    /// varredura de GC enquanto ainda em andamento; sem o `temp_tag`, isso derrubava uma
+    /// fração deles com `BlobNotFound` de forma esporádica — exatamente o padrão observado
+    /// (2 de ~22 falharam numa sessão real).
+    #[tokio::test]
+    async fn concurrent_fetches_from_the_same_peer_all_survive_gc_sweeps() {
+        use crate::api::blobs::IrohBlobsConfig;
+
+        let gc_interval = Duration::from_millis(20);
+
+        let node_a = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default().blobs(IrohBlobsConfig::Mem { gc_interval }),
+            test_device_info(),
+        )
+        .build()
+        .await
+        .unwrap();
+        let node_b = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default().blobs(IrohBlobsConfig::Mem { gc_interval }),
+            test_device_info(),
+        )
+        .build()
+        .await
+        .unwrap();
+
+        let addr_a = node_a.local_addr().clone();
+
+        // Próximo do burst real visto ao vivo (~20-22 `browse-cover` simultâneos pro mesmo peer).
+        const CONCURRENT_FETCHES: usize = 24;
+        const PAYLOAD_SIZE: usize = 2 * 1024 * 1024; // 2 MiB cada — tamanho realista de uma capa
+
+        let blobs_a = node_a.blobs().await.unwrap();
+        let mut payloads = Vec::with_capacity(CONCURRENT_FETCHES);
+        let mut hashes = Vec::with_capacity(CONCURRENT_FETCHES);
+        for index in 0..CONCURRENT_FETCHES {
+            let payload: Vec<u8> =
+                (0..PAYLOAD_SIZE).map(|byte| ((byte + index) % 251) as u8).collect();
+            let hash = blobs_a.put(payload.clone()).await.unwrap();
+            payloads.push(payload);
+            hashes.push(hash);
+        }
+
+        wait_for_mdns().await;
+
+        let blobs_b = node_b.blobs().await.unwrap();
+        let mut handles = Vec::with_capacity(CONCURRENT_FETCHES);
+        for hash in hashes {
+            let blobs_b = Arc::clone(&blobs_b);
+            let addr_a = addr_a.clone();
+            handles.push(tokio::spawn(async move {
+                blobs_b
+                    .fetch(&hash, &addr_a)
+                    .await
+                    .expect("fetch must survive GC sweeps happening under concurrent load");
+                let mut reader = blobs_b
+                    .get(&hash)
+                    .await
+                    .expect("blob must be present immediately after a concurrent fetch");
+                let mut received = Vec::new();
+                reader.read_to_end(&mut received).await.unwrap();
+                received
+            }));
+        }
+
+        for (handle, expected) in handles.into_iter().zip(payloads) {
+            let received = handle.await.unwrap();
+            assert_eq!(received, expected);
+        }
+    }
+
     #[tokio::test]
     async fn fetch_fails_when_remote_peer_does_not_have_the_requested_hash() {
         let node_a = build_node_with_blobs().await;
