@@ -2,7 +2,11 @@
 
 Ecossistema de leitura de quadrinhos/mangás locais com sincronização 100% P2P entre dispositivos — sem servidor central, sem conta, sem nuvem.
 
-Este é um monorepo: cada plataforma vive isolada em `acerola/`, com sua própria stack e seu próprio README completo. Nenhuma plataforma depende diretamente de outra — todas consomem as bibliotecas compartilhadas em `lib/`.
+Este é um monorepo: cada plataforma vive isolada em `acerola/`, com sua própria stack e seu próprio README completo. Nenhuma plataforma depende diretamente de outra — todas consomem as bibliotecas compartilhadas em `lib/` via dependência `path` local (não git), então uma mudança em `lib/p2p/` já reflete direto nos consumidores sem precisar publicar/atualizar nada.
+
+## Ferramentas necessárias
+
+- [`cargo-make`](https://github.com/sagiegurari/cargo-make) (`cargo install cargo-make`) — usado pelos crates Rust individualmente (veja o `CONTRIBUTING.md` de cada plataforma) e pelas tarefas de manutenção do monorepo inteiro, definidas no [`Makefile.toml`](Makefile.toml) da raiz. Com ele instalado: `cargo make clean` limpa o `target/` de todos os crates Rust do repo (`lib/p2p`, `lib/relay`, `acerola/desktop/src-tauri`, `acerola/android/native/rust`) de uma vez.
 
 | Pasta | Plataforma | Stack | Leia mais |
 | --- | --- | --- | --- |

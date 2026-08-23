@@ -1,0 +1,20 @@
+# Tarefas de manutenção do monorepo inteiro. Requer cargo-make: `cargo install cargo-make`.
+# Rode com `cargo make <task>` a partir da raiz do repo.
+
+[tasks.clean]
+clear = true
+description = "Remove o target/ de todos os crates Rust do monorepo (lib/p2p, lib/relay, desktop, android)"
+script_runner = "@duckscript"
+script = '''
+paths = array lib/p2p/target lib/relay/target acerola/desktop/src-tauri/target acerola/android/native/rust/target
+
+for path in ${paths}
+    exists = is_path_exists ${path}
+    if ${exists}
+        rm -r ${path}
+        echo Removido: ${path}
+    else
+        echo Ja limpo: ${path}
+    end
+end
+'''
