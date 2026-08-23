@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - 'acerola/desktop/**'
+      - 'lib/p2p/**'
       - '.github/workflows/desktop-tests.yml'
   workflow_dispatch:
 
