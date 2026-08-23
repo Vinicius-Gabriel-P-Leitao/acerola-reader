@@ -6,7 +6,7 @@ on:
       - develop
       - main
     paths:
-      - 'platforms/desktop/**'
+      - 'acerola/desktop/**'
       - '.github/workflows/desktop-tests.yml'
   workflow_dispatch:
 
@@ -17,7 +17,7 @@ jobs:
     defaults:
       run:
         shell: pwsh
-        working-directory: platforms/desktop
+        working-directory: acerola/desktop
 
     steps:
       - name: Checkout
@@ -32,7 +32,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('platforms/desktop/src-tauri/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('acerola/desktop/src-tauri/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-registry-
 
@@ -67,8 +67,8 @@ jobs:
       - name: Cache Rust test target
         uses: actions/cache@v4
         with:
-          path: platforms/desktop/src-tauri/target
-          key: ${{ runner.os }}-cargo-target-rust-${{ hashFiles('platforms/desktop/src-tauri/Cargo.lock', 'platforms/desktop/src-tauri/Cargo.toml', 'platforms/desktop/src-tauri/Makefile.toml') }}
+          path: acerola/desktop/src-tauri/target
+          key: ${{ runner.os }}-cargo-target-rust-${{ hashFiles('acerola/desktop/src-tauri/Cargo.lock', 'acerola/desktop/src-tauri/Cargo.toml', 'acerola/desktop/src-tauri/Makefile.toml') }}
           restore-keys: |
             ${{ runner.os }}-cargo-target-rust-
 
@@ -82,14 +82,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rust-lcov
-          path: platforms/desktop/src-tauri/lcov.info
+          path: acerola/desktop/src-tauri/lcov.info
 
   svelte:
     name: Svelte Tests
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: platforms/desktop
+        working-directory: acerola/desktop
 
     steps:
       - name: Checkout
@@ -100,13 +100,13 @@ jobs:
         with:
           node-version: 25.9.0
           cache: npm
-          cache-dependency-path: platforms/desktop/package-lock.json
+          cache-dependency-path: acerola/desktop/package-lock.json
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('platforms/desktop/package-lock.json') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('acerola/desktop/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
 
@@ -129,4 +129,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: svelte-coverage
-          path: platforms/desktop/coverage
+          path: acerola/desktop/coverage
