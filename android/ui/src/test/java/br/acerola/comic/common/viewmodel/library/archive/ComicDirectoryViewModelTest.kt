@@ -1,0 +1,124 @@
+package br.acerola.comic.common.viewmodel.library.archive
+
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import app.cash.turbine.test
+import br.acerola.comic.MainDispatcherRule
+import br.acerola.comic.adapter.contract.gateway.ChapterReadGateway
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncStatusGateway
+import br.acerola.comic.adapter.contract.gateway.ComicGateway
+import br.acerola.comic.config.permission.FileSystemAccessManager
+import br.acerola.comic.dto.archive.ChapterPageDto
+import br.acerola.comic.dto.archive.ComicDirectoryDto
+import br.acerola.comic.logging.AcerolaLogger
+import br.acerola.comic.logging.LogSource
+import br.acerola.comic.usecase.chapter.ObserveChaptersUseCase
+import br.acerola.comic.usecase.comic.CoverFromChapterUseCase
+import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
+import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
+import com.google.common.truth.Truth.assertThat
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
+import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
+import org.junit.After
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import java.util.UUID
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class ComicDirectoryViewModelTest {
+    @get:Rule
+    val coroutineRule = MainDispatcherRule()
+
+    private val manager = mockk<FileSystemAccessManager>(relaxed = true)
+    private val workManager = mockk<WorkManager>(relaxed = true)
+    private val coverFromChapterUseCase = mockk<CoverFromChapterUseCase>(relaxed = true)
+    private val manageCategoriesUseCase = mockk<ManageCategoriesUseCase>(relaxed = true)
+
+    private val readGateway = mockk<ChapterReadGateway<ChapterPageDto>>(relaxed = true)
+    private val statusGateway = mockk<ChapterSyncStatusGateway>(relaxed = true)
+    private val comicRepo = mockk<ComicGateway<ComicDirectoryDto>>(relaxed = true)
+
+    private lateinit var observeChaptersUseCase: ObserveChaptersUseCase<ChapterPageDto>
+    private lateinit var observeLibraryUseCase: ObserveLibraryUseCase<ComicDirectoryDto>
+
+    private lateinit var viewModel: ComicDirectoryViewModel
+
+    @Before
+    fun setup() {
+        mockkObject(AcerolaLogger)
+        every { AcerolaLogger.d(any<String>(), any<String>(), any<LogSource>()) } returns Unit
+        every { AcerolaLogger.audit(any<String>(), any<String>(), any<LogSource>(), any<Map<String, String>>()) } returns Unit
+
+        every { comicRepo.observeLibrary() } returns MutableStateFlow(emptyList())
+        every { comicRepo.isIndexing } returns MutableStateFlow(false)
+        every { comicRepo.progress } returns MutableStateFlow(-1)
+
+        every { statusGateway.isIndexing } returns MutableStateFlow(false)
+        every { statusGateway.progress } returns MutableStateFlow(-1)
+
+        observeChaptersUseCase = ObserveChaptersUseCase(readGateway = readGateway, syncStatusGateway = statusGateway)
+        observeLibraryUseCase = ObserveLibraryUseCase(comicRepository = comicRepo)
+
+        viewModel = createViewModel()
+    }
+
+    private fun createViewModel() =
+        ComicDirectoryViewModel(
+            workManager = workManager,
+            manager = manager,
+            coverFromChapterUseCase = coverFromChapterUseCase,
+            updateComicSettingsUseCase = mockk(relaxed = true),
+            observeLibraryUseCase = observeLibraryUseCase,
+            observeChaptersUseCase = observeChaptersUseCase,
+            manageCategoriesUseCase = manageCategoriesUseCase,
+        )
+
+    @After
+    fun tearDown() {
+        unmockkObject(AcerolaLogger)
+    }
+
+    @Test
+    fun `should synchronize library on initialization`() {
+        verify { workManager.enqueueUniqueWork(any<String>(), any<ExistingWorkPolicy>(), any<OneTimeWorkRequest>()) }
+    }
+
+    @Test
+    fun `should emit library directory list`() =
+        runTest {
+            val directories = listOf(mockk<ComicDirectoryDto>())
+            every { comicRepo.observeLibrary() } returns MutableStateFlow(directories)
+
+            viewModel = createViewModel()
+
+            viewModel.comicDirectories.test {
+                assertThat(awaitItem()).isEqualTo(directories)
+            }
+        }
+
+    @Test
+    fun `should reflect WorkManager progress`() =
+        runTest {
+            val workInfo = mockk<WorkInfo>()
+            every { workInfo.state } returns WorkInfo.State.RUNNING
+            every { workInfo.progress.getInt(any<String>(), any<Int>()) } returns 75
+
+            every { workManager.getWorkInfoByIdFlow(any<UUID>()) } returns flowOf(workInfo)
+
+            viewModel.rescanMangas()
+
+            viewModel.progress.test {
+                assertThat(awaitItem()).isEqualTo(75)
+            }
+        }
+}

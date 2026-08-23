@@ -1,0 +1,41 @@
+package br.acerola.comic.adapter.metadata.comicinfo
+
+import br.acerola.comic.adapter.contract.gateway.ComicLibraryScanGateway
+import br.acerola.comic.adapter.contract.gateway.ComicSingleSyncGateway
+import br.acerola.comic.adapter.contract.provider.MetadataProvider
+import br.acerola.comic.adapter.metadata.comicinfo.engine.ComicInfoComicEngine
+import br.acerola.comic.adapter.metadata.comicinfo.source.ComicInfoSource
+import br.acerola.comic.dto.metadata.comic.ComicMetadataDto
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Qualifier
+import javax.inject.Singleton
+
+@Qualifier
+@Retention(value = AnnotationRetention.BINARY)
+annotation class ComicInfoEngine
+
+@Qualifier
+@Retention(value = AnnotationRetention.BINARY)
+annotation class ComicInfoSourceQualifier
+
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class ComicInfoModule {
+    @Binds
+    @Singleton
+    @ComicInfoEngine
+    abstract fun bindComicInfoMangaRepository(impl: ComicInfoComicEngine): ComicSingleSyncGateway
+
+    @Binds
+    @Singleton
+    @ComicInfoEngine
+    abstract fun bindComicInfoLibraryScan(impl: ComicInfoComicEngine): ComicLibraryScanGateway
+
+    @Binds
+    @Singleton
+    @ComicInfoSourceQualifier
+    abstract fun bindComicInfoMangaInfoService(impl: ComicInfoSource): MetadataProvider<ComicMetadataDto, String>
+}

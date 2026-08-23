@@ -1,0 +1,11 @@
+[bindings.kotlin]
+package_name = "p2p"
+cdylib_name = "acerola"
+android = true
+disable_java_cleaner = true
+
+[bindings.python]
+cdylib_name = "acerola"
+
+[bindings.swift]
+cdylib_name = "acerola"

@@ -1,0 +1,38 @@
+query MediaSearch($search: String, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    pageInfo {
+      hasNextPage
+      currentPage
+    }
+    media(search: $search, type: MANGA, sort: POPULARITY_DESC) {
+      id
+      title {
+        userPreferred
+        romaji
+      }
+      status
+      description(asHtml: false)
+      genres
+      averageScore
+      popularity
+      trending
+      startDate {
+        year
+      }
+      staff(sort: RELEVANCE) {
+        edges {
+          role
+          node {
+            name {
+              full
+            }
+          }
+        }
+      }
+      coverImage {
+        large
+      }
+      bannerImage
+    }
+  }
+}

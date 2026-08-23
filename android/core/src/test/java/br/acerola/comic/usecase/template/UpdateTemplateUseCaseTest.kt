@@ -1,0 +1,69 @@
+package br.acerola.comic.usecase.template
+
+import arrow.core.Either
+import br.acerola.comic.error.message.TemplateError
+import br.acerola.comic.service.template.ChapterNameProcessor
+import br.acerola.comic.util.sort.SortType
+import io.mockk.MockKAnnotations
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.impl.annotations.MockK
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+
+class UpdateTemplateUseCaseTest {
+    @MockK
+    lateinit var service: ChapterNameProcessor
+
+    private lateinit var useCase: UpdateTemplateUseCase
+
+    @Before
+    fun setUp() {
+        MockKAnnotations.init(this)
+        useCase = UpdateTemplateUseCase(service)
+    }
+
+    @Test
+    fun `delegates to service with correct parameters`() =
+        runTest {
+            coEvery { service.updateTemplate(1L, "Label", "{chapter}", SortType.CHAPTER) } returns Either.Right(Unit)
+
+            useCase(1L, "Label", "{chapter}", SortType.CHAPTER)
+
+            coVerify { service.updateTemplate(1L, "Label", "{chapter}", SortType.CHAPTER) }
+        }
+
+    @Test
+    fun `returns Right when service succeeds`() =
+        runTest {
+            coEvery { service.updateTemplate(any(), any(), any(), any()) } returns Either.Right(Unit)
+
+            val result = useCase(1L, "Label", "{chapter}", SortType.CHAPTER)
+
+            assertTrue(result.isRight())
+        }
+
+    @Test
+    fun `propagates Left when service returns Duplicate`() =
+        runTest {
+            coEvery { service.updateTemplate(any(), any(), any(), any()) } returns Either.Left(TemplateError.Duplicate)
+
+            val result = useCase(1L, "Label", "{chapter}", SortType.CHAPTER)
+
+            assertTrue(result.isLeft())
+            result.onLeft { assertTrue(it is TemplateError.Duplicate) }
+        }
+
+    @Test
+    fun `propagates Left when service returns SystemProtected`() =
+        runTest {
+            coEvery { service.updateTemplate(any(), any(), any(), any()) } returns Either.Left(TemplateError.SystemProtected)
+
+            val result = useCase(99L, "Label", "{chapter}", SortType.CHAPTER)
+
+            assertTrue(result.isLeft())
+            result.onLeft { assertTrue(it is TemplateError.SystemProtected) }
+        }
+}

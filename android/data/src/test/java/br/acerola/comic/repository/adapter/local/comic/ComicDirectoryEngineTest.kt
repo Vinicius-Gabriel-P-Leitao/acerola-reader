@@ -1,0 +1,235 @@
+package br.acerola.comic.repository.adapter.local.comic
+
+import android.content.Context
+import android.net.Uri
+import android.provider.DocumentsContract
+import androidx.documentfile.provider.DocumentFile
+import arrow.core.Either
+import br.acerola.comic.adapter.contract.gateway.ChapterSyncGateway
+import br.acerola.comic.adapter.library.engine.ComicDirectoryEngine
+import br.acerola.comic.config.preference.ComicDirectoryPreference
+import br.acerola.comic.error.message.IoError
+import br.acerola.comic.fixtures.MangaDirectoryFixtures
+import br.acerola.comic.local.dao.archive.ComicDirectoryDao
+import br.acerola.comic.service.library.DirectoryScanner
+import br.acerola.comic.service.template.ChapterNameProcessor
+import br.acerola.comic.service.template.TemplateMatcher
+import br.acerola.comic.util.file.ContentQueryHelper
+import br.acerola.comic.util.file.FastFileMetadata
+import io.mockk.MockKAnnotations
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.mockkStatic
+import io.mockk.unmockkObject
+import io.mockk.unmockkStatic
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class ComicDirectoryEngineTest {
+    @MockK(relaxed = true)
+    lateinit var context: Context
+
+    @MockK lateinit var directoryDao: ComicDirectoryDao
+
+    @MockK lateinit var comicDirectoryOps: ChapterSyncGateway
+
+    @MockK lateinit var templateService: ChapterNameProcessor
+
+    @MockK lateinit var templateMatcher: TemplateMatcher
+
+    @MockK lateinit var directoryScanner: DirectoryScanner
+
+    private lateinit var repository: ComicDirectoryEngine
+    private val testDispatcher = StandardTestDispatcher()
+
+    @Before
+    fun setUp() {
+        MockKAnnotations.init(this)
+        Dispatchers.setMain(testDispatcher)
+
+        repository = ComicDirectoryEngine(directoryDao, directoryScanner, templateMatcher, templateService, context)
+        repository.comicDirectoryOps = comicDirectoryOps
+
+        mockkStatic(Uri::class)
+        mockkStatic(DocumentFile::class)
+        mockkStatic(DocumentsContract::class)
+        mockkObject(ContentQueryHelper)
+        mockkObject(ComicDirectoryPreference)
+
+        every { context.contentResolver } returns mockk(relaxed = true)
+        every { context.applicationContext } returns context
+        every { context.filesDir } returns mockk(relaxed = true)
+        every { DocumentsContract.getTreeDocumentId(any()) } returns "root_id"
+        every { DocumentsContract.buildChildDocumentsUriUsingTree(any(), any()) } returns mockk(relaxed = true)
+        every { DocumentsContract.buildDocumentUriUsingTree(any(), any()) } returns mockk(relaxed = true)
+
+        every { directoryDao.getVisibleDirectories() } returns flowOf(emptyList())
+        every { directoryDao.getAllDirectories() } returns flowOf(emptyList())
+        coEvery { comicDirectoryOps.refreshComicChapters(any(), any()) } returns Either.Right(Unit)
+        every { ContentQueryHelper.listFiles(any(), any(), any()) } returns Either.Right(emptyList())
+        every { ContentQueryHelper.listFiles(any(), any()) } returns Either.Right(emptyList())
+        every { ComicDirectoryPreference.folderUriFlow(any()) } returns flowOf("content://root")
+        coEvery { templateService.getTemplates() } returns emptyList()
+        every { templateMatcher.detect(any(), any()) } returns null
+    }
+
+    @After
+    fun tearDown() {
+        unmockkStatic(Uri::class)
+        unmockkStatic(DocumentFile::class)
+        unmockkStatic(DocumentsContract::class)
+        unmockkObject(ContentQueryHelper)
+        unmockkObject(ComicDirectoryPreference)
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `refreshManga should update metadata when directory was modified`() =
+        runTest {
+            val comicId = 1L
+            val existingManga = MangaDirectoryFixtures.createMangaDirectory(id = comicId, lastModified = 1000L)
+            val uriMock = mockk<Uri>()
+            val folderDocMock = mockk<DocumentFile>()
+
+            coEvery { directoryDao.getDirectoryById(comicId) } returns existingManga
+            every { Uri.parse(any()) } returns uriMock
+            every { DocumentFile.fromSingleUri(context, uriMock) } returns folderDocMock
+
+            every { folderDocMock.lastModified() } returns 90000000L
+            every { folderDocMock.name } returns "Comic Folder"
+            every { folderDocMock.uri } returns mockk(relaxed = true)
+            every { folderDocMock.isDirectory } returns true
+
+            val childMetadata =
+                FastFileMetadata(id = "cap1", name = "cap1.cbz", size = 100, lastModified = 500, mimeType = "application/zip")
+            every { ContentQueryHelper.listFiles(context, any(), any()) } returns Either.Right(listOf(childMetadata))
+
+            coEvery { directoryDao.update(any()) } returns Unit
+
+            val result = repository.refreshManga(comicId)
+
+            assertTrue("Expected Right, but was $result", result.isRight())
+            coVerify(exactly = 1) { directoryDao.update(any()) }
+        }
+
+    @Test
+    fun `refreshManga should return Left when comic does not exist in database`() =
+        runTest {
+            val comicId = 999L
+            coEvery { directoryDao.getDirectoryById(comicId) } returns null
+
+            val result = repository.refreshManga(comicId)
+
+            assertTrue("Expected Left, but was $result", result.isLeft())
+            coVerify(exactly = 0) { directoryDao.update(any()) }
+        }
+
+    @Test
+    fun `refreshManga should return Left when comic directory is not accessible`() =
+        runTest {
+            val comicId = 1L
+            val existingManga = MangaDirectoryFixtures.createMangaDirectory(id = comicId)
+            val uriMock = mockk<Uri>()
+            val folderDocMock = mockk<DocumentFile>()
+
+            coEvery { directoryDao.getDirectoryById(comicId) } returns existingManga
+            every { Uri.parse(any()) } returns uriMock
+            every { DocumentFile.fromSingleUri(context, uriMock) } returns folderDocMock
+            every { folderDocMock.isDirectory } returns false
+
+            val result = repository.refreshManga(comicId)
+
+            assertTrue("Expected Left, but was $result", result.isLeft())
+            coVerify(exactly = 0) { directoryDao.update(any()) }
+        }
+
+    @Test
+    fun `refreshManga should return Left when listing files in directory via SAF fails`() =
+        runTest {
+            val comicId = 1L
+            val existingManga = MangaDirectoryFixtures.createMangaDirectory(id = comicId)
+            val uriMock = mockk<Uri>()
+            val folderDocMock = mockk<DocumentFile>()
+
+            coEvery { directoryDao.getDirectoryById(comicId) } returns existingManga
+            every { Uri.parse(any()) } returns uriMock
+            every { DocumentFile.fromSingleUri(context, uriMock) } returns folderDocMock
+            every { folderDocMock.isDirectory } returns true
+            every { ContentQueryHelper.listFiles(context, any(), any()) } returns
+                Either.Left(IoError.FileReadError(path = "content://root", cause = SecurityException("boom")))
+
+            val result = repository.refreshManga(comicId)
+
+            assertTrue("Expected Left, but was $result", result.isLeft())
+            coVerify(exactly = 0) { directoryDao.update(any()) }
+        }
+
+    @Test
+    fun `should perform incremental scan and find comics`() =
+        runTest {
+            val rootUri = mockk<Uri>()
+            val comic = MangaDirectoryFixtures.createMangaDirectory(name = "BPRD")
+
+            coEvery { directoryScanner.buildLibrary(rootUri, any()) } returns listOf(comic)
+            coEvery { directoryDao.upsertDirectoryTransaction(any(), any()) } returns 1L
+
+            val result = repository.incrementalScan(rootUri)
+
+            assertTrue(result.isRight())
+            coVerify { directoryDao.upsertDirectoryTransaction(match { it.name == "BPRD" }, any()) }
+        }
+
+    @Test
+    fun `incrementalScan should reprocess existing directory even when lastModified did not increase`() =
+        runTest {
+            val rootUri = mockk<Uri>()
+            val discovered =
+                MangaDirectoryFixtures.createMangaDirectory(name = "BPRD", path = "content://path/bprd", lastModified = 1000L)
+            val existing =
+                MangaDirectoryFixtures.createMangaDirectory(
+                    id = 5L,
+                    name = "BPRD",
+                    path = "content://path/bprd",
+                    lastModified = 5000L,
+                )
+
+            coEvery { directoryScanner.buildLibrary(rootUri, any()) } returns listOf(discovered)
+            every { directoryDao.getAllDirectories() } returns flowOf(listOf(existing))
+            coEvery { directoryDao.upsertDirectoryTransaction(any(), any()) } returns existing.id
+
+            val result = repository.incrementalScan(rootUri)
+
+            assertTrue(result.isRight())
+            coVerify(exactly = 1) { directoryDao.upsertDirectoryTransaction(match { it.name == "BPRD" }, any()) }
+            coVerify(exactly = 1) { comicDirectoryOps.refreshComicChapters(comicId = existing.id, baseUri = rootUri) }
+        }
+
+    @Test
+    fun `observeLibrary should emit list of DTOs correctly`() =
+        runTest {
+            val entityList = listOf(MangaDirectoryFixtures.createMangaDirectory(id = 1, name = "Comic A"))
+            every { directoryDao.getAllDirectories() } returns flowOf(entityList)
+            every { Uri.parse(any()) } returns mockk(relaxed = true)
+
+            val result = repository.observeLibrary().first { it.isNotEmpty() }
+
+            assertEquals(1, result.size)
+            assertEquals("Comic A", result[0].name)
+        }
+}
