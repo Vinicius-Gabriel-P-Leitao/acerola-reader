@@ -7,15 +7,15 @@ Cliente desktop multiplataforma do ecossistema **acerola**. Aponte para uma past
 ## Preview
 
 <p align="center">
-  <img src="docs/banner/01-home.png" alt="Acerola Desktop Home" width="70%">
+  <img src="../docs/github/desktop/banner/01-home.png" alt="Acerola Desktop Home" width="70%">
 </p>
 
 <p align="center">
-  <img src="docs/banner/02-reader.png" alt="Acerola Desktop Reader" width="70%">
+  <img src="../docs/github/desktop/banner/02-reader.png" alt="Acerola Desktop Reader" width="70%">
 </p>
 
 <p align="center">
-  <img src="docs/banner/03-history.png" alt="Acerola Desktop History" width="70%">
+  <img src="../docs/github/desktop/banner/03-history.png" alt="Acerola Desktop History" width="70%">
 </p>
 
 > **Nota:** Os banners acima foram produzidos com auxílio de Inteligência Artificial e posteriormente refinados para representar a identidade visual e a experiência do acerola-desktop.
@@ -27,21 +27,21 @@ Cliente desktop multiplataforma do ecossistema **acerola**. Aponte para uma past
 <table>
   <tr>
     <td rowspan="2" valign="top" align="center">
-      <img src="docs/prints/reader-screen.png" width="260" style="display:block;"><br>
+      <img src="../docs/github/desktop/prints/reader-screen.png" width="260" style="display:block;"><br>
       <sub><b>Leitura</b></sub>
     </td>
     <td align="center">
-      <img src="docs/prints/home-screen.png" width="140"><br>
+      <img src="../docs/github/desktop/prints/home-screen.png" width="140"><br>
       <sub><b>Home</b></sub>
     </td>
     <td align="center">
-      <img src="docs/prints/config-screen.png" width="140"><br>
+      <img src="../docs/github/desktop/prints/config-screen.png" width="140"><br>
       <sub><b>Configurações</b></sub>
     </td>
   </tr>
   <tr>
     <td colspan="2" align="center">
-      <img src="docs/prints/history-screen.png" width="140"><br>
+      <img src="../docs/github/desktop/prints/history-screen.png" width="140"><br>
       <sub><b>Histórico</b></sub>
     </td>
   </tr>
