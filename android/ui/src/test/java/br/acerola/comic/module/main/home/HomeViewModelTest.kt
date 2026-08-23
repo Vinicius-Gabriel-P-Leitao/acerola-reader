@@ -23,6 +23,8 @@ import br.acerola.comic.usecase.comic.HideComicUseCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
 import br.acerola.comic.usecase.history.ObserveHistoryUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
+import br.acerola.comic.usecase.network.P2pUseCase
+import br.acerola.comic.usecase.network.SyncComicWithPeerUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.every
@@ -52,6 +54,8 @@ class HomeViewModelTest {
     private val hideComicUseCase = mockk<HideComicUseCase>(relaxed = true)
     private val deleteComicUseCase = mockk<DeleteComicUseCase>(relaxed = true)
     private val getChapterCountUseCase = mockk<GetChapterCountUseCase>(relaxed = true)
+    private val p2pUseCase = mockk<P2pUseCase>(relaxed = true)
+    private val syncComicWithPeerUseCase = mockk<SyncComicWithPeerUseCase>(relaxed = true)
 
     private lateinit var observeHistoryUseCase: ObserveHistoryUseCase
     private lateinit var mangadexObserve: ObserveLibraryUseCase<ComicMetadataDto>
@@ -116,6 +120,8 @@ class HomeViewModelTest {
             hideComicUseCase = hideComicUseCase,
             deleteComicUseCase = deleteComicUseCase,
             getChapterCountUseCase = getChapterCountUseCase,
+            p2pUseCase = p2pUseCase,
+            syncComicWithPeerUseCase = syncComicWithPeerUseCase,
         )
 
     @Test

@@ -3,6 +3,7 @@ package br.acerola.comic.usecase
 import android.content.Context
 import br.acerola.comic.config.preference.RelayPreference
 import br.acerola.comic.service.P2pService
+import br.acerola.comic.service.network.CoverBrowseProviderImpl
 import br.acerola.comic.service.network.FileSyncProviderImpl
 import br.acerola.comic.service.network.HistorySyncProviderImpl
 import br.acerola.comic.service.network.P2pEventBus
@@ -28,10 +29,18 @@ object NetworkCaseModule {
         secureStore: SecureBlobStoreImpl,
         historyProvider: HistorySyncProviderImpl,
         fileProvider: FileSyncProviderImpl,
+        coverProvider: CoverBrowseProviderImpl,
     ): P2pService {
         // Read once at startup (no runtime hot-swap) — changing the relay requires restarting the app.
         val relayUrlOverride = runBlocking { RelayPreference.relayUrlOverrideFlow(context).first() }
-        return P2pService(context, relayUrlOverride, secureStore, historyProvider, fileProvider) { event, data ->
+        return P2pService(
+            context,
+            relayUrlOverride,
+            secureStore,
+            historyProvider,
+            fileProvider,
+            coverProvider,
+        ) { event, data ->
             eventBus.emit(event, data)
         }
     }

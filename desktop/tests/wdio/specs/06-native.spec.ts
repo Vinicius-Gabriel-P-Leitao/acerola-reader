@@ -1,4 +1,10 @@
-import { firstDisplayed, getTitle, navigateTo, navigateToWithState, waitForAppReady } from '../helpers/app';
+import {
+	firstDisplayed,
+	getTitle,
+	navigateTo,
+	navigateToWithState,
+	waitForAppReady
+} from '../helpers/app';
 import { createReaderFixture, readerChapterFor } from '../helpers/fixtures';
 
 describe('native acerola via WebDriverIO', () => {

@@ -656,28 +656,37 @@ internal open class UniffiForeignFutureStructVoid(
 internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
     fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructVoid.UniffiByValue,)
 }
+internal interface UniffiCallbackInterfaceCoverBrowseProviderMethod0 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`comicName`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceCoverBrowseProviderMethod1 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`peerId`: RustBuffer.ByValue,`comicName`: RustBuffer.ByValue,`coverVersion`: Long,`bytes`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
 internal interface UniffiCallbackInterfaceFileSyncProviderMethod0 : com.sun.jna.Callback {
     fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
 }
 internal interface UniffiCallbackInterfaceFileSyncProviderMethod1 : com.sun.jna.Callback {
-    fun callback(`uniffiHandle`: Long,`comicName`: RustBuffer.ByValue,`chapter`: RustBuffer.ByValue,`uniffiOutReturn`: LongByReference,uniffiCallStatus: UniffiRustCallStatus,)
+    fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
 }
 internal interface UniffiCallbackInterfaceFileSyncProviderMethod2 : com.sun.jna.Callback {
-    fun callback(`uniffiHandle`: Long,`handle`: Long,`chunkSize`: Int,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+    fun callback(`uniffiHandle`: Long,`comicName`: RustBuffer.ByValue,`chapter`: RustBuffer.ByValue,`uniffiOutReturn`: LongByReference,uniffiCallStatus: UniffiRustCallStatus,)
 }
 internal interface UniffiCallbackInterfaceFileSyncProviderMethod3 : com.sun.jna.Callback {
-    fun callback(`uniffiHandle`: Long,`handle`: Long,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
+    fun callback(`uniffiHandle`: Long,`handle`: Long,`chunkSize`: Int,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
 }
 internal interface UniffiCallbackInterfaceFileSyncProviderMethod4 : com.sun.jna.Callback {
-    fun callback(`uniffiHandle`: Long,`comicName`: RustBuffer.ByValue,`chapter`: RustBuffer.ByValue,`fileName`: RustBuffer.ByValue,`expectedChecksum`: RustBuffer.ByValue,`sizeBytes`: Long,`uniffiOutReturn`: LongByReference,uniffiCallStatus: UniffiRustCallStatus,)
+    fun callback(`uniffiHandle`: Long,`handle`: Long,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
 }
 internal interface UniffiCallbackInterfaceFileSyncProviderMethod5 : com.sun.jna.Callback {
-    fun callback(`uniffiHandle`: Long,`handle`: Long,`bytes`: RustBuffer.ByValue,`uniffiOutReturn`: ByteByReference,uniffiCallStatus: UniffiRustCallStatus,)
+    fun callback(`uniffiHandle`: Long,`comicName`: RustBuffer.ByValue,`chapter`: RustBuffer.ByValue,`fileName`: RustBuffer.ByValue,`expectedChecksum`: RustBuffer.ByValue,`sizeBytes`: Long,`uniffiOutReturn`: LongByReference,uniffiCallStatus: UniffiRustCallStatus,)
 }
 internal interface UniffiCallbackInterfaceFileSyncProviderMethod6 : com.sun.jna.Callback {
-    fun callback(`uniffiHandle`: Long,`handle`: Long,`uniffiOutReturn`: ByteByReference,uniffiCallStatus: UniffiRustCallStatus,)
+    fun callback(`uniffiHandle`: Long,`handle`: Long,`bytes`: RustBuffer.ByValue,`uniffiOutReturn`: ByteByReference,uniffiCallStatus: UniffiRustCallStatus,)
 }
 internal interface UniffiCallbackInterfaceFileSyncProviderMethod7 : com.sun.jna.Callback {
+    fun callback(`uniffiHandle`: Long,`handle`: Long,`uniffiOutReturn`: ByteByReference,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceFileSyncProviderMethod8 : com.sun.jna.Callback {
     fun callback(`uniffiHandle`: Long,`handle`: Long,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
 }
 internal interface UniffiCallbackInterfaceHistorySyncProviderMethod0 : com.sun.jna.Callback {
@@ -701,32 +710,54 @@ internal interface UniffiCallbackInterfaceSecureBlobStoreMethod0 : com.sun.jna.C
 internal interface UniffiCallbackInterfaceSecureBlobStoreMethod1 : com.sun.jna.Callback {
     fun callback(`uniffiHandle`: Long,`key`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
 }
-@Structure.FieldOrder("getFileManifest", "openChapterForRead", "readChapterChunk", "closeReadHandle", "beginChapterWrite", "writeChapterChunk", "finalizeChapterWrite", "abortChapterWrite", "uniffiFree")
+@Structure.FieldOrder("getLocalCover", "saveRemoteCover", "uniffiFree")
+internal open class UniffiVTableCallbackInterfaceCoverBrowseProvider(
+    @JvmField internal var `getLocalCover`: UniffiCallbackInterfaceCoverBrowseProviderMethod0? = null,
+    @JvmField internal var `saveRemoteCover`: UniffiCallbackInterfaceCoverBrowseProviderMethod1? = null,
+    @JvmField internal var `uniffiFree`: UniffiCallbackInterfaceFree? = null,
+) : Structure() {
+    class UniffiByValue(
+        `getLocalCover`: UniffiCallbackInterfaceCoverBrowseProviderMethod0? = null,
+        `saveRemoteCover`: UniffiCallbackInterfaceCoverBrowseProviderMethod1? = null,
+        `uniffiFree`: UniffiCallbackInterfaceFree? = null,
+    ): UniffiVTableCallbackInterfaceCoverBrowseProvider(`getLocalCover`,`saveRemoteCover`,`uniffiFree`,), Structure.ByValue
+
+   internal fun uniffiSetValue(other: UniffiVTableCallbackInterfaceCoverBrowseProvider) {
+        `getLocalCover` = other.`getLocalCover`
+        `saveRemoteCover` = other.`saveRemoteCover`
+        `uniffiFree` = other.`uniffiFree`
+    }
+
+}
+@Structure.FieldOrder("getFileManifest", "getLibrarySummary", "openChapterForRead", "readChapterChunk", "closeReadHandle", "beginChapterWrite", "writeChapterChunk", "finalizeChapterWrite", "abortChapterWrite", "uniffiFree")
 internal open class UniffiVTableCallbackInterfaceFileSyncProvider(
     @JvmField internal var `getFileManifest`: UniffiCallbackInterfaceFileSyncProviderMethod0? = null,
-    @JvmField internal var `openChapterForRead`: UniffiCallbackInterfaceFileSyncProviderMethod1? = null,
-    @JvmField internal var `readChapterChunk`: UniffiCallbackInterfaceFileSyncProviderMethod2? = null,
-    @JvmField internal var `closeReadHandle`: UniffiCallbackInterfaceFileSyncProviderMethod3? = null,
-    @JvmField internal var `beginChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod4? = null,
-    @JvmField internal var `writeChapterChunk`: UniffiCallbackInterfaceFileSyncProviderMethod5? = null,
-    @JvmField internal var `finalizeChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod6? = null,
-    @JvmField internal var `abortChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod7? = null,
+    @JvmField internal var `getLibrarySummary`: UniffiCallbackInterfaceFileSyncProviderMethod1? = null,
+    @JvmField internal var `openChapterForRead`: UniffiCallbackInterfaceFileSyncProviderMethod2? = null,
+    @JvmField internal var `readChapterChunk`: UniffiCallbackInterfaceFileSyncProviderMethod3? = null,
+    @JvmField internal var `closeReadHandle`: UniffiCallbackInterfaceFileSyncProviderMethod4? = null,
+    @JvmField internal var `beginChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod5? = null,
+    @JvmField internal var `writeChapterChunk`: UniffiCallbackInterfaceFileSyncProviderMethod6? = null,
+    @JvmField internal var `finalizeChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod7? = null,
+    @JvmField internal var `abortChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod8? = null,
     @JvmField internal var `uniffiFree`: UniffiCallbackInterfaceFree? = null,
 ) : Structure() {
     class UniffiByValue(
         `getFileManifest`: UniffiCallbackInterfaceFileSyncProviderMethod0? = null,
-        `openChapterForRead`: UniffiCallbackInterfaceFileSyncProviderMethod1? = null,
-        `readChapterChunk`: UniffiCallbackInterfaceFileSyncProviderMethod2? = null,
-        `closeReadHandle`: UniffiCallbackInterfaceFileSyncProviderMethod3? = null,
-        `beginChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod4? = null,
-        `writeChapterChunk`: UniffiCallbackInterfaceFileSyncProviderMethod5? = null,
-        `finalizeChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod6? = null,
-        `abortChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod7? = null,
+        `getLibrarySummary`: UniffiCallbackInterfaceFileSyncProviderMethod1? = null,
+        `openChapterForRead`: UniffiCallbackInterfaceFileSyncProviderMethod2? = null,
+        `readChapterChunk`: UniffiCallbackInterfaceFileSyncProviderMethod3? = null,
+        `closeReadHandle`: UniffiCallbackInterfaceFileSyncProviderMethod4? = null,
+        `beginChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod5? = null,
+        `writeChapterChunk`: UniffiCallbackInterfaceFileSyncProviderMethod6? = null,
+        `finalizeChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod7? = null,
+        `abortChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod8? = null,
         `uniffiFree`: UniffiCallbackInterfaceFree? = null,
-    ): UniffiVTableCallbackInterfaceFileSyncProvider(`getFileManifest`,`openChapterForRead`,`readChapterChunk`,`closeReadHandle`,`beginChapterWrite`,`writeChapterChunk`,`finalizeChapterWrite`,`abortChapterWrite`,`uniffiFree`,), Structure.ByValue
+    ): UniffiVTableCallbackInterfaceFileSyncProvider(`getFileManifest`,`getLibrarySummary`,`openChapterForRead`,`readChapterChunk`,`closeReadHandle`,`beginChapterWrite`,`writeChapterChunk`,`finalizeChapterWrite`,`abortChapterWrite`,`uniffiFree`,), Structure.ByValue
 
    internal fun uniffiSetValue(other: UniffiVTableCallbackInterfaceFileSyncProvider) {
         `getFileManifest` = other.`getFileManifest`
+        `getLibrarySummary` = other.`getLibrarySummary`
         `openChapterForRead` = other.`openChapterForRead`
         `readChapterChunk` = other.`readChapterChunk`
         `closeReadHandle` = other.`closeReadHandle`
@@ -924,6 +955,21 @@ internal open class UniffiVTableCallbackInterfaceSecureBlobStore(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -934,6 +980,7 @@ internal interface UniffiLib : Library {
             .also { lib: UniffiLib ->
                 uniffiCheckContractApiVersion(lib)
                 uniffiCheckApiChecksums(lib)
+                uniffiCallbackInterfaceCoverBrowseProvider.register(lib)
                 uniffiCallbackInterfaceFileSyncProvider.register(lib)
                 uniffiCallbackInterfaceHistorySyncProvider.register(lib)
                 uniffiCallbackInterfaceP2PCallback.register(lib)
@@ -947,6 +994,16 @@ internal interface UniffiLib : Library {
         }
     }
 
+    fun uniffi_acerola_fn_clone_coverbrowseprovider(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Pointer
+    fun uniffi_acerola_fn_free_coverbrowseprovider(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_acerola_fn_init_callback_vtable_coverbrowseprovider(`vtable`: UniffiVTableCallbackInterfaceCoverBrowseProvider,
+    ): Unit
+    fun uniffi_acerola_fn_method_coverbrowseprovider_get_local_cover(`ptr`: Pointer,`comicName`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_acerola_fn_method_coverbrowseprovider_save_remote_cover(`ptr`: Pointer,`peerId`: RustBuffer.ByValue,`comicName`: RustBuffer.ByValue,`coverVersion`: Long,`bytes`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_acerola_fn_clone_filesyncprovider(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
     fun uniffi_acerola_fn_free_filesyncprovider(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
@@ -954,6 +1011,8 @@ internal interface UniffiLib : Library {
     fun uniffi_acerola_fn_init_callback_vtable_filesyncprovider(`vtable`: UniffiVTableCallbackInterfaceFileSyncProvider,
     ): Unit
     fun uniffi_acerola_fn_method_filesyncprovider_get_file_manifest(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_acerola_fn_method_filesyncprovider_get_library_summary(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_acerola_fn_method_filesyncprovider_open_chapter_for_read(`ptr`: Pointer,`comicName`: RustBuffer.ByValue,`chapter`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Long
@@ -995,8 +1054,12 @@ internal interface UniffiLib : Library {
     ): Pointer
     fun uniffi_acerola_fn_free_p2pnode(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
-    fun uniffi_acerola_fn_constructor_p2pnode_new(`callback`: Pointer,`legacyDataDir`: RustBuffer.ByValue,`relayUrl`: RustBuffer.ByValue,`deviceName`: RustBuffer.ByValue,`deviceVersion`: RustBuffer.ByValue,`secureStore`: Pointer,`historyProvider`: Pointer,`fileProvider`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_acerola_fn_constructor_p2pnode_new(`callback`: Pointer,`legacyDataDir`: RustBuffer.ByValue,`blobsDir`: RustBuffer.ByValue,`relayUrl`: RustBuffer.ByValue,`deviceName`: RustBuffer.ByValue,`deviceVersion`: RustBuffer.ByValue,`secureStore`: Pointer,`historyProvider`: Pointer,`fileProvider`: Pointer,`coverProvider`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
+    fun uniffi_acerola_fn_method_p2pnode_browse_cover(`ptr`: Pointer,`peerAddr`: RustBuffer.ByValue,`comicName`: RustBuffer.ByValue,`knownVersion`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_acerola_fn_method_p2pnode_browse_library(`ptr`: Pointer,`peerAddr`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_acerola_fn_method_p2pnode_connect(`ptr`: Pointer,`peerAddr`: RustBuffer.ByValue,`alpn`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_acerola_fn_method_p2pnode_get_connected_peers(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
@@ -1018,6 +1081,8 @@ internal interface UniffiLib : Library {
     fun uniffi_acerola_fn_method_p2pnode_switch_to_local(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_acerola_fn_method_p2pnode_switch_to_relay(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_acerola_fn_method_p2pnode_sync_comic(`ptr`: Pointer,`peerAddr`: RustBuffer.ByValue,`comicName`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_acerola_fn_clone_secureblobstore(`ptr`: Pointer,uniffi_out_err: UniffiRustCallStatus, 
     ): Pointer
@@ -1141,7 +1206,13 @@ internal interface UniffiLib : Library {
     ): Unit
     fun ffi_acerola_rust_future_complete_void(`handle`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_acerola_checksum_method_coverbrowseprovider_get_local_cover(
+    ): Short
+    fun uniffi_acerola_checksum_method_coverbrowseprovider_save_remote_cover(
+    ): Short
     fun uniffi_acerola_checksum_method_filesyncprovider_get_file_manifest(
+    ): Short
+    fun uniffi_acerola_checksum_method_filesyncprovider_get_library_summary(
     ): Short
     fun uniffi_acerola_checksum_method_filesyncprovider_open_chapter_for_read(
     ): Short
@@ -1167,6 +1238,10 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_acerola_checksum_method_p2pcallback_on_event(
     ): Short
+    fun uniffi_acerola_checksum_method_p2pnode_browse_cover(
+    ): Short
+    fun uniffi_acerola_checksum_method_p2pnode_browse_library(
+    ): Short
     fun uniffi_acerola_checksum_method_p2pnode_connect(
     ): Short
     fun uniffi_acerola_checksum_method_p2pnode_get_connected_peers(
@@ -1188,6 +1263,8 @@ internal interface UniffiLib : Library {
     fun uniffi_acerola_checksum_method_p2pnode_switch_to_local(
     ): Short
     fun uniffi_acerola_checksum_method_p2pnode_switch_to_relay(
+    ): Short
+    fun uniffi_acerola_checksum_method_p2pnode_sync_comic(
     ): Short
     fun uniffi_acerola_checksum_method_secureblobstore_save_blob(
     ): Short
@@ -1212,28 +1289,37 @@ private fun uniffiCheckContractApiVersion(lib: UniffiLib) {
 
 @Suppress("UNUSED_PARAMETER")
 private fun uniffiCheckApiChecksums(lib: UniffiLib) {
+    if (lib.uniffi_acerola_checksum_method_coverbrowseprovider_get_local_cover() != 12108.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_acerola_checksum_method_coverbrowseprovider_save_remote_cover() != 6629.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_acerola_checksum_method_filesyncprovider_get_file_manifest() != 15691.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_checksum_method_filesyncprovider_open_chapter_for_read() != 27537.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_filesyncprovider_get_library_summary() != 1006.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_checksum_method_filesyncprovider_read_chapter_chunk() != 35797.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_filesyncprovider_open_chapter_for_read() != 47391.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_checksum_method_filesyncprovider_close_read_handle() != 57793.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_filesyncprovider_read_chapter_chunk() != 57668.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_checksum_method_filesyncprovider_begin_chapter_write() != 31815.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_filesyncprovider_close_read_handle() != 52478.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_checksum_method_filesyncprovider_write_chapter_chunk() != 56582.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_filesyncprovider_begin_chapter_write() != 31873.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_checksum_method_filesyncprovider_finalize_chapter_write() != 20149.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_filesyncprovider_write_chapter_chunk() != 20134.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_checksum_method_filesyncprovider_abort_chapter_write() != 61952.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_filesyncprovider_finalize_chapter_write() != 57641.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_acerola_checksum_method_filesyncprovider_abort_chapter_write() != 38843.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_acerola_checksum_method_historysyncprovider_get_reading_progress() != 48845.toShort()) {
@@ -1249,6 +1335,12 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_acerola_checksum_method_p2pcallback_on_event() != 37231.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_acerola_checksum_method_p2pnode_browse_cover() != 36121.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_acerola_checksum_method_p2pnode_browse_library() != 61984.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_acerola_checksum_method_p2pnode_connect() != 27942.toShort()) {
@@ -1269,7 +1361,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_acerola_checksum_method_p2pnode_get_mode() != 16134.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_checksum_method_p2pnode_get_paired_peers() != 47316.toShort()) {
+    if (lib.uniffi_acerola_checksum_method_p2pnode_get_paired_peers() != 51722.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_acerola_checksum_method_p2pnode_remove_paired_peer() != 11699.toShort()) {
@@ -1284,13 +1376,16 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_acerola_checksum_method_p2pnode_switch_to_relay() != 54345.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_acerola_checksum_method_p2pnode_sync_comic() != 49826.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_acerola_checksum_method_secureblobstore_save_blob() != 37330.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_acerola_checksum_method_secureblobstore_load_blob() != 6864.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_acerola_checksum_constructor_p2pnode_new() != 33334.toShort()) {
+    if (lib.uniffi_acerola_checksum_constructor_p2pnode_new() != 7853.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
 }
@@ -1694,6 +1789,371 @@ private class AndroidSystemCleanable(
     override fun clean() = cleanable.clean()
 }
 /**
+ * Fonte/destino da capa (`cover.jpg`) de um quadrinho, usada pelo protocolo
+ * `acerola/browse-cover/1`. Separada de `FileSyncProvider` de propósito: capas são pequenas o
+ * bastante (thumbnail) pra trafegar como `Vec<u8>` inteiro numa chamada FFI só, sem precisar da
+ * máquina de handles opacos que os capítulos (potencialmente centenas de MB) exigem.
+ */
+public interface CoverBrowseProvider {
+    
+    /**
+     * Capa local de `comic_name`, se existir. `bytes: None` cobre tanto "quadrinho não existe"
+     * quanto "existe mas não tem capa salva" — os dois casos resultam na mesma resposta
+     * `not_modified`/ausência pro peer, não há necessidade de distinguir no wire.
+     */
+    fun `getLocalCover`(`comicName`: kotlin.String): FfiCoverEntry
+    
+    /**
+     * Grava a capa recebida de `peer_id` pra `comic_name` num cache local (nunca na árvore do
+     * usuário) e devolve o caminho/URI resultante, pra UI carregar via Coil. Chave de cache
+     * `(peer_id, comic_name, cover_version)` — quem chama decide se já tem essa versão cacheada
+     * antes de disparar a busca, isto aqui só persiste o que já foi baixado.
+     */
+    fun `saveRemoteCover`(`peerId`: kotlin.String, `comicName`: kotlin.String, `coverVersion`: kotlin.Long, `bytes`: kotlin.ByteArray): kotlin.String
+    
+    companion object
+}
+
+/**
+ * Fonte/destino da capa (`cover.jpg`) de um quadrinho, usada pelo protocolo
+ * `acerola/browse-cover/1`. Separada de `FileSyncProvider` de propósito: capas são pequenas o
+ * bastante (thumbnail) pra trafegar como `Vec<u8>` inteiro numa chamada FFI só, sem precisar da
+ * máquina de handles opacos que os capítulos (potencialmente centenas de MB) exigem.
+ */
+open class CoverBrowseProviderImpl: Disposable, AutoCloseable, CoverBrowseProvider {
+
+    constructor(pointer: Pointer) {
+        this.pointer = pointer
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
+    }
+
+    /**
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    constructor(noPointer: NoPointer) {
+        this.pointer = null
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
+    }
+
+    protected val pointer: Pointer?
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed = AtomicBoolean(false)
+    private val callCounter = AtomicLong(1)
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    @Synchronized
+    override fun close() {
+        this.destroy()
+    }
+
+    internal inline fun <R> callWithPointer(block: (ptr: Pointer) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.get()
+            if (c == 0L) {
+                throw IllegalStateException("${this.javaClass.simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this.javaClass.simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the pointer being freed concurrently.
+        try {
+            return block(this.uniffiClonePointer())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiCleanAction(private val pointer: Pointer?) : Runnable {
+        override fun run() {
+            pointer?.let { ptr ->
+                uniffiRustCall { status ->
+                    UniffiLib.INSTANCE.uniffi_acerola_fn_free_coverbrowseprovider(ptr, status)
+                }
+            }
+        }
+    }
+
+    fun uniffiClonePointer(): Pointer {
+        return uniffiRustCall() { status ->
+            UniffiLib.INSTANCE.uniffi_acerola_fn_clone_coverbrowseprovider(pointer!!, status)
+        }
+    }
+
+    
+    /**
+     * Capa local de `comic_name`, se existir. `bytes: None` cobre tanto "quadrinho não existe"
+     * quanto "existe mas não tem capa salva" — os dois casos resultam na mesma resposta
+     * `not_modified`/ausência pro peer, não há necessidade de distinguir no wire.
+     */override fun `getLocalCover`(`comicName`: kotlin.String): FfiCoverEntry {
+            return FfiConverterTypeFfiCoverEntry.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_coverbrowseprovider_get_local_cover(
+        it, FfiConverterString.lower(`comicName`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
+     * Grava a capa recebida de `peer_id` pra `comic_name` num cache local (nunca na árvore do
+     * usuário) e devolve o caminho/URI resultante, pra UI carregar via Coil. Chave de cache
+     * `(peer_id, comic_name, cover_version)` — quem chama decide se já tem essa versão cacheada
+     * antes de disparar a busca, isto aqui só persiste o que já foi baixado.
+     */override fun `saveRemoteCover`(`peerId`: kotlin.String, `comicName`: kotlin.String, `coverVersion`: kotlin.Long, `bytes`: kotlin.ByteArray): kotlin.String {
+            return FfiConverterString.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_coverbrowseprovider_save_remote_cover(
+        it, FfiConverterString.lower(`peerId`),FfiConverterString.lower(`comicName`),FfiConverterLong.lower(`coverVersion`),FfiConverterByteArray.lower(`bytes`),_status)
+}
+    }
+    )
+    }
+    
+
+    
+
+    
+    
+    companion object
+    
+}
+// Magic number for the Rust proxy to call using the same mechanism as every other method,
+// to free the callback once it's dropped by Rust.
+internal const val IDX_CALLBACK_FREE = 0
+// Callback return codes
+internal const val UNIFFI_CALLBACK_SUCCESS = 0
+internal const val UNIFFI_CALLBACK_ERROR = 1
+internal const val UNIFFI_CALLBACK_UNEXPECTED_ERROR = 2
+
+/**
+ * @suppress
+ */
+public abstract class FfiConverterCallbackInterface<CallbackInterface: Any>: FfiConverter<CallbackInterface, Long> {
+    internal val handleMap = UniffiHandleMap<CallbackInterface>()
+
+    internal fun drop(handle: Long) {
+        handleMap.remove(handle)
+    }
+
+    override fun lift(value: Long): CallbackInterface {
+        return handleMap.get(value)
+    }
+
+    override fun read(buf: ByteBuffer) = lift(buf.getLong())
+
+    override fun lower(value: CallbackInterface) = handleMap.insert(value)
+
+    override fun allocationSize(value: CallbackInterface) = 8UL
+
+    override fun write(value: CallbackInterface, buf: ByteBuffer) {
+        buf.putLong(lower(value))
+    }
+}
+
+// Put the implementation in an object so we don't pollute the top-level namespace
+internal object uniffiCallbackInterfaceCoverBrowseProvider {
+    internal object `getLocalCover`: UniffiCallbackInterfaceCoverBrowseProviderMethod0 {
+        override fun callback(`uniffiHandle`: Long,`comicName`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeCoverBrowseProvider.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`getLocalCover`(
+                    FfiConverterString.lift(`comicName`),
+                )
+            }
+            val writeReturn = { value: FfiCoverEntry -> uniffiOutReturn.setValue(FfiConverterTypeFfiCoverEntry.lower(value)) }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object `saveRemoteCover`: UniffiCallbackInterfaceCoverBrowseProviderMethod1 {
+        override fun callback(`uniffiHandle`: Long,`peerId`: RustBuffer.ByValue,`comicName`: RustBuffer.ByValue,`coverVersion`: Long,`bytes`: RustBuffer.ByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeCoverBrowseProvider.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`saveRemoteCover`(
+                    FfiConverterString.lift(`peerId`),
+                    FfiConverterString.lift(`comicName`),
+                    FfiConverterLong.lift(`coverVersion`),
+                    FfiConverterByteArray.lift(`bytes`),
+                )
+            }
+            val writeReturn = { value: kotlin.String -> uniffiOutReturn.setValue(FfiConverterString.lower(value)) }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+
+    internal object uniffiFree: UniffiCallbackInterfaceFree {
+        override fun callback(handle: Long) {
+            FfiConverterTypeCoverBrowseProvider.handleMap.remove(handle)
+        }
+    }
+
+    internal var vtable = UniffiVTableCallbackInterfaceCoverBrowseProvider.UniffiByValue(
+        `getLocalCover`,
+        `saveRemoteCover`,
+        uniffiFree,
+    )
+
+    // Registers the foreign callback with the Rust side.
+    // This method is generated for each callback interface.
+    internal fun register(lib: UniffiLib) {
+        lib.uniffi_acerola_fn_init_callback_vtable_coverbrowseprovider(vtable)
+    }
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeCoverBrowseProvider: FfiConverter<CoverBrowseProvider, Pointer> {
+    internal val handleMap = UniffiHandleMap<CoverBrowseProvider>()
+
+    override fun lower(value: CoverBrowseProvider): Pointer {
+        return Pointer(handleMap.insert(value))
+    }
+
+    override fun lift(value: Pointer): CoverBrowseProvider {
+        return CoverBrowseProviderImpl(value)
+    }
+
+    override fun read(buf: ByteBuffer): CoverBrowseProvider {
+        // The Rust code always writes pointers as 8 bytes, and will
+        // fail to compile if they don't fit.
+        return lift(Pointer(buf.getLong()))
+    }
+
+    override fun allocationSize(value: CoverBrowseProvider) = 8UL
+
+    override fun write(value: CoverBrowseProvider, buf: ByteBuffer) {
+        // The Rust code always expects pointers written as 8 bytes,
+        // and will fail to compile if they don't fit.
+        buf.putLong(Pointer.nativeValue(lower(value)))
+    }
+}
+
+
+// This template implements a class for working with a Rust struct via a Pointer/Arc<T>
+// to the live Rust struct on the other side of the FFI.
+//
+// Each instance implements core operations for working with the Rust `Arc<T>` and the
+// Kotlin Pointer to work with the live Rust struct on the other side of the FFI.
+//
+// There's some subtlety here, because we have to be careful not to operate on a Rust
+// struct after it has been dropped, and because we must expose a public API for freeing
+// theq Kotlin wrapper object in lieu of reliable finalizers. The core requirements are:
+//
+//   * Each instance holds an opaque pointer to the underlying Rust struct.
+//     Method calls need to read this pointer from the object's state and pass it in to
+//     the Rust FFI.
+//
+//   * When an instance is no longer needed, its pointer should be passed to a
+//     special destructor function provided by the Rust FFI, which will drop the
+//     underlying Rust struct.
+//
+//   * Given an instance, calling code is expected to call the special
+//     `destroy` method in order to free it after use, either by calling it explicitly
+//     or by using a higher-level helper like the `use` method. Failing to do so risks
+//     leaking the underlying Rust struct.
+//
+//   * We can't assume that calling code will do the right thing, and must be prepared
+//     to handle Kotlin method calls executing concurrently with or even after a call to
+//     `destroy`, and to handle multiple (possibly concurrent!) calls to `destroy`.
+//
+//   * We must never allow Rust code to operate on the underlying Rust struct after
+//     the destructor has been called, and must never call the destructor more than once.
+//     Doing so may trigger memory unsafety.
+//
+//   * To mitigate many of the risks of leaking memory and use-after-free unsafety, a `Cleaner`
+//     is implemented to call the destructor when the Kotlin object becomes unreachable.
+//     This is done in a background thread. This is not a panacea, and client code should be aware that
+//      1. the thread may starve if some there are objects that have poorly performing
+//     `drop` methods or do significant work in their `drop` methods.
+//      2. the thread is shared across the whole library. This can be tuned by using `android_cleaner = true`,
+//         or `android = true` in the [`kotlin` section of the `uniffi.toml` file](https://mozilla.github.io/uniffi-rs/kotlin/configuration.html).
+//
+// If we try to implement this with mutual exclusion on access to the pointer, there is the
+// possibility of a race between a method call and a concurrent call to `destroy`:
+//
+//    * Thread A starts a method call, reads the value of the pointer, but is interrupted
+//      before it can pass the pointer over the FFI to Rust.
+//    * Thread B calls `destroy` and frees the underlying Rust struct.
+//    * Thread A resumes, passing the already-read pointer value to Rust and triggering
+//      a use-after-free.
+//
+// One possible solution would be to use a `ReadWriteLock`, with each method call taking
+// a read lock (and thus allowed to run concurrently) and the special `destroy` method
+// taking a write lock (and thus blocking on live method calls). However, we aim not to
+// generate methods with any hidden blocking semantics, and a `destroy` method that might
+// block if called incorrectly seems to meet that bar.
+//
+// So, we achieve our goals by giving each instance an associated `AtomicLong` counter to track
+// the number of in-flight method calls, and an `AtomicBoolean` flag to indicate whether `destroy`
+// has been called. These are updated according to the following rules:
+//
+//    * The initial value of the counter is 1, indicating a live object with no in-flight calls.
+//      The initial value for the flag is false.
+//
+//    * At the start of each method call, we atomically check the counter.
+//      If it is 0 then the underlying Rust struct has already been destroyed and the call is aborted.
+//      If it is nonzero them we atomically increment it by 1 and proceed with the method call.
+//
+//    * At the end of each method call, we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+//    * When `destroy` is called, we atomically flip the flag from false to true.
+//      If the flag was already true we silently fail.
+//      Otherwise we atomically decrement and check the counter.
+//      If it has reached zero then we destroy the underlying Rust struct.
+//
+// Astute readers may observe that this all sounds very similar to the way that Rust's `Arc<T>` works,
+// and indeed it is, with the addition of a flag to guard against multiple calls to `destroy`.
+//
+// The overall effect is that the underlying Rust struct is destroyed only when `destroy` has been
+// called *and* all in-flight method calls have completed, avoiding violating any of the expectations
+// of the underlying Rust code.
+//
+// This makes a cleaner a better alternative to _not_ calling `destroy()` as
+// and when the object is finished with, but the abstraction is not perfect: if the Rust object's `drop`
+// method is slow, and/or there are many objects to cleanup, and it's on a low end Android device, then the cleaner
+// thread may be starved, and the app will leak memory.
+//
+// In this case, `destroy`ing manually may be a better solution.
+//
+// The cleaner can live side by side with the manual calling of `destroy`. In the order of responsiveness, uniffi objects
+// with Rust peers are reclaimed:
+//
+// 1. By calling the `destroy` method of the object, which calls `rustObject.free()`. If that doesn't happen:
+// 2. When the object becomes unreachable, AND the Cleaner thread gets to call `rustObject.free()`. If the thread is starved then:
+// 3. The memory is reclaimed when the process terminates.
+//
+// [1] https://stackoverflow.com/questions/24376768/can-java-finalize-an-object-when-it-is-still-in-scope/24380219
+//
+
+
+/**
  * Fonte/destino dos arquivos de capítulo usada pelo protocolo `acerola/sync-files/1`.
  * Implementada em Kotlin contra SAF/DocumentFile. Baseada em handles opacos (`i64`) porque
  * streams não cruzam a fronteira FFI diretamente — o Kotlin mantém um mapa de handles abertos.
@@ -1704,6 +2164,17 @@ public interface FileSyncProvider {
      * Todos os capítulos locais com checksum/tamanho, com chave natural `(comic_name, chapter)`.
      */
     fun `getFileManifest`(): List<FfiFileManifestEntry>
+    
+    /**
+     * Resumo por quadrinho (nome + contagem de capítulos), direto do Room — usado só por
+     * `acerola/browse-library/1`. Existe separado de `get_file_manifest()` de propósito: aquele
+     * método faz um `DocumentFile.exists()` via SAF por capítulo (uma transação binder cada),
+     * que só compensa quando o resultado realmente precisa apontar pra um arquivo (transferência
+     * de verdade). Pra só listar títulos isso é custo puro, e já estourou o timeout do
+     * protocolo numa biblioteca grande/recém-escaneada — ver o comentário em
+     * `FileSyncProviderImpl.getFileManifest()`.
+     */
+    fun `getLibrarySummary`(): List<FfiComicSummaryEntry>
     
     /**
      * Abre um capítulo local para leitura em chunks (lado que envia). `-1` se não encontrado.
@@ -1849,6 +2320,27 @@ open class FileSyncProviderImpl: Disposable, AutoCloseable, FileSyncProvider {
 
     
     /**
+     * Resumo por quadrinho (nome + contagem de capítulos), direto do Room — usado só por
+     * `acerola/browse-library/1`. Existe separado de `get_file_manifest()` de propósito: aquele
+     * método faz um `DocumentFile.exists()` via SAF por capítulo (uma transação binder cada),
+     * que só compensa quando o resultado realmente precisa apontar pra um arquivo (transferência
+     * de verdade). Pra só listar títulos isso é custo puro, e já estourou o timeout do
+     * protocolo numa biblioteca grande/recém-escaneada — ver o comentário em
+     * `FileSyncProviderImpl.getFileManifest()`.
+     */override fun `getLibrarySummary`(): List<FfiComicSummaryEntry> {
+            return FfiConverterSequenceTypeFfiComicSummaryEntry.lift(
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_filesyncprovider_get_library_summary(
+        it, _status)
+}
+    }
+    )
+    }
+    
+
+    
+    /**
      * Abre um capítulo local para leitura em chunks (lado que envia). `-1` se não encontrado.
      */override fun `openChapterForRead`(`comicName`: kotlin.String, `chapter`: kotlin.String): kotlin.Long {
             return FfiConverterLong.lift(
@@ -1960,38 +2452,7 @@ open class FileSyncProviderImpl: Disposable, AutoCloseable, FileSyncProvider {
     companion object
     
 }
-// Magic number for the Rust proxy to call using the same mechanism as every other method,
-// to free the callback once it's dropped by Rust.
-internal const val IDX_CALLBACK_FREE = 0
-// Callback return codes
-internal const val UNIFFI_CALLBACK_SUCCESS = 0
-internal const val UNIFFI_CALLBACK_ERROR = 1
-internal const val UNIFFI_CALLBACK_UNEXPECTED_ERROR = 2
 
-/**
- * @suppress
- */
-public abstract class FfiConverterCallbackInterface<CallbackInterface: Any>: FfiConverter<CallbackInterface, Long> {
-    internal val handleMap = UniffiHandleMap<CallbackInterface>()
-
-    internal fun drop(handle: Long) {
-        handleMap.remove(handle)
-    }
-
-    override fun lift(value: Long): CallbackInterface {
-        return handleMap.get(value)
-    }
-
-    override fun read(buf: ByteBuffer) = lift(buf.getLong())
-
-    override fun lower(value: CallbackInterface) = handleMap.insert(value)
-
-    override fun allocationSize(value: CallbackInterface) = 8UL
-
-    override fun write(value: CallbackInterface, buf: ByteBuffer) {
-        buf.putLong(lower(value))
-    }
-}
 
 // Put the implementation in an object so we don't pollute the top-level namespace
 internal object uniffiCallbackInterfaceFileSyncProvider {
@@ -2006,7 +2467,18 @@ internal object uniffiCallbackInterfaceFileSyncProvider {
             uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
         }
     }
-    internal object `openChapterForRead`: UniffiCallbackInterfaceFileSyncProviderMethod1 {
+    internal object `getLibrarySummary`: UniffiCallbackInterfaceFileSyncProviderMethod1 {
+        override fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
+            val uniffiObj = FfiConverterTypeFileSyncProvider.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`getLibrarySummary`(
+                )
+            }
+            val writeReturn = { value: List<FfiComicSummaryEntry> -> uniffiOutReturn.setValue(FfiConverterSequenceTypeFfiComicSummaryEntry.lower(value)) }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object `openChapterForRead`: UniffiCallbackInterfaceFileSyncProviderMethod2 {
         override fun callback(`uniffiHandle`: Long,`comicName`: RustBuffer.ByValue,`chapter`: RustBuffer.ByValue,`uniffiOutReturn`: LongByReference,uniffiCallStatus: UniffiRustCallStatus,) {
             val uniffiObj = FfiConverterTypeFileSyncProvider.handleMap.get(uniffiHandle)
             val makeCall = { ->
@@ -2019,7 +2491,7 @@ internal object uniffiCallbackInterfaceFileSyncProvider {
             uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
         }
     }
-    internal object `readChapterChunk`: UniffiCallbackInterfaceFileSyncProviderMethod2 {
+    internal object `readChapterChunk`: UniffiCallbackInterfaceFileSyncProviderMethod3 {
         override fun callback(`uniffiHandle`: Long,`handle`: Long,`chunkSize`: Int,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,) {
             val uniffiObj = FfiConverterTypeFileSyncProvider.handleMap.get(uniffiHandle)
             val makeCall = { ->
@@ -2032,7 +2504,7 @@ internal object uniffiCallbackInterfaceFileSyncProvider {
             uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
         }
     }
-    internal object `closeReadHandle`: UniffiCallbackInterfaceFileSyncProviderMethod3 {
+    internal object `closeReadHandle`: UniffiCallbackInterfaceFileSyncProviderMethod4 {
         override fun callback(`uniffiHandle`: Long,`handle`: Long,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
             val uniffiObj = FfiConverterTypeFileSyncProvider.handleMap.get(uniffiHandle)
             val makeCall = { ->
@@ -2044,7 +2516,7 @@ internal object uniffiCallbackInterfaceFileSyncProvider {
             uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
         }
     }
-    internal object `beginChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod4 {
+    internal object `beginChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod5 {
         override fun callback(`uniffiHandle`: Long,`comicName`: RustBuffer.ByValue,`chapter`: RustBuffer.ByValue,`fileName`: RustBuffer.ByValue,`expectedChecksum`: RustBuffer.ByValue,`sizeBytes`: Long,`uniffiOutReturn`: LongByReference,uniffiCallStatus: UniffiRustCallStatus,) {
             val uniffiObj = FfiConverterTypeFileSyncProvider.handleMap.get(uniffiHandle)
             val makeCall = { ->
@@ -2060,7 +2532,7 @@ internal object uniffiCallbackInterfaceFileSyncProvider {
             uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
         }
     }
-    internal object `writeChapterChunk`: UniffiCallbackInterfaceFileSyncProviderMethod5 {
+    internal object `writeChapterChunk`: UniffiCallbackInterfaceFileSyncProviderMethod6 {
         override fun callback(`uniffiHandle`: Long,`handle`: Long,`bytes`: RustBuffer.ByValue,`uniffiOutReturn`: ByteByReference,uniffiCallStatus: UniffiRustCallStatus,) {
             val uniffiObj = FfiConverterTypeFileSyncProvider.handleMap.get(uniffiHandle)
             val makeCall = { ->
@@ -2073,7 +2545,7 @@ internal object uniffiCallbackInterfaceFileSyncProvider {
             uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
         }
     }
-    internal object `finalizeChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod6 {
+    internal object `finalizeChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod7 {
         override fun callback(`uniffiHandle`: Long,`handle`: Long,`uniffiOutReturn`: ByteByReference,uniffiCallStatus: UniffiRustCallStatus,) {
             val uniffiObj = FfiConverterTypeFileSyncProvider.handleMap.get(uniffiHandle)
             val makeCall = { ->
@@ -2085,7 +2557,7 @@ internal object uniffiCallbackInterfaceFileSyncProvider {
             uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
         }
     }
-    internal object `abortChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod7 {
+    internal object `abortChapterWrite`: UniffiCallbackInterfaceFileSyncProviderMethod8 {
         override fun callback(`uniffiHandle`: Long,`handle`: Long,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,) {
             val uniffiObj = FfiConverterTypeFileSyncProvider.handleMap.get(uniffiHandle)
             val makeCall = { ->
@@ -2106,6 +2578,7 @@ internal object uniffiCallbackInterfaceFileSyncProvider {
 
     internal var vtable = UniffiVTableCallbackInterfaceFileSyncProvider.UniffiByValue(
         `getFileManifest`,
+        `getLibrarySummary`,
         `openChapterForRead`,
         `readChapterChunk`,
         `closeReadHandle`,
@@ -2908,6 +3381,22 @@ public object FfiConverterTypeP2PCallback: FfiConverter<P2pCallback, Pointer> {
 
 public interface P2pNodeInterface {
     
+    /**
+     * Busca a capa (thumbnail) de `comic_name` na biblioteca de `peer_addr` — `known_version`
+     * é a versão já cacheada localmente (`(peer_id, comic_name, cover_version)`), `None` se
+     * nunca buscou essa capa antes. Mesmo padrão fire-and-forget de `sync_comic`: grava o
+     * escopo pendente antes de conectar, resultado chega via
+     * `browse:cover:result`/`browse:cover:error` (ver `protocol::cover_browse`).
+     */
+    fun `browseCover`(`peerAddr`: FfiPeerAddr, `comicName`: kotlin.String, `knownVersion`: kotlin.Long?)
+    
+    /**
+     * Pede a lista de quadrinhos (nome + contagem de capítulos) da biblioteca de `peer_addr`,
+     * sem sincronizar nada — fire-and-forget como `connect()`; o resultado chega depois via
+     * `browse:library:result`/`browse:library:error` (ver `protocol::library_browse`).
+     */
+    fun `browseLibrary`(`peerAddr`: FfiPeerAddr)
+    
     fun `connect`(`peerAddr`: FfiPeerAddr, `alpn`: kotlin.ByteArray)
     
     fun `getConnectedPeers`(): Map<kotlin.String, List<kotlin.ByteArray>>
@@ -2927,7 +3416,7 @@ public interface P2pNodeInterface {
      * e fecha). É essa lista, não `get_connected_peers*`, que deve alimentar "dispositivos
      * pareados" na UI.
      */
-    fun `getPairedPeers`(): List<FfiPeerAddr>
+    fun `getPairedPeers`(): List<FfiPairedPeer>
     
     /**
      * Desempareia um peer: some da confiança (`trust_store`) e do cache de endereços
@@ -2942,6 +3431,17 @@ public interface P2pNodeInterface {
     fun `switchToLocal`()
     
     fun `switchToRelay`()
+    
+    /**
+     * Sincroniza um único quadrinho (`comic_name`) com `peer_addr` — cobre tanto push (o
+     * usuário já tem esse quadrinho e quer mandar) quanto pull (o usuário descobriu o
+     * quadrinho navegando a biblioteca remota via `browse_library` e quer trazê-lo), já que a
+     * troca do protocolo `acerola/sync-comic/1` é sempre simétrica. Grava `comic_name` no
+     * registro pendente ANTES de conectar — é a única forma dessa escolha (que só existe aqui,
+     * do lado que chamou) chegar até `ComicSyncOutbound::handle`, já que `connect()` não carrega
+     * payload (ver `protocol::files::COMIC_SYNC_ALPN`).
+     */
+    fun `syncComic`(`peerAddr`: FfiPeerAddr, `comicName`: kotlin.String)
     
     companion object
 }
@@ -2963,11 +3463,11 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
         this.pointer = null
         this.cleanable = UniffiLib.CLEANER.register(this, UniffiCleanAction(pointer))
     }
-    constructor(`callback`: P2pCallback, `legacyDataDir`: kotlin.String?, `relayUrl`: kotlin.String?, `deviceName`: kotlin.String, `deviceVersion`: kotlin.String, `secureStore`: SecureBlobStore, `historyProvider`: HistorySyncProvider, `fileProvider`: FileSyncProvider) :
+    constructor(`callback`: P2pCallback, `legacyDataDir`: kotlin.String?, `blobsDir`: kotlin.String, `relayUrl`: kotlin.String?, `deviceName`: kotlin.String, `deviceVersion`: kotlin.String, `secureStore`: SecureBlobStore, `historyProvider`: HistorySyncProvider, `fileProvider`: FileSyncProvider, `coverProvider`: CoverBrowseProvider) :
         this(
     uniffiRustCall() { _status ->
     UniffiLib.INSTANCE.uniffi_acerola_fn_constructor_p2pnode_new(
-        FfiConverterTypeP2PCallback.lower(`callback`),FfiConverterOptionalString.lower(`legacyDataDir`),FfiConverterOptionalString.lower(`relayUrl`),FfiConverterString.lower(`deviceName`),FfiConverterString.lower(`deviceVersion`),FfiConverterTypeSecureBlobStore.lower(`secureStore`),FfiConverterTypeHistorySyncProvider.lower(`historyProvider`),FfiConverterTypeFileSyncProvider.lower(`fileProvider`),_status)
+        FfiConverterTypeP2PCallback.lower(`callback`),FfiConverterOptionalString.lower(`legacyDataDir`),FfiConverterString.lower(`blobsDir`),FfiConverterOptionalString.lower(`relayUrl`),FfiConverterString.lower(`deviceName`),FfiConverterString.lower(`deviceVersion`),FfiConverterTypeSecureBlobStore.lower(`secureStore`),FfiConverterTypeHistorySyncProvider.lower(`historyProvider`),FfiConverterTypeFileSyncProvider.lower(`fileProvider`),FfiConverterTypeCoverBrowseProvider.lower(`coverProvider`),_status)
 }
     )
 
@@ -3033,6 +3533,40 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
             UniffiLib.INSTANCE.uniffi_acerola_fn_clone_p2pnode(pointer!!, status)
         }
     }
+
+    
+    /**
+     * Busca a capa (thumbnail) de `comic_name` na biblioteca de `peer_addr` — `known_version`
+     * é a versão já cacheada localmente (`(peer_id, comic_name, cover_version)`), `None` se
+     * nunca buscou essa capa antes. Mesmo padrão fire-and-forget de `sync_comic`: grava o
+     * escopo pendente antes de conectar, resultado chega via
+     * `browse:cover:result`/`browse:cover:error` (ver `protocol::cover_browse`).
+     */override fun `browseCover`(`peerAddr`: FfiPeerAddr, `comicName`: kotlin.String, `knownVersion`: kotlin.Long?)
+        = 
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_browse_cover(
+        it, FfiConverterTypeFfiPeerAddr.lower(`peerAddr`),FfiConverterString.lower(`comicName`),FfiConverterOptionalLong.lower(`knownVersion`),_status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Pede a lista de quadrinhos (nome + contagem de capítulos) da biblioteca de `peer_addr`,
+     * sem sincronizar nada — fire-and-forget como `connect()`; o resultado chega depois via
+     * `browse:library:result`/`browse:library:error` (ver `protocol::library_browse`).
+     */override fun `browseLibrary`(`peerAddr`: FfiPeerAddr)
+        = 
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_browse_library(
+        it, FfiConverterTypeFfiPeerAddr.lower(`peerAddr`),_status)
+}
+    }
+    
+    
 
     override fun `connect`(`peerAddr`: FfiPeerAddr, `alpn`: kotlin.ByteArray)
         = 
@@ -3112,8 +3646,8 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
      * já que a conexão de handshake em si dura só alguns segundos (troca PING/PONG/DeviceInfo
      * e fecha). É essa lista, não `get_connected_peers*`, que deve alimentar "dispositivos
      * pareados" na UI.
-     */override fun `getPairedPeers`(): List<FfiPeerAddr> {
-            return FfiConverterSequenceTypeFfiPeerAddr.lift(
+     */override fun `getPairedPeers`(): List<FfiPairedPeer> {
+            return FfiConverterSequenceTypeFfiPairedPeer.lift(
     callWithPointer {
     uniffiRustCall() { _status ->
     UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_get_paired_peers(
@@ -3169,6 +3703,26 @@ open class P2pNode: Disposable, AutoCloseable, P2pNodeInterface {
     uniffiRustCall() { _status ->
     UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_switch_to_relay(
         it, _status)
+}
+    }
+    
+    
+
+    
+    /**
+     * Sincroniza um único quadrinho (`comic_name`) com `peer_addr` — cobre tanto push (o
+     * usuário já tem esse quadrinho e quer mandar) quanto pull (o usuário descobriu o
+     * quadrinho navegando a biblioteca remota via `browse_library` e quer trazê-lo), já que a
+     * troca do protocolo `acerola/sync-comic/1` é sempre simétrica. Grava `comic_name` no
+     * registro pendente ANTES de conectar — é a única forma dessa escolha (que só existe aqui,
+     * do lado que chamou) chegar até `ComicSyncOutbound::handle`, já que `connect()` não carrega
+     * payload (ver `protocol::files::COMIC_SYNC_ALPN`).
+     */override fun `syncComic`(`peerAddr`: FfiPeerAddr, `comicName`: kotlin.String)
+        = 
+    callWithPointer {
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_acerola_fn_method_p2pnode_sync_comic(
+        it, FfiConverterTypeFfiPeerAddr.lower(`peerAddr`),FfiConverterString.lower(`comicName`),_status)
 }
     }
     
@@ -3593,6 +4147,47 @@ public object FfiConverterTypeFfiChapterReadEntry: FfiConverterRustBuffer<FfiCha
 
 
 
+data class FfiComicSummaryEntry (
+    var `comicName`: kotlin.String, 
+    var `chapterCount`: kotlin.UInt, 
+    /**
+     * Reaproveita `ComicDirectory.lastModified`/`comic_directory.last_modified` — sem hash
+     * novo. O peer compara contra a versão já cacheada localmente pra decidir se precisa
+     * buscar uma capa nova via `acerola/browse-cover/1`.
+     */
+    var `coverVersion`: kotlin.Long
+) {
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFfiComicSummaryEntry: FfiConverterRustBuffer<FfiComicSummaryEntry> {
+    override fun read(buf: ByteBuffer): FfiComicSummaryEntry {
+        return FfiComicSummaryEntry(
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterLong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: FfiComicSummaryEntry) = (
+            FfiConverterString.allocationSize(value.`comicName`) +
+            FfiConverterUInt.allocationSize(value.`chapterCount`) +
+            FfiConverterLong.allocationSize(value.`coverVersion`)
+    )
+
+    override fun write(value: FfiComicSummaryEntry, buf: ByteBuffer) {
+            FfiConverterString.write(value.`comicName`, buf)
+            FfiConverterUInt.write(value.`chapterCount`, buf)
+            FfiConverterLong.write(value.`coverVersion`, buf)
+    }
+}
+
+
+
 data class FfiConnectedPeer (
     var `peerId`: kotlin.String, 
     var `alpns`: List<kotlin.ByteArray>, 
@@ -3624,6 +4219,38 @@ public object FfiConverterTypeFfiConnectedPeer: FfiConverterRustBuffer<FfiConnec
             FfiConverterString.write(value.`peerId`, buf)
             FfiConverterSequenceByteArray.write(value.`alpns`, buf)
             FfiConverterOptionalString.write(value.`deviceName`, buf)
+    }
+}
+
+
+
+data class FfiCoverEntry (
+    var `coverVersion`: kotlin.Long, 
+    var `bytes`: kotlin.ByteArray?
+) {
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFfiCoverEntry: FfiConverterRustBuffer<FfiCoverEntry> {
+    override fun read(buf: ByteBuffer): FfiCoverEntry {
+        return FfiCoverEntry(
+            FfiConverterLong.read(buf),
+            FfiConverterOptionalByteArray.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: FfiCoverEntry) = (
+            FfiConverterLong.allocationSize(value.`coverVersion`) +
+            FfiConverterOptionalByteArray.allocationSize(value.`bytes`)
+    )
+
+    override fun write(value: FfiCoverEntry, buf: ByteBuffer) {
+            FfiConverterLong.write(value.`coverVersion`, buf)
+            FfiConverterOptionalByteArray.write(value.`bytes`, buf)
     }
 }
 
@@ -3672,6 +4299,58 @@ public object FfiConverterTypeFfiFileManifestEntry: FfiConverterRustBuffer<FfiFi
             FfiConverterString.write(value.`fileName`, buf)
             FfiConverterString.write(value.`checksum`, buf)
             FfiConverterULong.write(value.`sizeBytes`, buf)
+    }
+}
+
+
+
+/**
+ * Item de `get_paired_peers` — igual a `FfiPeerAddr`, mas com `device_name` a mais. Tipo
+ * separado (em vez de acrescentar o campo em `FfiPeerAddr`) pra não forçar todo call site
+ * que constrói um `FfiPeerAddr` pra discar (`connect`/`sync_comic`/`browse_library`/
+ * `browse_cover`) a passar um `device_name` que não faz sentido nesses casos.
+ */
+data class FfiPairedPeer (
+    var `id`: kotlin.String, 
+    var `deviceId`: kotlin.String?, 
+    var `addrs`: kotlin.ByteArray, 
+    /**
+     * Vem de `AcerolaP2p::known_peers()` (persiste entre reinícios e sobrevive ao handshake
+     * fechar), não de `connected_peers_with_info()` (só tem dado pros poucos segundos em que
+     * a conexão de handshake está de fato aberta) — era essa a troca errada que deixava
+     * `device_name` quase sempre `None` na UI, caindo no fallback pro peer id cru.
+     */
+    var `deviceName`: kotlin.String?
+) {
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFfiPairedPeer: FfiConverterRustBuffer<FfiPairedPeer> {
+    override fun read(buf: ByteBuffer): FfiPairedPeer {
+        return FfiPairedPeer(
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterByteArray.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: FfiPairedPeer) = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterOptionalString.allocationSize(value.`deviceId`) +
+            FfiConverterByteArray.allocationSize(value.`addrs`) +
+            FfiConverterOptionalString.allocationSize(value.`deviceName`)
+    )
+
+    override fun write(value: FfiPairedPeer, buf: ByteBuffer) {
+            FfiConverterString.write(value.`id`, buf)
+            FfiConverterOptionalString.write(value.`deviceId`, buf)
+            FfiConverterByteArray.write(value.`addrs`, buf)
+            FfiConverterOptionalString.write(value.`deviceName`, buf)
     }
 }
 
@@ -3850,6 +4529,38 @@ public object FfiConverterTypeSecureBlobStoreError : FfiConverterRustBuffer<Secu
 /**
  * @suppress
  */
+public object FfiConverterOptionalLong: FfiConverterRustBuffer<kotlin.Long?> {
+    override fun read(buf: ByteBuffer): kotlin.Long? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterLong.read(buf)
+    }
+
+    override fun allocationSize(value: kotlin.Long?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterLong.allocationSize(value)
+        }
+    }
+
+    override fun write(value: kotlin.Long?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterLong.write(value, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
 public object FfiConverterOptionalString: FfiConverterRustBuffer<kotlin.String?> {
     override fun read(buf: ByteBuffer): kotlin.String? {
         if (buf.get().toInt() == 0) {
@@ -3970,6 +4681,34 @@ public object FfiConverterSequenceTypeFfiChapterReadEntry: FfiConverterRustBuffe
 /**
  * @suppress
  */
+public object FfiConverterSequenceTypeFfiComicSummaryEntry: FfiConverterRustBuffer<List<FfiComicSummaryEntry>> {
+    override fun read(buf: ByteBuffer): List<FfiComicSummaryEntry> {
+        val len = buf.getInt()
+        return List<FfiComicSummaryEntry>(len) {
+            FfiConverterTypeFfiComicSummaryEntry.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<FfiComicSummaryEntry>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeFfiComicSummaryEntry.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<FfiComicSummaryEntry>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeFfiComicSummaryEntry.write(it, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
 public object FfiConverterSequenceTypeFfiConnectedPeer: FfiConverterRustBuffer<List<FfiConnectedPeer>> {
     override fun read(buf: ByteBuffer): List<FfiConnectedPeer> {
         val len = buf.getInt()
@@ -4026,24 +4765,24 @@ public object FfiConverterSequenceTypeFfiFileManifestEntry: FfiConverterRustBuff
 /**
  * @suppress
  */
-public object FfiConverterSequenceTypeFfiPeerAddr: FfiConverterRustBuffer<List<FfiPeerAddr>> {
-    override fun read(buf: ByteBuffer): List<FfiPeerAddr> {
+public object FfiConverterSequenceTypeFfiPairedPeer: FfiConverterRustBuffer<List<FfiPairedPeer>> {
+    override fun read(buf: ByteBuffer): List<FfiPairedPeer> {
         val len = buf.getInt()
-        return List<FfiPeerAddr>(len) {
-            FfiConverterTypeFfiPeerAddr.read(buf)
+        return List<FfiPairedPeer>(len) {
+            FfiConverterTypeFfiPairedPeer.read(buf)
         }
     }
 
-    override fun allocationSize(value: List<FfiPeerAddr>): ULong {
+    override fun allocationSize(value: List<FfiPairedPeer>): ULong {
         val sizeForLength = 4UL
-        val sizeForItems = value.map { FfiConverterTypeFfiPeerAddr.allocationSize(it) }.sum()
+        val sizeForItems = value.map { FfiConverterTypeFfiPairedPeer.allocationSize(it) }.sum()
         return sizeForLength + sizeForItems
     }
 
-    override fun write(value: List<FfiPeerAddr>, buf: ByteBuffer) {
+    override fun write(value: List<FfiPairedPeer>, buf: ByteBuffer) {
         buf.putInt(value.size)
         value.iterator().forEach {
-            FfiConverterTypeFfiPeerAddr.write(it, buf)
+            FfiConverterTypeFfiPairedPeer.write(it, buf)
         }
     }
 }

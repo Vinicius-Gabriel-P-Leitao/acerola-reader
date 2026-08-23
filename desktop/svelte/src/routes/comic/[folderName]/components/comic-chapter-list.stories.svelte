@@ -47,3 +47,34 @@
 <Story name="Empty" asChild>
 	<ComicChapterList data={{ pagesData: [], totalChapters: 0, pageSize: 25 }} />
 </Story>
+
+<Story name="With Conflict" asChild>
+	<ComicChapterList
+		data={{
+			pagesData: [
+				{
+					page: 0,
+					items: [
+						{
+							id: 'c1',
+							title: 'Capítulo 1: O Início',
+							chapterSort: '1',
+							fileName: '001.cbz',
+							isRead: true
+						},
+						{
+							id: 'c5',
+							title: 'Capítulo 5 (conflito-peer1)',
+							chapterSort: '5',
+							fileName: '005.cbz',
+							isRead: false,
+							hasConflict: true
+						}
+					]
+				}
+			],
+			totalChapters: 2,
+			pageSize: 25
+		}}
+	/>
+</Story>

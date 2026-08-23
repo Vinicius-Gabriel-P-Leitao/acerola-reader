@@ -13,6 +13,7 @@ import br.acerola.comic.logging.AcerolaLogger
 import br.acerola.comic.logging.LogSource
 import br.acerola.comic.usecase.MangadexCase
 import br.acerola.comic.usecase.comic.ObserveLibraryUseCase
+import br.acerola.comic.usecase.metadata.ClearMetadataUseCase
 import br.acerola.comic.usecase.metadata.ManageCategoriesUseCase
 import br.acerola.comic.worker.contract.WorkerContract
 import br.acerola.comic.worker.sync.MetadataSyncWorker
@@ -36,6 +37,7 @@ class ComicMetadataViewModel
     constructor(
         private val workManager: WorkManager,
         private val manageCategoriesUseCase: ManageCategoriesUseCase,
+        private val clearMetadataUseCase: ClearMetadataUseCase,
         @param:MangadexCase private val observeLibraryUseCase: ObserveLibraryUseCase<ComicMetadataDto>,
     ) : ViewModel() {
         private val _workerIndexing = MutableStateFlow(false)
@@ -115,6 +117,18 @@ class ComicMetadataViewModel
         ) {
             viewModelScope.launch {
                 manageCategoriesUseCase.updateComicCategory(directoryId, categoryId)
+            }
+        }
+
+        fun clearMetadata(directoryId: Long) {
+            AcerolaLogger.audit(
+                TAG,
+                "User requested metadata clear for comic",
+                LogSource.VIEWMODEL,
+                mapOf("directoryId" to directoryId.toString()),
+            )
+            viewModelScope.launch {
+                clearMetadataUseCase(directoryId)
             }
         }
 

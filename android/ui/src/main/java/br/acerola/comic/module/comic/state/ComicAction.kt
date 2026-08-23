@@ -26,6 +26,8 @@ sealed interface ComicAction {
     data class UpdateVolumeView(
         val mode: VolumeViewType,
     ) : ComicAction
+
+    data object ClearMetadata : ComicAction
 }
 
 sealed interface ComicChapterAction {
@@ -62,4 +64,8 @@ sealed interface ComicSyncAction {
     data object ExtractFirstPageAsCover : ComicSyncAction
 
     data object ExtractVolumeCovers : ComicSyncAction
+
+    data class SyncWithPeer(
+        val peerId: String,
+    ) : ComicSyncAction
 }

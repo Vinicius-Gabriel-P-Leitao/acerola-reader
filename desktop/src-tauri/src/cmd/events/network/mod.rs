@@ -59,19 +59,22 @@ impl NetworkStatusPayload {
     }
 }
 
-/// Peer já pareado (TOFU) alguma vez, com o último endereço conhecido pra disparar `connect`
-/// — não carrega `DeviceInfo` (esse só existe pra sessões conectadas agora, ver
-/// `ConnectedPeerPayload`); o frontend cai pro id truncado quando o peer não está conectado.
+/// Peer já pareado (TOFU) alguma vez, com o último endereço conhecido pra disparar `connect`.
+/// `device_name` vem de `AcerolaP2p::known_peers()` (ver `NetworkServiceApi::paired_peers`) —
+/// persiste entre reinícios, ao contrário do `DeviceInfo` de `ConnectedPeerPayload` (só existe
+/// pros poucos segundos em que a sessão de handshake está de fato aberta). O frontend só cai
+/// pro id cru quando esse peer nunca respondeu a entrevista de identidade.
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct PairedPeerPayload {
     pub peer_id: String,
     pub addrs: Vec<u8>,
+    pub device_name: Option<String>,
 }
 
-impl From<peer::PeerAddr> for PairedPeerPayload {
-    fn from(addr: peer::PeerAddr) -> Self {
-        Self { peer_id: addr.id.id, addrs: addr.addrs }
+impl From<(peer::PeerAddr, Option<DeviceInfo>)> for PairedPeerPayload {
+    fn from((addr, device_info): (peer::PeerAddr, Option<DeviceInfo>)) -> Self {
+        Self { peer_id: addr.id.id, addrs: addr.addrs, device_name: device_info.map(|d| d.name) }
     }
 }
 

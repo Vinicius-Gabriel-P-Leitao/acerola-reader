@@ -87,7 +87,10 @@ describe('ComicVolumeList', () => {
 
 			intersectionCallback(
 				[
-					{ target: observedElements[0], isIntersecting: true } as unknown as IntersectionObserverEntry
+					{
+						target: observedElements[0],
+						isIntersecting: true
+					} as unknown as IntersectionObserverEntry
 				],
 				{} as IntersectionObserver
 			);
@@ -111,7 +114,12 @@ describe('ComicVolumeList', () => {
 		await user.click(volumeBtn);
 
 		intersectionCallback(
-			[{ target: observedElements[0], isIntersecting: true } as unknown as IntersectionObserverEntry],
+			[
+				{
+					target: observedElements[0],
+					isIntersecting: true
+				} as unknown as IntersectionObserverEntry
+			],
 			{} as IntersectionObserver
 		);
 		await tick();
@@ -203,7 +211,12 @@ describe('ComicVolumeList', () => {
 		await user.click(screen.getByRole('button', { name: /Volume 1/i }));
 
 		intersectionCallback(
-			[{ target: observedElements[0], isIntersecting: true } as unknown as IntersectionObserverEntry],
+			[
+				{
+					target: observedElements[0],
+					isIntersecting: true
+				} as unknown as IntersectionObserverEntry
+			],
 			{} as IntersectionObserver
 		);
 		await tick();

@@ -96,10 +96,7 @@
 		if (import.meta.env.DEV) {
 			try {
 				const packageFamilyName = await invoke<string>('get_package_family_name');
-				if (
-					packageFamilyName !== 'No package identity' &&
-					!packageFamilyName.startsWith('Error')
-				) {
+				if (packageFamilyName !== 'No package identity' && !packageFamilyName.startsWith('Error')) {
 					packageIdentity = `Package: ${packageFamilyName}`;
 				} else {
 					packageIdentity = `Not running with package identity`;
@@ -228,7 +225,7 @@
 							>
 								<span>{m['layout.search_placeholder']()}</span>
 								<kbd
-									class="pointer-events-none hidden select-none items-center gap-1 rounded border border-surface/80 bg-surface/50 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground sm:flex"
+									class="pointer-events-none hidden items-center gap-1 rounded border border-surface/80 bg-surface/50 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground select-none sm:flex"
 								>
 									Ctrl+K
 								</kbd>
@@ -304,7 +301,10 @@
 				{m['layout.command.no_results']()}
 			</Command.Empty>
 
-			<Command.Group heading={m['layout.command.navigation_group']()} class="px-2 text-muted-foreground">
+			<Command.Group
+				heading={m['layout.command.navigation_group']()}
+				class="px-2 text-muted-foreground"
+			>
 				{#each navItems as item (item.href)}
 					<Command.Item
 						value={item.label}
@@ -321,11 +321,16 @@
 			</Command.Group>
 
 			{#if summary.comics && summary.comics.total > 0}
-				<Command.Group heading={m['layout.command.library_group']()} class="px-2 text-muted-foreground">
+				<Command.Group
+					heading={m['layout.command.library_group']()}
+					class="px-2 text-muted-foreground"
+				>
 					<div class="flex flex-col gap-2">
 						{#each summary.comics.comics as comic (comic.relations.directoryId)}
 							{@const cover = resolveCover(comic.artwork)}
-							{@const comicBookmark = bookmarkStore.getBookmarkForComic(comic.relations.directoryId)}
+							{@const comicBookmark = bookmarkStore.getBookmarkForComic(
+								comic.relations.directoryId
+							)}
 							<Command.Item
 								value={`${comic.metadata.title ?? ''} ${comic.filesystem.folderName}`}
 								onSelect={() => {
@@ -345,7 +350,10 @@
 								>
 									{#snippet floatingBadge()}
 										{#if comicBookmark != null}
-											<AcerolaBookmarkRibbon color={comicBookmark.color} name={comicBookmark.name} />
+											<AcerolaBookmarkRibbon
+												color={comicBookmark.color}
+												name={comicBookmark.name}
+											/>
 										{/if}
 									{/snippet}
 								</AcerolaCardImage>

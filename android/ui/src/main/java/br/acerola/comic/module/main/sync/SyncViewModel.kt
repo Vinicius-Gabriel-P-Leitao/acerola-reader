@@ -16,6 +16,7 @@ import br.acerola.comic.module.main.sync.state.SyncResult
 import br.acerola.comic.module.main.sync.state.SyncUiState
 import br.acerola.comic.module.main.sync.state.TransferLogEntry
 import br.acerola.comic.service.PeerAddress
+import br.acerola.comic.service.network.ComicSummary
 import br.acerola.comic.service.network.P2pEvent
 import br.acerola.comic.service.network.P2pEventBus
 import br.acerola.comic.usecase.network.P2pUseCase
@@ -34,6 +35,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 
@@ -55,6 +57,12 @@ internal fun syncKey(
     kind: String,
 ) = "$peerId:$kind"
 
+/** Shared with [RemoteLibrarySheet] to look up [SyncUiState.remoteCoverPaths] per item. */
+internal fun coverKey(
+    peerId: String,
+    comicName: String,
+) = "$peerId:$comicName"
+
 @HiltViewModel
 class SyncViewModel
     @Inject
@@ -68,6 +76,12 @@ class SyncViewModel
         val uiState: StateFlow<SyncUiState> = _uiState.asStateFlow()
 
         private val nextLogId = AtomicLong(0)
+
+        /** `"$peerId:$comicName"` -> última versão de capa confirmada (cacheada ou já sabida
+         *  como atual) — usado como `known_version` em `browseCover`, pra nunca rebaixar a mesma
+         *  versão duas vezes na mesma sessão do app. Fora do `SyncUiState` de propósito: não
+         *  precisa disparar recomposição sozinho, só [SyncUiState.remoteCoverPaths] importa pra UI. */
+        private val knownCoverVersions = ConcurrentHashMap<String, Long>()
 
         init {
             viewModelScope.launch { refreshLocalInfo() }
@@ -161,6 +175,93 @@ class SyncViewModel
                 SyncAction.DismissTrustDialog -> _uiState.update { it.copy(trustedPeerDialogPeerId = null) }
                 SyncAction.DismissConnectError -> _uiState.update { it.copy(connectError = null) }
                 is SyncAction.RemovePeer -> removePeer(action.peerId)
+
+                is SyncAction.BrowseLibrary -> browseLibrary(action.peerId)
+                SyncAction.DismissLibraryBrowse ->
+                    _uiState.update {
+                        it.copy(
+                            browsingPeerId = null,
+                            remoteLibrary = emptyList(),
+                            remoteLibraryLoaded = false,
+                            browseLibraryError = null,
+                        )
+                    }
+                is SyncAction.SyncComic -> syncComic(action.peerId, action.comicName)
+            }
+        }
+
+        /** Dispara `acerola/browse-cover/1` em paralelo pra cada quadrinho da lista — streams são
+         *  baratas numa conexão já pooled por `(peer, alpn)` (ver `acerola-p2p`), então não há
+         *  necessidade de serializar. `known_version` vem do cache em memória
+         *  ([knownCoverVersions]); ausente = primeira vez que essa capa é vista nesta sessão. */
+        private fun fetchCoversFor(
+            peerId: String,
+            comics: List<ComicSummary>,
+        ) {
+            viewModelScope.launch(Dispatchers.IO) {
+                val addr = p2pUseCase.getPairedPeers().find { it.id == peerId } ?: return@launch
+                comics.forEach { comic ->
+                    val key = coverKey(peerId, comic.comicName)
+                    if (knownCoverVersions[key] == comic.coverVersion) return@forEach
+                    p2pUseCase.browseCover(addr, comic.comicName, knownCoverVersions[key])
+                }
+            }
+        }
+
+        /** Só lista os quadrinhos do peer (nome + contagem) — não sincroniza nada. Resultado
+         *  chega via [P2pEvent.LibraryBrowseResult]/[P2pEvent.LibraryBrowseError]. */
+        private fun browseLibrary(peerId: String) {
+            _uiState.update {
+                it.copy(
+                    browsingPeerId = peerId,
+                    remoteLibrary = emptyList(),
+                    remoteLibraryLoaded = false,
+                    browseLibraryError = null,
+                )
+            }
+
+            viewModelScope.launch(Dispatchers.IO) {
+                val addr = p2pUseCase.getPairedPeers().find { it.id == peerId }
+                if (addr == null) {
+                    _uiState.update { it.copy(browsingPeerId = null) }
+                    return@launch
+                }
+                p2pUseCase.browseLibrary(addr)
+            }
+        }
+
+        /** Sincroniza um único quadrinho (`acerola/sync-comic/1`) — reaproveita a MESMA
+         *  bookkeeping ([SYNC_KIND_FILES]/`syncingKeys`/[TransferLogEntry]) do botão
+         *  "Sincronizar arquivos", já que ambos emitem os mesmos eventos `sync:files:*`
+         *  (ver `protocol::files::run_and_report_scoped` do lado Rust). */
+        private fun syncComic(
+            peerId: String,
+            comicName: String,
+        ) {
+            val key = syncKey(peerId, SYNC_KIND_FILES)
+            if (key in _uiState.value.syncingKeys) return
+
+            _uiState.update {
+                it.copy(
+                    syncingKeys = it.syncingKeys + key,
+                    browsingPeerId = null,
+                    remoteLibrary = emptyList(),
+                    remoteLibraryLoaded = false,
+                )
+            }
+
+            viewModelScope.launch {
+                delay(SYNC_IN_FLIGHT_TIMEOUT_MS)
+                _uiState.update { it.copy(syncingKeys = it.syncingKeys - key) }
+            }
+
+            viewModelScope.launch(Dispatchers.IO) {
+                val addr = p2pUseCase.getPairedPeers().find { it.id == peerId }
+                if (addr == null) {
+                    _uiState.update { it.copy(syncingKeys = it.syncingKeys - key) }
+                    return@launch
+                }
+                p2pUseCase.syncComic(addr, comicName)
             }
         }
 
@@ -338,6 +439,26 @@ class SyncViewModel
                     refreshLocalInfo()
                 }
 
+                is P2pEvent.LibraryBrowseResult ->
+                    if (event.peerId == _uiState.value.browsingPeerId) {
+                        _uiState.update { it.copy(remoteLibrary = event.comics, remoteLibraryLoaded = true) }
+                        fetchCoversFor(event.peerId, event.comics)
+                    }
+                is P2pEvent.LibraryBrowseError ->
+                    if (event.peerId == _uiState.value.browsingPeerId) {
+                        _uiState.update { it.copy(browseLibraryError = event.message) }
+                    }
+
+                is P2pEvent.CoverBrowseResult -> {
+                    val key = coverKey(event.peerId, event.comicName)
+                    event.coverVersion?.let { knownCoverVersions[key] = it }
+                    val path = event.path
+                    if (event.status == "changed" && path != null) {
+                        _uiState.update { it.copy(remoteCoverPaths = it.remoteCoverPaths + (key to path)) }
+                    }
+                }
+                is P2pEvent.CoverBrowseError -> Unit // best-effort — a lista continua sem thumb pra esse item
+
                 else -> Unit
             }
         }
@@ -452,10 +573,15 @@ class SyncViewModel
             withContext(Dispatchers.IO) {
                 val localAddress = p2pUseCase.getLocalAddress()
                 val pairingCode = PairingCode.encode(localAddress.id, localAddress.deviceId, localAddress.addrs)
-                val liveDeviceNames = p2pUseCase.getConnectedPeersWithInfo().associate { it.peerId to it.deviceName }
+                // Nome do dispositivo vem de getPairedPeers() (que já resolve via
+                // known_peers() do lado nativo, persistente) -- getConnectedPeersWithInfo()
+                // só serve mais pra saber QUEM está conectado agora (connectedPeerIds), não
+                // pra nome: aquela lista só tem dado durante os poucos segundos em que a
+                // conexão de handshake está de fato aberta.
+                val connectedPeers = p2pUseCase.getConnectedPeersWithInfo()
                 val paired =
                     p2pUseCase.getPairedPeers().map {
-                        PairedPeer(peerId = it.id, deviceName = liveDeviceNames[it.id])
+                        PairedPeer(peerId = it.id, deviceName = it.deviceName)
                     }
                 val localId = p2pUseCase.getLocalId()
                 val mode = p2pUseCase.getMode()
@@ -467,7 +593,7 @@ class SyncViewModel
                         pairingCode = pairingCode,
                         mode = mode,
                         pairedPeers = paired,
-                        connectedPeerIds = liveDeviceNames.keys,
+                        connectedPeerIds = connectedPeers.map { peer -> peer.peerId }.toSet(),
                     )
                 }
             }

@@ -4,6 +4,7 @@ use std::{
 };
 
 use acerola_p2p::api::{
+    blobs::IrohBlobsConfig,
     guard::{TofuGuard, TrustedPeerStore},
     identity::{DefaultDeviceInfoProvider, DeviceInfoProvider},
     storage::P2PStorage,
@@ -28,10 +29,16 @@ use crate::{
             MasterKeySource,
         },
         sync::protocol::{
+            comic_handler::{ComicSyncInbound, ComicSyncOutbound},
+            comic_sync_registry::PendingComicSyncRegistry,
+            cover_browse_handler::{CoverBrowseInbound, CoverBrowseOutbound},
+            cover_request_registry::PendingCoverRequestRegistry,
             file_handler::{FileSyncInbound, FileSyncOutbound},
             file_session_guard::FileSyncSessionGuard,
             history_handler::{HistorySyncInbound, HistorySyncOutbound},
-            FILE_SYNC_ALPN, HISTORY_SYNC_ALPN,
+            library_browse_handler::{LibraryBrowseInbound, LibraryBrowseOutbound},
+            transfer::{BlobChapterTransfer, ChapterTransfer},
+            COMIC_SYNC_ALPN, COVER_BROWSE_ALPN, FILE_SYNC_ALPN, HISTORY_SYNC_ALPN, LIBRARY_BROWSE_ALPN,
         },
     },
 };
@@ -132,7 +139,13 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
     // Sem `.seed(...)` aqui — o builder resolve a identidade sozinho a partir do
     // `.storage(...)` abaixo (`acerola_builder.rs::resolve_identity`): carrega o seed
     // salvo em `identity.enc` se existir, ou gera um novo e já persiste criptografado.
-    let transport_builder = IrohTransportBuilder::default().relay(&relay_url);
+    // MITIGAÇÃO TEMPORÁRIA: `IrohBlobsConfig::fs(...)` trava dentro de
+    // `FsStore::load_with_opts` (iroh-blobs) — nunca testado com store em disco na lib, só em
+    // memória (ver `acerola-p2p/src/core/blobs/iroh/mod.rs`, só `mem_store()` nos testes).
+    // Estourava o timeout de 10s do `.build()` abaixo, deixando `network_service` sem
+    // `.manage()`. `.mem()` não persiste blobs entre reinícios, mas destrava o app
+    // imediatamente enquanto o hang do FsStore é isolado/corrigido.
+    let transport_builder = IrohTransportBuilder::default().relay(&relay_url).blobs(IrohBlobsConfig::mem());
 
     let device_information =
         DefaultDeviceInfoProvider::new("0.0.1-beta").provide().map_err(|device_error| {
@@ -147,13 +160,37 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
     // `library_root` fosse um `PathBuf` fixo, trocar `library_path` em `settings.json`
     // depois do boot (sem reiniciar o app) faria o sync continuar gravando no destino
     // antigo indefinidamente.
+    // Precisa ser resolvido ANTES de `app_data_directory` ser movido pra dentro da closure de
+    // `library_root` logo abaixo.
+    let remote_covers_dir = app_data_directory.join("remote_covers");
+
     let history_sync_service = HistorySyncService::new(database_pool.clone());
     let file_sync_service = FileSyncService::new(database_pool, move || {
         read_library_path(&app_data_directory).unwrap_or_else(|| app_data_directory.join("library"))
     });
     // Compartilhado entre inbound e outbound: garante que só uma sessão de sync-files por
-    // peer rode por vez, nos dois sentidos (ver `file_session_guard.rs`).
+    // peer rode por vez, nos dois sentidos (ver `file_session_guard.rs`). Também compartilhado
+    // com `COMIC_SYNC_ALPN` (mesmo recurso — transferência de arquivos — então uma sessão de
+    // biblioteca inteira e uma individual pro mesmo peer não podem rodar ao mesmo tempo).
     let file_sync_session_guard = FileSyncSessionGuard::new();
+
+    // Side-channel pro comando Tauri `sync_comic` informar qual `comic_name` o
+    // `ComicSyncOutbound` deve usar na próxima sessão que ele iniciar pra um dado peer — ver
+    // `comic_sync_registry.rs` pro motivo de precisar disso (o `Handler` é um singleton, não
+    // recebe parâmetro por chamada de `connect()`).
+    let pending_comic_sync = PendingComicSyncRegistry::new();
+    app_handle.manage(Arc::clone(&pending_comic_sync));
+
+    let pending_cover_request = PendingCoverRequestRegistry::new();
+    app_handle.manage(Arc::clone(&pending_cover_request));
+
+    // Handlers de `sync-files`/`sync-comic` são registrados no builder ANTES do node existir,
+    // mas precisam de `node.blobs()`/`node.known_peers()` pra publicar/buscar blobs —
+    // `BlobContext` guarda um `Weak<AcerolaP2p>` preenchido só depois de `.build()` (ver
+    // `infra::sync::blob_context`).
+    let blob_context = crate::infra::sync::blob_context::BlobContext::new();
+    let chapter_transfer: Arc<dyn ChapterTransfer> =
+        Arc::new(BlobChapterTransfer::new(Arc::clone(&blob_context)));
 
     let p2p_node = match tokio::time::timeout(
         std::time::Duration::from_secs(10),
@@ -186,15 +223,56 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
                     file_sync_service.clone(),
                     sync_log_repo.clone(),
                     Arc::clone(&file_sync_session_guard),
+                    Arc::clone(&chapter_transfer),
                 )),
             )
             .outbound(
                 FILE_SYNC_ALPN,
                 Arc::new(FileSyncOutbound::new(
                     Arc::clone(&event_emitter),
-                    file_sync_service,
-                    sync_log_repo,
-                    file_sync_session_guard,
+                    file_sync_service.clone(),
+                    sync_log_repo.clone(),
+                    Arc::clone(&file_sync_session_guard),
+                    Arc::clone(&chapter_transfer),
+                )),
+            )
+            .inbound(
+                COMIC_SYNC_ALPN,
+                Arc::new(ComicSyncInbound::new(
+                    Arc::clone(&event_emitter),
+                    file_sync_service.clone(),
+                    sync_log_repo.clone(),
+                    Arc::clone(&file_sync_session_guard),
+                    Arc::clone(&chapter_transfer),
+                )),
+            )
+            .outbound(
+                COMIC_SYNC_ALPN,
+                Arc::new(ComicSyncOutbound::new(
+                    Arc::clone(&event_emitter),
+                    file_sync_service.clone(),
+                    sync_log_repo.clone(),
+                    Arc::clone(&file_sync_session_guard),
+                    Arc::clone(&pending_comic_sync),
+                    Arc::clone(&chapter_transfer),
+                )),
+            )
+            .inbound(LIBRARY_BROWSE_ALPN, Arc::new(LibraryBrowseInbound::new(file_sync_service.clone())))
+            .outbound(
+                LIBRARY_BROWSE_ALPN,
+                Arc::new(LibraryBrowseOutbound::new(Arc::clone(&event_emitter))),
+            )
+            .inbound(
+                COVER_BROWSE_ALPN,
+                Arc::new(CoverBrowseInbound::new(file_sync_service, Arc::clone(&chapter_transfer))),
+            )
+            .outbound(
+                COVER_BROWSE_ALPN,
+                Arc::new(CoverBrowseOutbound::new(
+                    Arc::clone(&event_emitter),
+                    Arc::clone(&chapter_transfer),
+                    Arc::clone(&pending_cover_request),
+                    remote_covers_dir,
                 )),
             )
             .build(),
@@ -220,8 +298,11 @@ pub async fn setup_network(app_handle: &tauri::AppHandle) -> Result<(), ComicErr
         },
     };
 
+    let p2p_node = Arc::new(p2p_node);
+    blob_context.set_node(&p2p_node);
+
     let network_service: Arc<dyn NetworkServiceApi> =
-        Arc::new(NetworkService::new(Arc::new(p2p_node), secure_p2p_storage));
+        Arc::new(NetworkService::new(p2p_node, secure_p2p_storage));
     app_handle.manage(network_service);
 
     tracing::info!("[Bios::Network] P2P network service initialized successfully");
