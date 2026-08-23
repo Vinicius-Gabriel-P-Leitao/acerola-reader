@@ -169,6 +169,63 @@ mod run_in_isolation {
     /// premissa de "falha rápido, sem relay" pare de valer numa versão futura do iroh.
     const SAD_PATH_TIMEOUT: Duration = Duration::from_secs(10);
 
+    /// Regressão do bug reportado/reproduzido ao vivo em 22-23/08/2026: `IrohBlobStore::fetch()`
+    /// baixava o blob no store local sem criar nenhuma tag de proteção (diferente de `put()`,
+    /// que sai de `AddProgress::with_tag()` já com uma tag permanente) — deixando uma janela
+    /// real entre o `fetch()` retornar e o `get()` seguinte do chamador onde a varredura
+    /// periódica de GC do store (`gc_interval`) podia reciclar o blob recém-baixado antes de
+    /// qualquer um lê-lo, resultando em `BlobNotFound` esporádico. Usa um `gc_interval` bem
+    /// curto (bem menor que o default de produção) pra tornar essa janela determinística sem
+    /// deixar o teste lento: sem a tag, esperar mais que o intervalo antes do `get()` reproduz a
+    /// falha de forma confiável; com a tag, o blob sobrevive indefinidamente.
+    #[tokio::test]
+    async fn fetched_blob_survives_a_gc_sweep_before_being_read() {
+        use crate::api::blobs::IrohBlobsConfig;
+
+        let gc_interval = Duration::from_millis(200);
+
+        let node_a = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default().blobs(IrohBlobsConfig::Mem { gc_interval }),
+            test_device_info(),
+        )
+        .build()
+        .await
+        .unwrap();
+        let node_b = AcerolaP2p::builder(
+            no_op_emitter(),
+            IrohTransportBuilder::default().blobs(IrohBlobsConfig::Mem { gc_interval }),
+            test_device_info(),
+        )
+        .build()
+        .await
+        .unwrap();
+
+        let addr_a = node_a.local_addr().clone();
+        let payload = b"acerola gc survival payload".to_vec();
+
+        let blobs_a = node_a.blobs().await.unwrap();
+        let hash = blobs_a.put(payload.clone()).await.unwrap();
+
+        wait_for_mdns().await;
+
+        let blobs_b = node_b.blobs().await.unwrap();
+        blobs_b.fetch(&hash, &addr_a).await.unwrap();
+
+        // Deixa pelo menos uma varredura de GC completa acontecer antes de ler o blob de volta —
+        // sem a tag de proteção, essa espera por si só já é o suficiente pra reproduzir o bug.
+        sleep(gc_interval * 3).await;
+
+        let mut reader = blobs_b
+            .get(&hash)
+            .await
+            .expect("fetched blob must survive a GC sweep until explicitly removed");
+        let mut received = Vec::new();
+        reader.read_to_end(&mut received).await.unwrap();
+
+        assert_eq!(received, payload);
+    }
+
     #[tokio::test]
     async fn fetch_fails_when_remote_peer_does_not_have_the_requested_hash() {
         let node_a = build_node_with_blobs().await;
