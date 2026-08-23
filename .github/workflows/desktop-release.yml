@@ -13,7 +13,7 @@ jobs:
       contents: write
     defaults:
       run:
-        working-directory: platforms/desktop
+        working-directory: acerola/desktop
 
     steps:
       - name: Checkout
@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: 25.9.0
           cache: npm
-          cache-dependency-path: platforms/desktop/package-lock.json
+          cache-dependency-path: acerola/desktop/package-lock.json
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -35,8 +35,8 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            platforms/desktop/src-tauri/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('platforms/desktop/**/Cargo.lock') }}
+            acerola/desktop/src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('acerola/desktop/**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
 
@@ -113,7 +113,7 @@ jobs:
           draft: false
           prerelease: ${{ contains(env.VERSION_FULL, '-') }}
           files: |
-            platforms/desktop/.bin/windows/msix/acerola-x64.msix
-            platforms/desktop/.bin/windows/msi/acerola-x64.msi
-            platforms/desktop/.bin/windows/exe/acerola-x64.exe
+            acerola/desktop/.bin/windows/msix/acerola-x64.msix
+            acerola/desktop/.bin/windows/msi/acerola-x64.msi
+            acerola/desktop/.bin/windows/exe/acerola-x64.exe
           generate_release_notes: true
