@@ -17,7 +17,6 @@
 	import { useNetworkSync, type TransferLogEntry } from '$lib/hooks/store/use-network-sync.svelte';
 	import { useRemoteLibrary } from '$lib/hooks/store/use-remote-library.svelte';
 	import AcerolaDialog from '$lib/components/acerola-dialog/acerola-dialog.svelte';
-	import type { DeviceInfoPayload } from '$lib/contracts/network/network.payloads';
 	import { useRelaySettings } from '$lib/hooks/preferences/use-relay-settings.svelte';
 	import { NETWORK_COMMANDS } from '$lib/contracts/network/network.commands';
 	import { NETWORK_EVENTS } from '$lib/contracts/network/network.events';
@@ -121,21 +120,27 @@
 			});
 	});
 
-	type DisplayPeer = { peerId: string; device: DeviceInfoPayload | null; connected: boolean };
+	type DisplayPeer = { peerId: string; deviceName: string | null; connected: boolean };
 
-	// Une os pareados persistidos (sobrevivem a restart, mas sem `DeviceInfo` — a conexão do
-	// protocolo em si dura só segundos, ver `NetworkServiceApi::paired_peers`) com os
-	// conectados agora (`network:status`, tem nome/OS quando disponível). Sem os pareados,
-	// o botão de sync só existiria no instante exato em que o peer está conectado — quase
-	// nunca, já que a conexão fecha assim que a troca termina. `connected` é derivado da
-	// presença em `status.peers`, independente de `device` já ter chegado ou não.
+	// Une os pareados persistidos (sobrevivem a restart, `deviceName` vem de `known_peers()`
+	// no backend — ver `NetworkServiceApi::paired_peers`) com os conectados agora
+	// (`network:status`, mais fresco mas só existe nos poucos segundos em que a conexão de
+	// handshake está de fato aberta). Sem os pareados, o botão de sync só existiria no
+	// instante exato em que o peer está conectado — quase nunca. `connected` é derivado da
+	// presença em `status.peers`; ao sobrescrever com a entrada "ao vivo", mantém o
+	// `deviceName` já persistido como fallback pro caso raro do `device` ainda não ter
+	// chegado nesse instante exato (handshake acabou de abrir).
 	const uniquePeers = $derived.by(() => {
 		const byId = new Map<string, DisplayPeer>();
 		for (const peer of peers.pairedPeers) {
-			byId.set(peer.peerId, { peerId: peer.peerId, device: null, connected: false });
+			byId.set(peer.peerId, { peerId: peer.peerId, deviceName: peer.deviceName, connected: false });
 		}
 		for (const peer of peers.status?.peers ?? []) {
-			byId.set(peer.peerId, { peerId: peer.peerId, device: peer.device, connected: true });
+			byId.set(peer.peerId, {
+				peerId: peer.peerId,
+				deviceName: peer.device?.name ?? byId.get(peer.peerId)?.deviceName ?? null,
+				connected: true
+			});
 		}
 		return [...byId.values()];
 	});
@@ -471,7 +476,7 @@
 
 					<AcerolaHeroButton
 						data={{
-							title: peer.device?.name ?? shortId(peer.peerId),
+							title: peer.deviceName ?? shortId(peer.peerId),
 							description: peerStatusLabel(peer)
 						}}
 					>
@@ -684,17 +689,15 @@
 			<div class="max-h-80 w-full space-y-1 overflow-y-auto">
 				{#each filteredRemoteComics as comic (comic.comicName)}
 					{@const comicSyncing = browsingPeerId ? sync.isSyncing(browsingPeerId, 'comic') : false}
-					{@const coverPath = browsingPeerId ? remoteLibrary.coverPathFor(browsingPeerId, comic.comicName) : undefined}
+					{@const coverPath = browsingPeerId
+						? remoteLibrary.coverPathFor(browsingPeerId, comic.comicName)
+						: undefined}
 					<div
 						class="flex items-center justify-between gap-3 rounded-xl px-3 py-2 hover:bg-muted/50"
 					>
 						<div class="flex min-w-0 flex-1 items-center gap-3">
 							{#if coverPath}
-								<img
-									src={coverPath}
-									alt=""
-									class="h-10 w-10 shrink-0 rounded-lg object-cover"
-								/>
+								<img src={coverPath} alt="" class="h-10 w-10 shrink-0 rounded-lg object-cover" />
 							{:else}
 								<div class="h-10 w-10 shrink-0 rounded-lg bg-muted"></div>
 							{/if}

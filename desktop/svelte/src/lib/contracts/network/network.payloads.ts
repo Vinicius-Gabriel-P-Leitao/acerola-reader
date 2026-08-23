@@ -16,10 +16,13 @@ export type NetworkStatusPayload = {
 };
 
 /** Peer já pareado alguma vez, com o último endereço conhecido — sobrevive a restart e
- *  independe de estar conectado agora (ver `NetworkServiceApi::paired_peers` no backend). */
+ *  independe de estar conectado agora (ver `NetworkServiceApi::paired_peers` no backend).
+ *  `deviceName` vem de `known_peers()` (persistente) — `null` só quando esse peer nunca
+ *  respondeu a entrevista de identidade (DeviceInfo). */
 export type PairedPeerPayload = {
 	peerId: string;
 	addrs: number[];
+	deviceName: string | null;
 };
 
 export type RelayInfo = {

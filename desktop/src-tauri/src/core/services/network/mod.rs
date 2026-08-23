@@ -23,7 +23,11 @@ pub trait NetworkServiceApi: Send + Sync + 'static {
     /// [`NetworkServiceApi::connected_peers_with_info`] (sessão de protocolo, dura só
     /// segundos). É essa lista que deve alimentar "disparar sync com X" na UI, já que o peer
     /// quase nunca está conectado no exato instante em que o usuário clica o botão.
-    async fn paired_peers(&self) -> Result<Vec<PeerAddr>, String>;
+    ///
+    /// `DeviceInfo` vem de `AcerolaP2p::known_peers()` (mesmo mecanismo persistente,
+    /// sobrevive ao handshake fechar) — não de `connected_peers_with_info`, que só tem dado
+    /// nos poucos segundos em que a sessão de handshake está de fato aberta.
+    async fn paired_peers(&self) -> Result<Vec<(PeerAddr, Option<DeviceInfo>)>, String>;
     async fn switch_to_local(&self) -> Result<(), String>;
     async fn switch_to_relay(&self) -> Result<(), String>;
     async fn mode(&self) -> Result<NetworkMode, String>;
@@ -67,8 +71,26 @@ impl NetworkServiceApi for NetworkService {
         Ok(self.node.connected_peers_with_info().await)
     }
 
-    async fn paired_peers(&self) -> Result<Vec<PeerAddr>, String> {
-        self.storage.load_peers().await.map_err(|err| err.to_string())
+    async fn paired_peers(&self) -> Result<Vec<(PeerAddr, Option<DeviceInfo>)>, String> {
+        use std::collections::HashMap;
+
+        let peers = self.storage.load_peers().await.map_err(|err| err.to_string())?;
+
+        let device_info_by_peer: HashMap<String, DeviceInfo> = self
+            .node
+            .known_peers()
+            .await
+            .into_iter()
+            .filter_map(|(peer, _, info)| info.map(|device| (peer.id, device)))
+            .collect();
+
+        Ok(peers
+            .into_iter()
+            .map(|addr| {
+                let device = device_info_by_peer.get(&addr.id.id).cloned();
+                (addr, device)
+            })
+            .collect())
     }
 
     async fn switch_to_local(&self) -> Result<(), String> {
