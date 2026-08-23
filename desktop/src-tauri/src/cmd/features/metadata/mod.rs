@@ -1,0 +1,182 @@
+use std::sync::Arc;
+
+use tauri::{command, State};
+
+use crate::{
+    cmd::events::{metadata::ComicMetadataEvent, shared::ErrorPayload},
+    core::services::metadata::MetadataService,
+    data::repositories::metadata::MetadataRepository,
+    infra::error::ComicError,
+};
+
+pub struct MetadataState {
+    pub service: Arc<MetadataService>,
+    pub repo: MetadataRepository,
+}
+
+#[command]
+pub async fn sync_metadata_mangadex(
+    title: String, comic_id: String, language: String, generate_comic_info: bool,
+    state: State<'_, MetadataState>,
+) -> Result<ComicMetadataEvent, ErrorPayload> {
+    let parsed_id = comic_id.parse::<i64>().map_err(|err| {
+        ErrorPayload::from(&ComicError::SystemFailure(format!("Invalid ID: {}", err)))
+    })?;
+    let metadata = state
+        .service
+        .sync_comic_mangadex(&title, parsed_id, &language, generate_comic_info)
+        .await
+        .map_err(|err| ErrorPayload::from(&err))?;
+
+    let (cover, banner) = match metadata.comic_directory_fk {
+        Some(dir_id) => state.service.get_cover_and_banner(dir_id).await,
+        None => (None, None),
+    };
+
+    Ok(ComicMetadataEvent::from_model(metadata).with_cover(cover).with_banner(banner))
+}
+
+#[command]
+pub async fn sync_metadata_anilist(
+    title: String, comic_id: String, language: String, generate_comic_info: bool,
+    state: State<'_, MetadataState>,
+) -> Result<ComicMetadataEvent, ErrorPayload> {
+    let parsed_id = comic_id.parse::<i64>().map_err(|err| {
+        ErrorPayload::from(&ComicError::SystemFailure(format!("Invalid ID: {}", err)))
+    })?;
+    let metadata = state
+        .service
+        .sync_comic_anilist(&title, parsed_id, &language, generate_comic_info)
+        .await
+        .map_err(|err| ErrorPayload::from(&err))?;
+
+    let (cover, banner) = match metadata.comic_directory_fk {
+        Some(dir_id) => state.service.get_cover_and_banner(dir_id).await,
+        None => (None, None),
+    };
+
+    Ok(ComicMetadataEvent::from_model(metadata).with_cover(cover).with_banner(banner))
+}
+
+#[command]
+pub async fn read_comic_info(
+    xml_content: String, comic_id: i64, state: State<'_, MetadataState>,
+) -> Result<ComicMetadataEvent, ErrorPayload> {
+    let metadata = state
+        .service
+        .parse_and_sync_comic_info(&xml_content, comic_id)
+        .await
+        .map_err(|err| ErrorPayload::from(&err))?;
+
+    let (cover, banner) = match metadata.comic_directory_fk {
+        Some(dir_id) => state.service.get_cover_and_banner(dir_id).await,
+        None => (None, None),
+    };
+
+    Ok(ComicMetadataEvent::from_model(metadata).with_cover(cover).with_banner(banner))
+}
+
+#[command]
+pub async fn sync_metadata_comic_info(
+    comic_id: String, state: State<'_, MetadataState>,
+) -> Result<ComicMetadataEvent, ErrorPayload> {
+    let parsed_id = comic_id.parse::<i64>().map_err(|err| {
+        ErrorPayload::from(&ComicError::SystemFailure(format!("Invalid ID: {}", err)))
+    })?;
+    let metadata = state
+        .service
+        .sync_comic_comic_info(parsed_id)
+        .await
+        .map_err(|err| ErrorPayload::from(&err))?;
+
+    let (cover, banner) = match metadata.comic_directory_fk {
+        Some(dir_id) => state.service.get_cover_and_banner(dir_id).await,
+        None => (None, None),
+    };
+
+    Ok(ComicMetadataEvent::from_model(metadata).with_cover(cover).with_banner(banner))
+}
+
+/// Comando Tauri para apagar os metadados sincronizados (+ cover/banner + ComicInfo.xml)
+/// de um único quadrinho, revertendo-o ao estado sem sincronização.
+#[command]
+pub async fn clear_comic_metadata(
+    comic_id: String, state: State<'_, MetadataState>,
+) -> Result<(), ErrorPayload> {
+    let parsed_id = comic_id.parse::<i64>().map_err(|err| {
+        ErrorPayload::from(&ComicError::SystemFailure(format!("Invalid ID: {}", err)))
+    })?;
+
+    state.service.clear_comic_metadata(parsed_id).await.map_err(|err| ErrorPayload::from(&err))
+}
+
+/// Comando Tauri para apagar os metadados sincronizados de múltiplos quadrinhos em lote.
+/// Best-effort: quadrinhos que falharem são pulados. Retorna quantos foram limpos.
+#[command]
+pub async fn clear_comics_metadata_batch(
+    comic_ids: Vec<String>, state: State<'_, MetadataState>,
+) -> Result<usize, ErrorPayload> {
+    let mut parsed_ids = Vec::with_capacity(comic_ids.len());
+    for id in comic_ids {
+        let parsed = id.parse::<i64>().map_err(|err| {
+            ErrorPayload::from(&ComicError::SystemFailure(format!("Invalid ID: {}", err)))
+        })?;
+        parsed_ids.push(parsed);
+    }
+
+    Ok(state.service.clear_comics_metadata_batch(&parsed_ids).await)
+}
+
+#[command]
+pub async fn sync_all_metadata_mangadex<R: tauri::Runtime>(
+    language: String, generate_comic_info: bool, app: tauri::AppHandle<R>,
+    state: State<'_, MetadataState>,
+) -> Result<(), ErrorPayload> {
+    use tauri::Emitter;
+    let service = state.service.clone();
+
+    tokio::spawn(async move {
+        match service
+            .sync_all_comics_mangadex(&language, generate_comic_info, |comic_name| {
+                let _ = app.emit("metadata:sync_all:progress", comic_name);
+            })
+            .await
+        {
+            Ok(_) => {
+                let _ = app.emit("metadata:sync_all:complete", ());
+            },
+            Err(err) => {
+                let _ = app.emit("metadata:sync_all:error", ErrorPayload::from(&err));
+            },
+        }
+    });
+
+    Ok(())
+}
+
+#[command]
+pub async fn sync_all_metadata_anilist<R: tauri::Runtime>(
+    language: String, generate_comic_info: bool, app: tauri::AppHandle<R>,
+    state: State<'_, MetadataState>,
+) -> Result<(), ErrorPayload> {
+    use tauri::Emitter;
+    let service = state.service.clone();
+
+    tokio::spawn(async move {
+        match service
+            .sync_all_comics_anilist(&language, generate_comic_info, |comic_name| {
+                let _ = app.emit("metadata:sync_all:progress", comic_name);
+            })
+            .await
+        {
+            Ok(_) => {
+                let _ = app.emit("metadata:sync_all:complete", ());
+            },
+            Err(err) => {
+                let _ = app.emit("metadata:sync_all:error", ErrorPayload::from(&err));
+            },
+        }
+    });
+
+    Ok(())
+}

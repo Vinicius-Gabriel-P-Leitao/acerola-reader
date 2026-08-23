@@ -1,0 +1,119 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    name: Build & Release (Windows)
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: acerola
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 25.9.0
+          cache: npm
+          cache-dependency-path: acerola/package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            acerola/src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Extract versions from tag
+        shell: bash
+        run: |
+          VERSION_FULL=${GITHUB_REF_NAME#v}
+          VERSION_MSI=${VERSION_FULL%%-*}
+          echo "VERSION_FULL=$VERSION_FULL" >> $GITHUB_ENV
+          echo "VERSION_MSI=$VERSION_MSI" >> $GITHUB_ENV
+
+      - name: Update tauri.conf.json (versão MSI sem sufixo)
+        shell: bash
+        run: |
+          node -e "
+            const fs = require('fs');
+            const config = JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json', 'utf8'));
+            config.version = process.env.VERSION_MSI;
+            fs.writeFileSync('src-tauri/tauri.conf.json', JSON.stringify(config, null, 2) + '\n');
+          "
+        env:
+          VERSION_MSI: ${{ env.VERSION_MSI }}
+
+      - name: Update Cargo.toml
+        shell: bash
+        run: |
+          sed -i "s/^version = \".*\"/version = \"$VERSION_FULL\"/" src-tauri/Cargo.toml
+        env:
+          VERSION_FULL: ${{ env.VERSION_FULL }}
+
+      - name: Update package.json
+        shell: bash
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = process.env.VERSION_FULL;
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+        env:
+          VERSION_FULL: ${{ env.VERSION_FULL }}
+
+      - name: Install cargo-make
+        run: cargo install cargo-make
+
+      - name: Install winapp
+        run: npm install -g @microsoft/winappcli
+
+      - name: Initialize MSIX & Generate Certificate
+        run: >
+          npm run make -- 
+          -e MSIX_PACKAGE_NAME="${{ secrets.MSIX_PACKAGE_NAME }}" 
+          -e MSIX_PUBLISHER="${{ secrets.MSIX_PUBLISHER }}" 
+          -e MSIX_PUBLISHER_DISPLAY_NAME="${{ secrets.MSIX_PUBLISHER_DISPLAY_NAME }}" 
+          init-msix
+
+      - name: Build and Package (EXE, MSI, MSIX)
+        run: npm run make cd
+
+      - name: Rename Artifacts
+        shell: powershell
+        run: |
+          Rename-Item (Get-Item ".bin\windows\msix\*.msix").FullName "acerola-x64.msix"
+          Rename-Item (Get-Item ".bin\windows\msi\*.msi").FullName "acerola-x64.msi"
+          Rename-Item (Get-Item ".bin\windows\exe\*.exe").FullName "acerola-x64.exe"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Acerola ${{ env.VERSION_FULL }}
+          draft: false
+          prerelease: ${{ contains(env.VERSION_FULL, '-') }}
+          files: |
+            acerola/.bin/windows/msix/acerola-x64.msix
+            acerola/.bin/windows/msi/acerola-x64.msi
+            acerola/.bin/windows/exe/acerola-x64.exe
+          generate_release_notes: true

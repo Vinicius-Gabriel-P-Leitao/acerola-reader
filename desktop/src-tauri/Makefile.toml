@@ -1,0 +1,253 @@
+[config]
+default_to_workspace = false
+skip_core_tasks = true
+
+# ==========================================
+# Core Configuration
+# ==========================================
+
+[tasks.default]
+alias = "test"
+
+[tasks.clean]
+args = ["clean"]
+command = "cargo"
+description = "Clean target"
+workspace = false
+
+# ==========================================
+# Formatting & Linting
+# ==========================================
+
+[tasks.format]
+args = [
+  "fmt",
+  "--all",
+  "--",
+  "--config",
+  "unstable_features=true",
+  "--config",
+  "imports_granularity=Crate,group_imports=StdExternalCrate,reorder_imports=true,format_code_in_doc_comments=true",
+]
+command = "cargo"
+description = "Formats the code with import grouping and doc comment formatting"
+workspace = false
+
+[tasks.lint]
+args = ["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]
+command = "cargo"
+description = "Run clippy lints"
+workspace = false
+
+[tasks.check]
+args = ["check", "--all-targets", "--all-features"]
+command = "cargo"
+description = "Check Rust code"
+workspace = false
+
+# ==========================================
+# Testing
+# ==========================================
+
+[tasks.test]
+args = ["nextest", "run"]
+command = "cargo"
+description = "Run all tests using nextest"
+workspace = false
+
+[tasks.test.windows]
+dependencies = ["copy-pdfium-dll"]
+env = {RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml"}
+
+[tasks.copy-pdfium-dll]
+script = '''
+Copy-Item -Force ".bin\pdfium.dll" "target\\debug\\deps\\pdfium.dll" -ErrorAction SilentlyContinue
+'''
+script_extension = "ps1"
+script_runner = "pwsh"
+workspace = false
+
+[tasks.test-verbose]
+args = ["nextest", "run", "--no-capture"]
+command = "cargo"
+description = "Run all tests using nextest with verbose output"
+workspace = false
+
+[tasks.test-verbose.windows]
+env = {RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml"}
+
+[tasks.test-ci]
+args = ["nextest", "run", "--profile", "ci"]
+command = "cargo"
+description = "Run tests in CI profile (longer timeouts, no fail-fast)"
+workspace = false
+
+[tasks.test-ci.windows]
+env = {RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml"}
+
+# ==========================================
+# Coverage & Mutation Testing
+# ==========================================
+
+[tasks.coverage]
+args = ["llvm-cov", "nextest", "--all-features", "--lcov", "--output-path", "lcov.info"]
+command = "cargo"
+description = "Run tests under coverage instrumentation and emit an lcov report"
+workspace = false
+
+[tasks.coverage.windows]
+dependencies = ["copy-pdfium-dll"]
+env = {RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml"}
+
+[tasks.mutants]
+# Escopo restrito à camada de guards/allowlist (fronteira de segurança e permissão
+# de filesystem), não ao core de regra de negócio: alto sinal por linha analisada,
+# custo de execução baixo. "-- --lib" restringe cada mutante aos testes unitários
+# in-tree, evitando recompilar/rodar a suíte de integração inteira por mutante.
+args = [
+  "mutants",
+  "--file", "src/core/services/archive/path_guard.rs",
+  "--file", "src/core/services/archive/files_guard.rs",
+  "--file", "src/bios/scopes.rs",
+  "--",
+  "--lib",
+]
+command = "cargo"
+description = "Run mutation testing scoped to the filesystem guard/allowlist boundary"
+workspace = false
+
+[tasks.mutants.windows]
+dependencies = ["copy-pdfium-dll"]
+env = {RUSTFLAGS = "-C link-arg=/MANIFEST:EMBED -C link-arg=/MANIFESTINPUT:${CARGO_MAKE_WORKING_DIRECTORY}/.config/windows/windows-app-manifest.xml"}
+
+# ==========================================
+# Continuous Integration and Deploy
+# ==========================================
+
+[tasks.ci]
+dependencies = ["check", "lint", "test-ci"]
+description = "Run full CI pipeline: check, lint, test"
+workspace = false
+
+[tasks.cd]
+description = "Run full continuous delivery build and organize artifacts"
+
+# ==========================================
+# Windows Packaging & Deployment (MSIX, MSI, EXE)
+# ==========================================
+
+[env]
+MSIX_BG_COLOR = "#1e1e2e"
+MSIX_DESCRIPTION = "Aplicativo para ler e gerenciar bibliotecas de quadrinhos locais."
+MSIX_DISPLAY_NAME = "Acerola"
+MSIX_PACKAGE_NAME = "acerola"
+MSIX_PUBLISHER = "CN=Vinícius Gabriel Pereira Leitão"
+MSIX_PUBLISHER_DISPLAY_NAME = "Vinícius Gabriel Pereira Leitão"
+MSIX_VERSION = "1.0.0.0"
+
+[tasks.init-msix]
+description = "Initialize MSIX files with correct author and description"
+script = '''
+$ErrorActionPreference = "Stop"
+$msixDir = "..\\.bin\\windows\\msix"
+
+New-Item -ItemType Directory -Force -Path $msixDir | Out-Null
+$manifest = "$msixDir\\Package.appxmanifest"
+
+if (Test-Path $manifest) { Remove-Item $manifest -Force }
+winapp init $msixDir --use-defaults --setup-sdks none
+
+$xml = [xml](Get-Content $manifest)
+$xml.Package.Identity.Name = $env:MSIX_PACKAGE_NAME
+$xml.Package.Identity.Publisher = $env:MSIX_PUBLISHER
+$xml.Package.Identity.Version = $env:MSIX_VERSION
+$xml.Package.Properties.DisplayName = $env:MSIX_DISPLAY_NAME
+$xml.Package.Properties.PublisherDisplayName = $env:MSIX_PUBLISHER_DISPLAY_NAME
+$xml.Package.Applications.Application.Id = $env:MSIX_PACKAGE_NAME
+$xml.Package.Applications.Application.Executable = "acerola.exe"
+$xml.Package.Applications.Application.VisualElements.DisplayName = $env:MSIX_DISPLAY_NAME
+$xml.Package.Applications.Application.VisualElements.Description = $env:MSIX_DESCRIPTION
+$xml.Package.Applications.Application.VisualElements.BackgroundColor = $env:MSIX_BG_COLOR
+
+$rescapNS = "http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+$capsNode = $xml.Package.Capabilities
+$broadFs = $xml.CreateElement("rescap", "Capability", $rescapNS)
+$broadFs.SetAttribute("Name", "broadFileSystemAccess")
+$capsNode.AppendChild($broadFs) | Out-Null
+
+$xml.Save($manifest)
+
+winapp cert generate --manifest $manifest --output "$msixDir\\devcert.pfx" --if-exists overwrite
+Get-ChildItem -Path "$msixDir\\Assets" -Filter *.png | ForEach-Object { Copy-Item -Path "icons\\icon.png" -Destination $_.FullName -Force }
+'''
+script_extension = "ps1"
+script_runner = "pwsh"
+
+[tasks.dev-msix]
+description = "Run the app locally with MSIX identity injected"
+script = '''
+$ErrorActionPreference = "Stop"
+cargo build
+Copy-Item -Force "target\debug\acerola.exe" "..\.bin\windows\msix\"
+Set-Location ..
+winapp run .\.bin\windows\msix
+'''
+script_extension = "ps1"
+script_runner = "pwsh"
+
+[tasks.cd-build]
+description = "Run Tauri build for production"
+script = '''
+$ErrorActionPreference = "Stop"
+npm run --prefix .. tauri -- build
+'''
+script_extension = "ps1"
+script_runner = "pwsh"
+
+[tasks.pack-msix]
+description = "Generate MSIX package and move to final folder"
+script = '''
+$ErrorActionPreference = "Stop"
+$binDir = "..\\.bin\\windows"
+
+New-Item -ItemType Directory -Force -Path "$binDir\\msix" | Out-Null
+Copy-Item -Force "target\\release\\acerola.exe" "$binDir\\msix\\"
+
+New-Item -ItemType Directory -Force -Path "$binDir\\msix\\.bin" | Out-Null
+Copy-Item -Force ".bin\\pdfium.dll" "$binDir\\msix\\.bin\\"
+
+Set-Location ..
+
+winapp pack .\\.bin\\windows\\msix --cert .\\.bin\\windows\\msix\\devcert.pfx
+Move-Item -Force -Path *.msix -Destination .\\.bin\\windows\\msix\\
+Set-Location src-tauri
+'''
+script_extension = "ps1"
+script_runner = "pwsh"
+
+[tasks.pack-msi]
+description = "Move MSI installer to final folder"
+script = '''
+$ErrorActionPreference = "Stop"
+$binDir = "..\.bin\windows"
+
+New-Item -ItemType Directory -Force -Path "$binDir\msi" | Out-Null
+Move-Item -Force -Path "target\release\bundle\msi\*.msi" -Destination "$binDir\msi\"
+'''
+script_extension = "ps1"
+script_runner = "pwsh"
+
+[tasks.pack-exe]
+description = "Move NSIS setup EXE to final folder"
+script = '''
+$ErrorActionPreference = "Stop"
+$binDir = "..\.bin\windows"
+
+New-Item -ItemType Directory -Force -Path "$binDir\exe" | Out-Null
+Move-Item -Force -Path "target\release\bundle\nsis\*.exe" -Destination "$binDir\exe\"
+'''
+script_extension = "ps1"
+script_runner = "pwsh"
+
+[tasks.cd.windows]
+dependencies = ["cd-build", "pack-msix", "pack-msi", "pack-exe"]

@@ -1,0 +1,163 @@
+pub async fn setup_test_db() -> sqlx::SqlitePool {
+    let pool = sqlx::sqlite::SqlitePoolOptions::new()
+        .max_connections(1)
+        .connect("sqlite::memory:")
+        .await
+        .unwrap();
+
+    // archive
+    sqlx::query(include_str!(
+        "../../infra/db/migrations/models/archive/001_create_chapter_template.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    sqlx::query(include_str!(
+        "../../infra/db/migrations/models/archive/002_create_comic_directory.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    sqlx::query(include_str!(
+        "../../infra/db/migrations/models/archive/003_create_chapter_archive.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    sqlx::query(include_str!(
+        "../../infra/db/migrations/models/archive/004_create_volume_archive.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    // metadata
+    sqlx::query(include_str!(
+        "../../infra/db/migrations/models/metadata/001_create_comic_metadata.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    sqlx::query(include_str!(
+        "../../infra/db/migrations/models/metadata/002_create_chapter_metadata.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    sqlx::query(include_str!(
+        "../../infra/db/migrations/models/metadata/source/001_create_anilist_source.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    sqlx::query(include_str!(
+        "../../infra/db/migrations/models/metadata/source/003_create_mangadex_source.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    sqlx::query(include_str!(
+        "../../infra/db/migrations/models/metadata/relationship/001_create_genre.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    sqlx::query(include_str!(
+        "../../infra/db/migrations/models/metadata/relationship/004_create_author.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    // category
+    sqlx::query(include_str!("../../infra/db/migrations/models/category/001_create_category.sql"))
+        .execute(&pool)
+        .await
+        .unwrap();
+
+    sqlx::query(include_str!(
+        "../../infra/db/migrations/models/category/002_create_comic_category.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    // history
+    sqlx::query(include_str!(
+        "../../infra/db/migrations/models/history/001_create_reading_history.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    sqlx::query(include_str!(
+        "../../infra/db/migrations/models/history/002_create_chapter_read.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    // views
+    sqlx::query(include_str!("../../infra/db/migrations/views/001_create_comic_summary_view.sql"))
+        .execute(&pool)
+        .await
+        .unwrap();
+
+    pool
+}
+
+/// Pool com seeds de produção aplicados — usado quando o teste depende dos templates padrão.
+pub async fn setup_test_db_with_seeds() -> sqlx::SqlitePool {
+    let pool = setup_test_db().await;
+
+    sqlx::query(include_str!("../../infra/db/migrations/seeds/001_seed_chapter_template.sql"))
+        .execute(&pool)
+        .await
+        .unwrap();
+
+    pool
+}
+
+/// Zera o `last_modified` de todos os comics — usado para forçar reprocessamento no incremental.
+pub async fn reset_comics_last_modified(pool: &sqlx::SqlitePool) {
+    sqlx::query("UPDATE comic_directory SET last_modified = 0").execute(pool).await.unwrap();
+}
+
+/// Pool com um comic_directory já inserido — usado por testes de chapter que precisam da FK.
+pub async fn setup_test_db_with_comic() -> sqlx::SqlitePool {
+    let pool = setup_test_db().await;
+
+    sqlx::query(
+        "INSERT INTO comic_directory (id, name, path, last_modified, external_sync_enabled, hidden)
+         VALUES (1, 'Test', '/test', 0, 0, 0)",
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    pool
+}
+
+/// Pool com um comic_directory e volumes já inseridos.
+pub async fn setup_test_db_with_volumes() -> sqlx::SqlitePool {
+    let pool = setup_test_db_with_comic().await;
+
+    sqlx::query(
+        "INSERT INTO volume_archive (id, name, path, volume_sort, is_special, comic_directory_fk, last_modified)
+         VALUES (1, 'Vol 01', '/test/v1', '1', 0, 1, 0),
+                (2, 'Vol 02', '/test/v2', '2', 0, 1, 0)",
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    pool
+}
