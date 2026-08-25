@@ -176,6 +176,8 @@ impl MetadataService {
             .ok_or(ComicError::NotFound)?;
 
         let dir_path = PathBuf::from(&comic_dir.path);
+
+        // FIXME: Isso dos nomes dos arquivos a serem deletados deveria vir de um pattern em comum de arquivos a serem sincronizado e já existe isso.
         for file_name in [
             "ComicInfo.xml",
             "cover.jpg",

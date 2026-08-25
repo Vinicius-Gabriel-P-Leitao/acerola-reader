@@ -56,6 +56,7 @@
 		await goto('/home');
 	}
 
+	// FIXME: Se não tiver uso remover
 	const steps = [StepWelcome, StepLanguage, StepFormats, StepSettings, StepComplete];
 
 	let currentStepIndex = $derived(onboarding.currentStep);

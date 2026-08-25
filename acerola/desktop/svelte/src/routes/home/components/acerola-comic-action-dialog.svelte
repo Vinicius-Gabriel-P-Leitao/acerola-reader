@@ -170,7 +170,7 @@
 		<!-- Selection Hero Header & Select All Option -->
 		{#if onSelectAll && totalCount > 0}
 			<div
-				class="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-3.5 transition-all duration-300 hover:border-primary/40"
+				class="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-primary/10 via-primary/5 to-transparent p-3.5 transition-all duration-300 hover:border-primary/40"
 			>
 				<div class="flex min-w-0 items-center justify-between gap-3">
 					<div class="flex min-w-0 flex-1 items-center gap-3">

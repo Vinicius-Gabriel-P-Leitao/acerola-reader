@@ -122,6 +122,7 @@ mod tests {
         (pool, repo)
     }
 
+    // FIXME: Todo e qualquer SQL de testes não fica nos testes fica na pasta de testes acerola\desktop\src-tauri\src\tests como utils de testes.
     async fn insert_comic_with_chapters(
         pool: &SqlitePool, id: i64, name: &str, title: &str, chapter_count: i64,
     ) {

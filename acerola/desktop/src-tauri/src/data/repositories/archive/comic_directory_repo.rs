@@ -49,6 +49,7 @@ impl ComicRepository {
         Ok(result)
     }
 
+    // FIXME: Sem necessiadade disso a base já implementa sem precisar reescrever
     pub async fn update(&self, entity: &ComicDirectory) -> Result<ComicDirectory, DbError> {
         self.base.update(entity).await
     }

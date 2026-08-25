@@ -1,3 +1,4 @@
+// FIXME: Validar se dá pra separa em mais arquivos esse está grande de mais e provavelmente pode ser separado em arquivos compositores.
 use std::{
     fs::File,
     io::Read,

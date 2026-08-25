@@ -130,8 +130,10 @@
 		const validIds = ids.filter((id) => id != null && String(id).trim() !== '');
 		if (validIds.length === 0) return;
 		const count = await summary.updateVisibility(validIds, true);
+
 		toast.success(m['pages.home.toast.hidden']({ count }));
 		selection.exitSelectionMode();
+
 		showActionDialog = false;
 	}
 
@@ -139,8 +141,10 @@
 		const validIds = ids.filter((id) => id != null && String(id).trim() !== '');
 		if (validIds.length === 0) return;
 		const count = await summary.deleteComics(validIds);
+
 		toast.success(m['pages.home.toast.deleted']({ count }));
 		selection.exitSelectionMode();
+
 		showActionDialog = false;
 	}
 
@@ -148,8 +152,10 @@
 		const validIds = ids.filter((id) => id != null && String(id).trim() !== '');
 		if (validIds.length === 0) return;
 		const count = await summary.clearMetadata(validIds);
+
 		toast.success(m['pages.home.toast.metadata_cleared']({ count }));
 		selection.exitSelectionMode();
+
 		showActionDialog = false;
 	}
 
@@ -158,6 +164,7 @@
 		if (validIds.length === 0) return;
 		let successCount = 0;
 		let failCount = 0;
+
 		for (const id of validIds) {
 			try {
 				await bookmarkStore.assignToComic(id, categoryId);
@@ -167,14 +174,17 @@
 				console.error(`Failed to assign bookmark to comic ${id}:`, err);
 			}
 		}
+
 		if (successCount > 0) {
 			toast.success(m['pages.home.toast.bookmarked']({ count: successCount }));
 			await summary.fetch();
 		}
+
 		if (failCount > 0) {
 			toast.error(m['pages.home.toast.error.bookmark']());
 			await summary.fetch();
 		}
+
 		selection.exitSelectionMode();
 		showActionDialog = false;
 	}
@@ -274,6 +284,7 @@
 						ui={{ variant: 'ghost', class: 'rounded-xl gap-2' }}
 						events={{ onClick: () => (showFilterPanel = !showFilterPanel) }}
 					>
+					<!-- FIXME: Troar esse icone para um da lib, não usar SVG seco em UI -->
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							width="16"
@@ -430,6 +441,7 @@
 		</div>
 	</div>
 
+	<!-- FIXME: Transformar em um componente que aceita snipet e coisa do tipo para ser composto, ou organizar melhor essas props, props flat ficam confusas, o que é dados? o que é evento? fica ruim de entender, deixar igual ao AcerolaFilterPanel-->
 	<AcerolaComicActionDialog
 		open={showActionDialog}
 		selectedIds={selection.selectedIdsArray}

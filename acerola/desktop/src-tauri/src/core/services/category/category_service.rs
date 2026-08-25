@@ -13,6 +13,7 @@ pub struct CategoryService {
     repo: CategoryRepository,
 }
 
+// FIXME: Cade os testes
 impl CategoryService {
     /// Inicializa o serviço de categorias.
     pub fn new(pool: SqlitePool) -> Self {

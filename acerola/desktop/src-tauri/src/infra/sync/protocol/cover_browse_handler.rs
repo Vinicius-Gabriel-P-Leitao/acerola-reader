@@ -236,6 +236,7 @@ mod tests {
         let cover_path = temp_dir.path().join("cover.jpg");
         std::fs::write(&cover_path, cover_bytes).unwrap();
 
+        // FIXME: Todo e qualquer SQL de testes não fica nos testes fica na pasta de testes acerola\desktop\src-tauri\src\tests como utils de testes.
         sqlx::query(
             "INSERT INTO comic_directory (id, name, path, cover, last_modified, external_sync_enabled, hidden)
              VALUES (1, 'Comic A', '/test', ?, ?, 0, 0)",
@@ -306,6 +307,7 @@ mod tests {
     async fn no_local_cover_returns_unavailable() {
         let pool = crate::tests::utils::setup_test_db::setup_test_db().await;
         let temp_dir = tempfile::tempdir().unwrap();
+        // FIXME: Todo e qualquer SQL de testes não fica nos testes fica na pasta de testes acerola\desktop\src-tauri\src\tests como utils de testes.
         sqlx::query(
             "INSERT INTO comic_directory (id, name, path, last_modified, external_sync_enabled, hidden)
              VALUES (1, 'Comic A', '/test', 0, 0, 0)",

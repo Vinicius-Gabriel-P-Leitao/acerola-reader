@@ -1,3 +1,5 @@
+// FIXME: Por que não esta em uma pasta e com mod.rs
+
 use serde::Serialize;
 
 use crate::data::models::metadata::comic::ComicMetadata;

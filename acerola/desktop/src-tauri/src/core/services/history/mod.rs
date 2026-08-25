@@ -109,6 +109,7 @@ impl HistoryService {
     }
 }
 
+// FIXME: Todo e qualquer SQL de testes não fica nos testes fica na pasta de testes acerola\desktop\src-tauri\src\tests como utils de testes.
 #[cfg(test)]
 mod tests {
     use super::HistoryService;

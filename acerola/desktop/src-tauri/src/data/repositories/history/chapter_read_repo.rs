@@ -55,7 +55,8 @@ impl ChapterReadRepository {
         Ok(rows.into_iter().map(|(id,)| id).collect())
     }
 
-    /// Remove o registro de leitura de um capítulo (marca como não lido).
+    // FIXME: Caso seja um delete comum ele deve usar o da abstração se não mudar o nome para mais clareza.
+    /// Remove o registro de leitura de um capítulo (marca como não lido)
     pub async fn delete(
         &self, comic_directory_id: i64, chapter_archive_id: i64,
     ) -> Result<(), DbError> {

@@ -254,6 +254,7 @@
 	}
 </script>
 
+<!-- FIXME: Ramificar essa pagina em componentes internos, compor ela e tem que ter testes unitários e storybook. -->
 <div class="mx-auto w-full max-w-5xl space-y-12 p-8">
 	<!-- Header -->
 	<div>
