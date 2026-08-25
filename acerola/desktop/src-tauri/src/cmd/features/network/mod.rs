@@ -7,8 +7,8 @@ use crate::{
     cmd::events::network::{DeviceInfoPayload, NetworkStatusPayload, PairedPeerPayload, RelayInfo},
     core::services::network::NetworkServiceApi,
     data::{
-        models::sync::sync_history_log::SyncHistoryLogEntry,
-        repositories::sync::sync_history_log_repo::SyncHistoryLogRepository,
+        models::sync::SyncHistoryLogEntry,
+        repositories::sync::SyncHistoryLogRepository,
     },
     infra::{
         security::MasterKeySource,

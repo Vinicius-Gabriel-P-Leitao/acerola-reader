@@ -1,6 +1,5 @@
-use crate::infra::error::{ComicError, RpcError};
+use super::{ComicError, RpcError};
 
-// FIXME: Isso deveria estar em acerola\desktop\src-tauri\src\infra\error
 /// Ponte entre os erros internos deste crate e o `ConnectionError` que
 /// `acerola_p2p::api::protocol::Handler::handle` exige como retorno. Não há um
 /// variant específico pra "erro de protocolo de aplicação" na lib, então usamos

@@ -19,7 +19,7 @@ use crate::{
         network::{NetworkService, NetworkServiceApi},
         sync::{file_sync::FileSyncService, history_sync::HistorySyncService},
     },
-    data::repositories::sync::sync_history_log_repo::SyncHistoryLogRepository,
+    data::repositories::sync::SyncHistoryLogRepository,
     infra::{
         error::ComicError,
         security::{

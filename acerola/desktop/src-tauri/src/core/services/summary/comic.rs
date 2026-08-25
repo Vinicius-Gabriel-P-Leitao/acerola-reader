@@ -11,7 +11,7 @@ use crate::{
         },
         repositories::{
             archive::chapter_archive_repo::ChapterRepository,
-            category::category_repo::CategoryRepository,
+            category::CategoryRepository,
             metadata::MetadataRepository,
             views::{HomeRepository, SortCriteria},
         },
