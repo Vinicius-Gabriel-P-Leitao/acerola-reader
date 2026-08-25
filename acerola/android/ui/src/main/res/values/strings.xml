@@ -241,6 +241,7 @@
 
     <!-- History & Reader Info -->
     <string name="description_history_empty_state">Nenhum quadrinho lido recentemente</string>
+    <string name="description_icon_history_sync_with_peer">Sincronizar histórico com um dispositivo pareado.</string>
     <string name="label_chapter_unknown">Capítulo desconhecido</string>
     <string name="label_reader_chapter_order">Ordem: %1$s</string>
     <string name="label_reader_page_format">Página %1$d / %2$d</string>
