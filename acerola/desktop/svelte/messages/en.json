@@ -474,6 +474,13 @@
 			"chapter_label": "Chapter {chapter}",
 			"page_label": "Page {page}",
 			"older": "Older",
+			"sync": {
+				"button": "Sync",
+				"title": "Sync history",
+				"empty": "No paired devices. Pair a device in Network to sync your history.",
+				"success": "History synced with {peer}.",
+				"error": "Failed to sync history: {msg}"
+			},
 			"clear": {
 				"button": "Clear History",
 				"title": "Are you absolutely sure?",

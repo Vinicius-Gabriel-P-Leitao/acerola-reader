@@ -474,6 +474,13 @@
 			"chapter_label": "Capítulo {chapter}",
 			"page_label": "Página {page}",
 			"older": "Mais Antigos",
+			"sync": {
+				"button": "Sincronizar",
+				"title": "Sincronizar histórico",
+				"empty": "Nenhum dispositivo pareado. Pareie um dispositivo em Rede pra sincronizar seu histórico.",
+				"success": "Histórico sincronizado com {peer}.",
+				"error": "Falha ao sincronizar histórico: {msg}"
+			},
 			"clear": {
 				"button": "Limpar Histórico",
 				"title": "Tem certeza absoluta?",
