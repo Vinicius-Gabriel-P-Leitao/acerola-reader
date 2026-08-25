@@ -211,46 +211,41 @@
 		await withSync((id, addrs) => sync.syncComic(id, addrs, comicName), peerId);
 	}
 
-	// FIXME: Melhorar esse código switch case aqui é problema, fica impossivel de entender.
-	function describeEntry(entry: TransferLogEntry): string {
-		switch (`${entry.kind}:${entry.status}`) {
-			case 'history:started':
-				return m['pages.network.transfers.history_started']({
-					peer: peers.peerLabel(entry.message)
-				});
-			case 'history:complete':
-				return m['pages.network.transfers.history_complete']({
-					peer: peers.peerLabel(entry.message)
-				});
-			case 'history:error':
-				return m['pages.network.transfers.history_error']({ msg: entry.message });
-			case 'files:started':
-				return m['pages.network.transfers.files_started']({
-					peer: peers.peerLabel(entry.message)
-				});
-			case 'files:progress':
-				return m['pages.network.transfers.files_progress']({ item: entry.message });
-			case 'files:complete':
-				return m['pages.network.transfers.files_complete']({
-					peer: peers.peerLabel(entry.message)
-				});
-			case 'files:error':
-				return m['pages.network.transfers.files_error']({ msg: entry.message });
-			case 'comic:started':
-				return m['pages.network.transfers.comic_started']({
-					peer: peers.peerLabel(entry.message)
-				});
-			case 'comic:progress':
-				return m['pages.network.transfers.comic_progress']({ item: entry.message });
-			case 'comic:complete':
-				return m['pages.network.transfers.comic_complete']({
-					peer: peers.peerLabel(entry.message)
-				});
-			case 'comic:error':
-				return m['pages.network.transfers.comic_error']({ msg: entry.message });
-			default:
-				return entry.message;
+	type EntryMessageByStatus = Partial<
+		Record<TransferLogEntry['status'], (entry: TransferLogEntry) => string>
+	>;
+
+	// Agrupada por kind e depois por status (em vez de um switch sobre a string
+	// concatenada "kind:status") pra deixar visível quais combinações existem de fato —
+	// nem todo kind tem "progress", por exemplo.
+	const TRANSFER_MESSAGE_BY_KIND: Record<TransferLogEntry['kind'], EntryMessageByStatus> = {
+		history: {
+			started: (entry) =>
+				m['pages.network.transfers.history_started']({ peer: peers.peerLabel(entry.message) }),
+			complete: (entry) =>
+				m['pages.network.transfers.history_complete']({ peer: peers.peerLabel(entry.message) }),
+			error: (entry) => m['pages.network.transfers.history_error']({ msg: entry.message })
+		},
+		files: {
+			started: (entry) =>
+				m['pages.network.transfers.files_started']({ peer: peers.peerLabel(entry.message) }),
+			progress: (entry) => m['pages.network.transfers.files_progress']({ item: entry.message }),
+			complete: (entry) =>
+				m['pages.network.transfers.files_complete']({ peer: peers.peerLabel(entry.message) }),
+			error: (entry) => m['pages.network.transfers.files_error']({ msg: entry.message })
+		},
+		comic: {
+			started: (entry) =>
+				m['pages.network.transfers.comic_started']({ peer: peers.peerLabel(entry.message) }),
+			progress: (entry) => m['pages.network.transfers.comic_progress']({ item: entry.message }),
+			complete: (entry) =>
+				m['pages.network.transfers.comic_complete']({ peer: peers.peerLabel(entry.message) }),
+			error: (entry) => m['pages.network.transfers.comic_error']({ msg: entry.message })
 		}
+	};
+
+	function describeEntry(entry: TransferLogEntry): string {
+		return TRANSFER_MESSAGE_BY_KIND[entry.kind][entry.status]?.(entry) ?? entry.message;
 	}
 </script>
 
