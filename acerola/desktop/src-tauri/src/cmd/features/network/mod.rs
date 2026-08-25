@@ -104,6 +104,16 @@ pub async fn get_paired_peers(
     Ok(service.paired_peers().await?.into_iter().map(PairedPeerPayload::from).collect())
 }
 
+/// Desempareia um peer — some da lista de pareados e da confiança (TOFU). Se ele tentar se
+/// conectar de novo depois, passa pelo mesmo fluxo de confirmação de um dispositivo nunca
+/// visto (ver [`NetworkServiceApi::remove_peer`]).
+#[tauri::command]
+pub async fn remove_paired_peer(
+    service: State<'_, Arc<dyn NetworkServiceApi>>, peer_id: String,
+) -> Result<(), String> {
+    service.remove_peer(peer_id).await
+}
+
 /// Dispara uma sessão de sync de histórico com um peer já pareado. O progresso e a
 /// conclusão chegam pro frontend via os eventos `sync:history:*`, emitidos direto pelo
 /// protocolo (ver `infra::sync::protocol::history_handler`) assim que a conexão é aceita.

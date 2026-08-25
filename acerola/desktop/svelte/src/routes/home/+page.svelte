@@ -9,9 +9,14 @@
 	import AcerolaFilterPanel, {
 		type BookmarkFilter
 	} from './components/acerola-filter-panel.svelte';
+	import AcerolaPeerPicker from '$lib/components/acerola-peer-picker/acerola-peer-picker.svelte';
+	import AcerolaRemoteLibraryDialog from '$lib/components/acerola-remote-library-dialog/acerola-remote-library-dialog.svelte';
 	import { useBookmarks } from '$lib/hooks/store/use-bookmarks.svelte';
 	import { useComicSelection } from '$lib/hooks/store/use-comic-selection.svelte';
 	import { useSelectFolder } from '$lib/hooks/store/use-select-folder.svelte';
+	import { usePeerConnection } from '$lib/hooks/store/use-peer-connection.svelte';
+	import { useNetworkSync } from '$lib/hooks/store/use-network-sync.svelte';
+	import { useRemoteLibrary } from '$lib/hooks/store/use-remote-library.svelte';
 	import MoreVertical from '@lucide/svelte/icons/more-vertical';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import Check from '@lucide/svelte/icons/check';
@@ -19,6 +24,7 @@
 	import FolderPlus from '@lucide/svelte/icons/folder-plus';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import SearchX from '@lucide/svelte/icons/search-x';
+	import MonitorIcon from '@lucide/svelte/icons/monitor';
 	import { LIBRARY_EVENTS } from '$lib/contracts/library/library.events';
 	import { DIRECTORY_SCAN_COMMANDS } from '$lib/contracts/library/library.commands';
 	import { useLibraryScanner } from '$lib/hooks/store/use-comic-scanner.svelte';
@@ -35,12 +41,16 @@
 		SortBy,
 		SortOrder
 	} from '$lib/contracts/home/home.payloads';
+	import type { PairedPeerPayload } from '$lib/contracts/network/network.payloads';
 
 	const summary = useComicSummary();
 	const activeComic = useComicContext();
 	const bookmarkStore = useBookmarks();
 	const selection = useComicSelection();
 	const folderStore = useSelectFolder();
+	const peers = usePeerConnection();
+	const sync = useNetworkSync();
+	const remoteLibrary = useRemoteLibrary();
 
 	const refreshScanner = useLibraryScanner(
 		DIRECTORY_SCAN_COMMANDS.refreshLibrary,
@@ -51,6 +61,12 @@
 	let showFilterPanel = $state(false);
 	let showActionDialog = $state(false);
 	let bookmarkFilter = $state<BookmarkFilter>('all');
+	let showPeerPicker = $state(false);
+	let browsingPeerId = $state<string | null>(null);
+	// Evita re-disparar `summary.fetch()`/toast duas vezes pro mesmo evento — `sync.log[0]`
+	// dispara o `$effect` de novo a cada re-render enquanto essa entrada continuar sendo a
+	// mais recente do log (mesmo padrão usado na tela de Histórico pro sync de histórico).
+	let lastHandledSyncLogId: number | undefined;
 
 	onMount(async () => {
 		await folderStore.loadSavedPath();
@@ -60,11 +76,55 @@
 		});
 
 		await summary.fetch();
+
+		peers.startListening();
+		sync.startListening();
+		remoteLibrary.startListening();
 	});
 
 	onDestroy(() => {
 		unlistenScan?.();
+		peers.stopListening();
+		sync.stopListening();
+		remoteLibrary.stopListening();
 	});
+
+	// `sync.syncComic` só resolve quando a conexão é aberta, não quando a sessão termina de
+	// fato — o resultado real (e portanto o momento de recarregar a biblioteca local) chega
+	// aqui via `sync.log`, alimentado pelos mesmos eventos `sync:comic:*` que a tela de Rede
+	// escuta.
+	$effect(() => {
+		const entry = sync.log[0];
+		if (!entry || entry.kind !== 'comic' || entry.id === lastHandledSyncLogId) return;
+
+		if (entry.status === 'complete') {
+			lastHandledSyncLogId = entry.id;
+			toast.success(
+				m['pages.network.transfers.comic_complete']({ peer: peers.peerLabel(entry.message) })
+			);
+			summary.fetch();
+			return;
+		}
+
+		if (entry.status === 'error') {
+			lastHandledSyncLogId = entry.id;
+			toast.error(m['pages.network.transfers.comic_error']({ msg: entry.message }));
+			return;
+		}
+	});
+
+	function selectPeerForBrowsing(peer: PairedPeerPayload) {
+		showPeerPicker = false;
+		browsingPeerId = peer.peerId;
+		remoteLibrary.queryRemoteLibrary(peer.peerId, peer.addrs);
+	}
+
+	function syncRemoteComic(comicName: string) {
+		if (!browsingPeerId) return;
+		const addrs = peers.getKnownAddr(browsingPeerId);
+		if (!addrs) return;
+		sync.syncComic(browsingPeerId, addrs, comicName).catch((err) => toast.error(String(err)));
+	}
 
 	async function handleHide(ids: (string | number)[]) {
 		const validIds = ids.filter((id) => id != null && String(id).trim() !== '');
@@ -243,6 +303,15 @@
 								{activeFiltersCount}
 							</span>
 						{/if}
+					</AcerolaButton>
+
+					<!-- Buscar/sincronizar quadrinhos de outro dispositivo pareado -->
+					<AcerolaButton
+						ui={{ variant: 'ghost', class: 'rounded-xl gap-2' }}
+						events={{ onClick: () => (showPeerPicker = true) }}
+					>
+						<MonitorIcon size={16} />
+						{m['pages.home.browse_remote_button']()}
 					</AcerolaButton>
 
 					<!-- Active sort indicator -->
@@ -430,5 +499,35 @@
 	events={{
 		onApply: handleFilterApply,
 		onClose: () => (showFilterPanel = false)
+	}}
+/>
+
+<!-- Escolher dispositivo pareado pra buscar quadrinhos -->
+<AcerolaPeerPicker
+	state={{ open: showPeerPicker }}
+	data={{ peers: peers.pairedPeers }}
+	events={{
+		onOpenChange: (open) => (showPeerPicker = open),
+		onSelect: selectPeerForBrowsing
+	}}
+/>
+
+<!-- Biblioteca remota do dispositivo escolhido -->
+<AcerolaRemoteLibraryDialog
+	state={{ open: browsingPeerId !== null }}
+	data={{
+		peerLabel: browsingPeerId ? peers.peerLabel(browsingPeerId) : '',
+		comics: browsingPeerId ? remoteLibrary.comicsFor(browsingPeerId) : [],
+		isLoading: browsingPeerId ? remoteLibrary.isLoading(browsingPeerId) : false,
+		errorMessage: browsingPeerId ? remoteLibrary.errorFor(browsingPeerId) : undefined,
+		coverPathFor: (comicName) =>
+			browsingPeerId ? remoteLibrary.coverPathFor(browsingPeerId, comicName) : undefined,
+		isSyncing: () => (browsingPeerId ? sync.isSyncing(browsingPeerId, 'comic') : false)
+	}}
+	events={{
+		onOpenChange: (open) => {
+			if (!open) browsingPeerId = null;
+		},
+		onSelectComic: syncRemoteComic
 	}}
 />

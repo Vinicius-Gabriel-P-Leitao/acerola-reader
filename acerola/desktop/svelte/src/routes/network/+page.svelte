@@ -12,11 +12,12 @@
 	import AcerolaButtonIcon from '$lib/components/acerola-button/acerola-button-icon.svelte';
 	import AcerolaPopover from '$lib/components/acerola-popover/acerola-popover.svelte';
 	import AcerolaInput from '$lib/components/acerola-input/acerola-input.svelte';
+	import AcerolaAlertDialog from '$lib/components/acerola-alert-dialog/acerola-alert-dialog.svelte';
+	import AcerolaRemoteLibraryDialog from '$lib/components/acerola-remote-library-dialog/acerola-remote-library-dialog.svelte';
 
 	import { usePeerConnection } from '$lib/hooks/store/use-peer-connection.svelte';
 	import { useNetworkSync, type TransferLogEntry } from '$lib/hooks/store/use-network-sync.svelte';
 	import { useRemoteLibrary } from '$lib/hooks/store/use-remote-library.svelte';
-	import AcerolaDialog from '$lib/components/acerola-dialog/acerola-dialog.svelte';
 	import { useRelaySettings } from '$lib/hooks/preferences/use-relay-settings.svelte';
 	import { NETWORK_COMMANDS } from '$lib/contracts/network/network.commands';
 	import { NETWORK_EVENTS } from '$lib/contracts/network/network.events';
@@ -38,9 +39,8 @@
 	import XIcon from '@lucide/svelte/icons/x';
 	import MonitorIcon from '@lucide/svelte/icons/monitor';
 	import MoreVerticalIcon from '@lucide/svelte/icons/more-vertical';
-	import SearchIcon from '@lucide/svelte/icons/search';
+	import UserMinusIcon from '@lucide/svelte/icons/user-minus';
 	import BookOpenIcon from '@lucide/svelte/icons/book-open';
-	import CloudDownloadIcon from '@lucide/svelte/icons/cloud-download';
 
 	const peers = usePeerConnection();
 	const sync = useNetworkSync();
@@ -48,7 +48,6 @@
 	const remoteLibrary = useRemoteLibrary();
 
 	let browsingPeerId = $state<string | null>(null);
-	let remoteSearchQuery = $state('');
 
 	let qrDataUrl = $state<string | undefined>(undefined);
 	let qrError = $state(false);
@@ -56,6 +55,7 @@
 	let pasteValue = $state('');
 	let connectError = $state<string | undefined>(undefined);
 	let openPeerMenuId = $state<string | null>(null);
+	let peerPendingRemoval = $state<DisplayPeer | null>(null);
 	// Feedback visual dos botões de copiar — além do toast, o próprio ícone vira um check
 	// por um instante, pra quem não pegar o toast a tempo perceber que a cópia aconteceu.
 	let idJustCopied = $state(false);
@@ -135,6 +135,7 @@
 		for (const peer of peers.pairedPeers) {
 			byId.set(peer.peerId, { peerId: peer.peerId, deviceName: peer.deviceName, connected: false });
 		}
+
 		for (const peer of peers.status?.peers ?? []) {
 			byId.set(peer.peerId, {
 				peerId: peer.peerId,
@@ -201,20 +202,8 @@
 		}
 	}
 
-	// Filtro reativo local sobre o cache já consultado (`remoteLibrary.comicsFor`) — mesmo
-	// padrão do "Buscar quadrinhos por título" da Home: não re-dispara a consulta P2P a cada
-	// tecla, só quando o usuário abre a busca pra um peer (`openRemoteLibrary`).
-	const filteredRemoteComics = $derived.by(() => {
-		if (!browsingPeerId) return [];
-		const comics = remoteLibrary.comicsFor(browsingPeerId);
-		const query = remoteSearchQuery.trim().toLowerCase();
-		if (!query) return comics;
-		return comics.filter((comic) => comic.comicName.toLowerCase().includes(query));
-	});
-
 	async function openRemoteLibrary(peerId: string) {
 		browsingPeerId = peerId;
-		remoteSearchQuery = '';
 		await withSync((id, addrs) => remoteLibrary.queryRemoteLibrary(id, addrs), peerId);
 	}
 
@@ -222,6 +211,7 @@
 		await withSync((id, addrs) => sync.syncComic(id, addrs, comicName), peerId);
 	}
 
+	// FIXME: Melhorar esse código switch case aqui é problema, fica impossivel de entender.
 	function describeEntry(entry: TransferLogEntry): string {
 		switch (`${entry.kind}:${entry.status}`) {
 			case 'history:started':
@@ -577,6 +567,25 @@
 												<BookOpenIcon size={16} class="shrink-0" />
 												{m['pages.network.peers.browse_library']()}
 											</AcerolaButton>
+
+											<div class="my-1 h-px bg-border/60"></div>
+
+											<AcerolaButton
+												events={{
+													onClick: () => {
+														openPeerMenuId = null;
+														peerPendingRemoval = peer;
+													}
+												}}
+												ui={{
+													variant: 'ghost',
+													class:
+														'h-9 w-full justify-start gap-2.5 rounded-xl px-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 hover:text-destructive'
+												}}
+											>
+												<UserMinusIcon size={16} class="shrink-0" />
+												{m['pages.network.peers.remove']()}
+											</AcerolaButton>
 										</div>
 									{/snippet}
 								</AcerolaPopover>
@@ -643,89 +652,50 @@
 </div>
 
 <!-- Buscar biblioteca remota -->
-<AcerolaDialog
+<AcerolaRemoteLibraryDialog
 	state={{ open: browsingPeerId !== null }}
 	data={{
-		title: m['pages.network.remote_library.title'](),
-		description: browsingPeerId ? peers.peerLabel(browsingPeerId) : ''
+		peerLabel: browsingPeerId ? peers.peerLabel(browsingPeerId) : '',
+		comics: browsingPeerId ? remoteLibrary.comicsFor(browsingPeerId) : [],
+		isLoading: browsingPeerId ? remoteLibrary.isLoading(browsingPeerId) : false,
+		errorMessage: browsingPeerId ? remoteLibrary.errorFor(browsingPeerId) : undefined,
+		coverPathFor: (comicName) =>
+			browsingPeerId ? remoteLibrary.coverPathFor(browsingPeerId, comicName) : undefined,
+		isSyncing: () => (browsingPeerId ? sync.isSyncing(browsingPeerId, 'comic') : false)
 	}}
 	events={{
 		onOpenChange: (open) => {
 			if (!open) browsingPeerId = null;
+		},
+		onSelectComic: (comicName) => {
+			if (browsingPeerId) handleSyncRemoteComic(browsingPeerId, comicName);
 		}
 	}}
-	ui={{
-		contentClass:
-			'w-full max-w-[calc(100vw-2rem)] sm:max-w-md border-border/60 bg-background/95 backdrop-blur-xl shadow-2xl p-6 rounded-3xl overflow-hidden'
-	}}
->
-	<div class="flex w-full min-w-0 flex-col gap-4 py-1">
-		<div class="relative w-full">
-			<SearchIcon
-				size={14}
-				class="absolute top-1/2 left-3 shrink-0 -translate-y-1/2 text-muted-foreground"
-			/>
-			<input
-				type="text"
-				placeholder={m['pages.network.remote_library.search_placeholder']()}
-				bind:value={remoteSearchQuery}
-				class="h-9 w-full rounded-xl border border-border/60 bg-muted/60 pr-3 pl-8 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none"
-			/>
-		</div>
+/>
 
-		{#if browsingPeerId && remoteLibrary.isLoading(browsingPeerId)}
-			<p class="p-4 text-center text-sm text-muted-foreground">
-				{m['pages.network.remote_library.loading']()}
-			</p>
-		{:else if browsingPeerId && remoteLibrary.errorFor(browsingPeerId)}
-			<p class="p-4 text-center text-sm text-destructive">
-				{remoteLibrary.errorFor(browsingPeerId)}
-			</p>
-		{:else if filteredRemoteComics.length === 0}
-			<p class="p-4 text-center text-sm text-muted-foreground">
-				{m['pages.network.remote_library.empty']()}
-			</p>
-		{:else}
-			<div class="max-h-80 w-full space-y-1 overflow-y-auto">
-				{#each filteredRemoteComics as comic (comic.comicName)}
-					{@const comicSyncing = browsingPeerId ? sync.isSyncing(browsingPeerId, 'comic') : false}
-					{@const coverPath = browsingPeerId
-						? remoteLibrary.coverPathFor(browsingPeerId, comic.comicName)
-						: undefined}
-					<div
-						class="flex items-center justify-between gap-3 rounded-xl px-3 py-2 hover:bg-muted/50"
-					>
-						<div class="flex min-w-0 flex-1 items-center gap-3">
-							{#if coverPath}
-								<img src={coverPath} alt="" class="h-10 w-10 shrink-0 rounded-lg object-cover" />
-							{:else}
-								<div class="h-10 w-10 shrink-0 rounded-lg bg-muted"></div>
-							{/if}
-							<div class="min-w-0">
-								<p class="truncate text-sm font-medium text-foreground">{comic.comicName}</p>
-								<p class="text-xs text-muted-foreground">
-									{m['pages.network.remote_library.chapter_count']({ count: comic.chapterCount })}
-								</p>
-							</div>
-						</div>
-						<AcerolaButton
-							events={{
-								onClick: () =>
-									browsingPeerId && handleSyncRemoteComic(browsingPeerId, comic.comicName)
-							}}
-							ui={{
-								size: 'sm',
-								variant: 'outline',
-								class: 'gap-2 shrink-0',
-								disabled: comicSyncing
-							}}
-						>
-							<CloudDownloadIcon size={14} class={comicSyncing ? 'animate-spin' : ''} />
-							{m['pages.network.remote_library.sync_button']()}
-						</AcerolaButton>
-					</div>
-				{/each}
-			</div>
-		{/if}
-	</div>
-</AcerolaDialog>
+<!-- Confirmar remoção de dispositivo pareado -->
+<AcerolaAlertDialog
+	state={{ open: peerPendingRemoval !== null }}
+	data={{
+		title: m['pages.network.peers.remove_confirm.title']({
+			peer: peerPendingRemoval
+				? (peerPendingRemoval.deviceName ?? shortId(peerPendingRemoval.peerId))
+				: ''
+		}),
+		description: m['pages.network.peers.remove_confirm.desc'](),
+		cancelText: m['pages.network.peers.remove_confirm.cancel'](),
+		actionText: m['pages.network.peers.remove_confirm.confirm']()
+	}}
+	ui={{ variant: 'destructive' }}
+	events={{
+		onOpenChange: (open) => {
+			if (!open) peerPendingRemoval = null;
+		},
+		onCancel: () => (peerPendingRemoval = null),
+		onAction: () => {
+			const peerId = peerPendingRemoval?.peerId;
+			peerPendingRemoval = null;
+			if (peerId) peers.removePeer(peerId);
+		}
+	}}
+/>
