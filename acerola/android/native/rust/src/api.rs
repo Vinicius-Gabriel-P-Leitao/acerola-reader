@@ -269,6 +269,20 @@ impl P2PNode {
         }
     }
 
+    /// Repassa ao transporte um aviso de que a rede do SO pode ter mudado (troca de Wi-Fi/dados
+    /// móveis, saída de Doze, etc). Existe porque o Android não expõe monitoramento de interface
+    /// de rede para código nativo — só para Java/Kotlin via `ConnectivityManager.NetworkCallback`
+    /// — então sem essa ponte o transporte QUIC nunca fica sabendo que o caminho de rede mudou e
+    /// mantém reaproveitando conexões silenciosamente mortas até o app ser reiniciado. O Kotlin
+    /// deve chamar isto a cada `onAvailable`/`onLost`/`onCapabilitiesChanged` do
+    /// `NetworkCallback` (ver `P2pService`).
+    pub fn notify_network_change(&self) {
+        let node = Arc::clone(&self.node);
+        self.runtime.spawn(async move {
+            node.network_change().await;
+        });
+    }
+
     pub fn connect(&self, peer_addr: FfiPeerAddr, alpn: Vec<u8>) {
         let node = Arc::clone(&self.node);
         let addr = PeerAddr {
