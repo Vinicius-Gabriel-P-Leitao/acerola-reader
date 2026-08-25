@@ -34,6 +34,13 @@ pub async fn setup_test_db() -> sqlx::SqlitePool {
     .await
     .unwrap();
 
+    sqlx::query(include_str!(
+        "../../infra/db/migrations/models/archive/005_rename_volume_id_fk_to_volume_fk.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+
     // metadata
     sqlx::query(include_str!(
         "../../infra/db/migrations/models/metadata/001_create_comic_metadata.sql"
@@ -110,6 +117,18 @@ pub async fn setup_test_db() -> sqlx::SqlitePool {
         .execute(&pool)
         .await
         .unwrap();
+
+    sqlx::query(include_str!("../../infra/db/migrations/views/002_drop_comic_summary_view.sql"))
+        .execute(&pool)
+        .await
+        .unwrap();
+
+    sqlx::query(include_str!(
+        "../../infra/db/migrations/views/003_recreate_comic_summary_view_with_fk_names.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
 
     // sync
     sqlx::query(include_str!(

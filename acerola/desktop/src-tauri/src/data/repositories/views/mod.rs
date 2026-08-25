@@ -82,7 +82,7 @@ impl HomeRepository {
             SortCriteria::TitleAsc | SortCriteria::TitleDesc => {
                 let dir = if matches!(criteria, SortCriteria::TitleAsc) { "ASC" } else { "DESC" };
                 let sql = format!(
-                    "SELECT {} FROM {} v JOIN comic_directory d ON v.directory_id = d.id {} ORDER BY COALESCE(v.metadata_title, v.folder_name) {}",
+                    "SELECT {} FROM {} v JOIN comic_directory d ON v.directory_fk = d.id {} ORDER BY COALESCE(v.metadata_title, v.folder_name) {}",
                     cols, table, where_clause, dir
                 );
                 let result = query_as::<_, ComicSummaryView>(&sql).fetch_all(&self.pool).await?;
@@ -91,7 +91,7 @@ impl HomeRepository {
             SortCriteria::ChapterCountAsc | SortCriteria::ChapterCountDesc => {
                 let dir = if matches!(criteria, SortCriteria::ChapterCountAsc) { "ASC" } else { "DESC" };
                 let sql = format!(
-                    "SELECT {} FROM {} v JOIN comic_directory d ON v.directory_id = d.id LEFT JOIN (SELECT comic_directory_fk, COUNT(*) as chapter_count FROM chapter_archive GROUP BY comic_directory_fk) c ON v.directory_id = c.comic_directory_fk {} ORDER BY COALESCE(c.chapter_count, 0) {}",
+                    "SELECT {} FROM {} v JOIN comic_directory d ON v.directory_fk = d.id LEFT JOIN (SELECT comic_directory_fk, COUNT(*) as chapter_count FROM chapter_archive GROUP BY comic_directory_fk) c ON v.directory_fk = c.comic_directory_fk {} ORDER BY COALESCE(c.chapter_count, 0) {}",
                     cols, table, where_clause, dir
                 );
                 let result = query_as::<_, ComicSummaryView>(&sql).fetch_all(&self.pool).await?;
@@ -101,7 +101,7 @@ impl HomeRepository {
                 let dir =
                     if matches!(criteria, SortCriteria::LastUpdatedAsc) { "ASC" } else { "DESC" };
                 let sql = format!(
-                    "SELECT {} FROM {} v JOIN comic_directory d ON v.directory_id = d.id {} ORDER BY d.last_modified {}",
+                    "SELECT {} FROM {} v JOIN comic_directory d ON v.directory_fk = d.id {} ORDER BY d.last_modified {}",
                     cols, table, where_clause, dir
                 );
                 let result = query_as::<_, ComicSummaryView>(&sql).fetch_all(&self.pool).await?;
