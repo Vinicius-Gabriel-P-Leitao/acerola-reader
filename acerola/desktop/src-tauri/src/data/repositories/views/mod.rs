@@ -114,7 +114,9 @@ impl HomeRepository {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::utils::setup_test_db::setup_test_db;
+    use crate::tests::utils::setup_test_db::{
+        insert_comic_directory, insert_comic_metadata, insert_comic_with_chapters, setup_test_db,
+    };
 
     async fn setup() -> (SqlitePool, HomeRepository) {
         let pool = setup_test_db().await;
@@ -122,58 +124,14 @@ mod tests {
         (pool, repo)
     }
 
-    // FIXME: Todo e qualquer SQL de testes não fica nos testes fica na pasta de testes acerola\desktop\src-tauri\src\tests como utils de testes.
-    async fn insert_comic_with_chapters(
-        pool: &SqlitePool, id: i64, name: &str, title: &str, chapter_count: i64,
-    ) {
-        sqlx::query(
-            "INSERT INTO comic_directory (id, name, path, last_modified) VALUES (?, ?, ?, 0)",
-        )
-        .bind(id)
-        .bind(name)
-        .bind(format!("/mangas/{}", name.to_lowercase()))
-        .execute(pool)
-        .await
-        .unwrap();
-
-        sqlx::query("INSERT INTO comic_metadata (id, comic_directory_fk, title, description, status) VALUES (?, ?, ?, '', '')")
-            .bind(id)
-            .bind(id)
-            .bind(title)
-            .execute(pool)
-            .await
-            .unwrap();
-
-        for i in 0..chapter_count {
-            sqlx::query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, comic_directory_fk, last_modified) VALUES (?, ?, ?, ?, 0, ?, 0)")
-                .bind(format!("{}{}", id, i))
-                .bind(format!("Capítulo {}", i))
-                .bind(format!("/mangas/{}/cap{}", name.to_lowercase(), i))
-                .bind(format!("{:03}", i))
-                .bind(id)
-                .execute(pool)
-                .await
-                .unwrap();
-        }
-    }
-
     #[tokio::test]
     async fn test_search_by_title_lower_and_upper() {
         let (pool, repo) = setup().await;
 
-        sqlx::query("INSERT INTO comic_directory (id, name, path, last_modified) VALUES (1, 'One Piece', '/mangas/one piece', 0)")
-            .execute(&pool)
-            .await
-            .unwrap();
-        sqlx::query("INSERT INTO comic_metadata (id, comic_directory_fk, title, description, status) VALUES (1, 1, 'One Piece - Piratas', 'desc', 'status')")
-            .execute(&pool)
-            .await
-            .unwrap();
+        insert_comic_directory(&pool, 1, "One Piece", "/mangas/one piece").await;
+        insert_comic_metadata(&pool, 1, 1, "One Piece - Piratas").await;
 
-        sqlx::query("INSERT INTO comic_directory (id, name, path, last_modified) VALUES (2, 'NARUTO', '/mangas/naruto', 0)")
-            .execute(&pool)
-            .await
-            .unwrap();
+        insert_comic_directory(&pool, 2, "NARUTO", "/mangas/naruto").await;
 
         let results_upper = repo.search_by_title("PIECE").await.unwrap();
         assert_eq!(results_upper.len(), 1);

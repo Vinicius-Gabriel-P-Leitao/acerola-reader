@@ -178,11 +178,15 @@ mod tests {
 
     async fn setup_service() -> (FileSyncService, tempfile::TempDir) {
         let pool = crate::tests::utils::setup_test_db::setup_test_db_with_comic().await;
-        // FIXME: Todo e qualquer SQL de testes não fica nos testes fica na pasta de testes acerola\desktop\src-tauri\src\tests como utils de testes.
-        sqlx::query("INSERT INTO chapter_archive (id, chapter, path, chapter_sort, is_special, checksum, comic_directory_fk, last_modified) VALUES (1, 'Cap 1', 'p/Cap 1.cbz', '1', 0, 'abc', 1, 0)")
-            .execute(&pool)
-            .await
-            .unwrap();
+        crate::tests::utils::setup_test_db::insert_chapter_archive_with_checksum(
+            &pool,
+            1,
+            1,
+            "Cap 1",
+            "p/Cap 1.cbz",
+            "abc",
+        )
+        .await;
 
         let temp_dir = tempfile::tempdir().unwrap();
         let root = temp_dir.path().to_path_buf();
