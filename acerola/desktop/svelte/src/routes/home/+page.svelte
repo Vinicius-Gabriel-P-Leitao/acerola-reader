@@ -420,18 +420,21 @@
 		</div>
 	</div>
 
-	<!-- FIXME: Transformar em um componente que aceita snipet e coisa do tipo para ser composto, ou organizar melhor essas props, props flat ficam confusas, o que é dados? o que é evento? fica ruim de entender, deixar igual ao AcerolaFilterPanel-->
 	<AcerolaComicActionDialog
-		open={showActionDialog}
-		selectedIds={selection.selectedIdsArray}
-		totalCount={visibleComics.length}
-		bookmarks={bookmarkStore.bookmarks}
-		onHide={handleHide}
-		onDelete={handleDelete}
-		onClearMetadata={handleClearMetadata}
-		onBookmark={handleBookmark}
-		onSelectAll={handleSelectAllToggle}
-		onClose={() => (showActionDialog = false)}
+		state={{ open: showActionDialog }}
+		data={{
+			selectedIds: selection.selectedIdsArray,
+			totalCount: visibleComics.length,
+			bookmarks: bookmarkStore.bookmarks
+		}}
+		events={{
+			onHide: handleHide,
+			onDelete: handleDelete,
+			onClearMetadata: handleClearMetadata,
+			onBookmark: handleBookmark,
+			onSelectAll: handleSelectAllToggle,
+			onClose: () => (showActionDialog = false)
+		}}
 	/>
 {:else}
 	<div
